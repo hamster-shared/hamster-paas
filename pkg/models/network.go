@@ -35,9 +35,3 @@ func ParseNetworkType(s string) (NetworkType, error) {
 		return Mainnet, fmt.Errorf("invalid network type: %s", s)
 	}
 }
-
-type Network struct {
-	Name             string `json:"name"`
-	HttpAddress      string `json:"http_address"`
-	WebsocketAddress string `json:"websocket_address"`
-}

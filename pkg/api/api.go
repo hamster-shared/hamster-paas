@@ -23,33 +23,56 @@ func Serve(port string) {
 }
 
 func chains(c *gin.Context) {
-
-	c.JSON(200, gin.H{
-		"message": "chains",
-	})
+	chains, err := models.GetChains()
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	Success(c, chains)
 }
 
 func networks(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "networks",
-	})
+	// 路径参数
+	chain, ok := c.Params.Get("chain")
+	if !ok {
+		Fail(c, "invalid params")
+		return
+	}
+	chainType, err := models.ParseChainType(chain)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	networks, err := models.GetNetworks(chainType)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	Success(c, networks)
 }
 
 func getApps(c *gin.Context) {
-	// account, ok := c.Params.Get("account")
-	// if !ok {
-	// 	Fail(c, "invalid params")
-	// 	return
-	// }
-	// var pagination models.ApiRequestPagination
-	// if err := c.ShouldBindQuery(&pagination); err != nil {
-	// 	Fail(c, "invalid params")
-	// 	return
-	// }
-
-	c.JSON(200, gin.H{
-		"message": "apps",
-	})
+	account, ok := c.Params.Get("account")
+	if !ok {
+		Fail(c, "invalid params")
+		return
+	}
+	var pagination models.ApiRequestPagination
+	if err := c.ShouldBindQuery(&pagination); err != nil {
+		Fail(c, "invalid params")
+		return
+	}
+	a, err := models.GetAccount(account)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	apps, p, err := a.GetApps(pagination)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	SuccessWithPagination(c, apps, p)
 }
 
 func createApp(c *gin.Context) {
@@ -74,5 +97,3 @@ func deleteApp(c *gin.Context) {
 func subscriptionOverview(c *gin.Context) {
 
 }
-
-

@@ -1,14 +1,16 @@
-DROP TABLE IF EXISTS paas_account;
-CREATE TABLE IF NOT EXISTS paas_account (
-    address varchar(255) NOT NULL,
+DROP TABLE IF EXISTS t_cl_account;
+CREATE TABLE IF NOT EXISTS t_cl_account (
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    address varchar(255) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    app_id_index int NOT NULL,
-    PRIMARY KEY (address)
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    app_id_index int NOT NULL
 );
-DROP TABLE IF EXISTS paas_app;
-CREATE TABLE IF NOT EXISTS paas_app (
+DROP TABLE IF EXISTS t_cl_app;
+CREATE TABLE IF NOT EXISTS t_cl_app (
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    app_id int NOT NULL,
     account varchar(50) NOT NULL,
-    id int NOT NULL,
     name varchar(50) NOT NULL,
     description varchar(255) NOT NULL,
     chain varchar(50) NOT NULL,
@@ -17,17 +19,17 @@ CREATE TABLE IF NOT EXISTS paas_app (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     http_link varchar(100) NOT NULL,
     websocket_link varchar(100) NOT NULL,
-    PRIMARY KEY (account, id)
+    UNIQUE KEY (app_id, account)
 );
-DROP TABLE IF EXISTS paas_chain;
-CREATE TABLE IF NOT EXISTS paas_chain (
-    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+DROP TABLE IF EXISTS t_cl_chain;
+CREATE TABLE IF NOT EXISTS t_cl_chain (
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name varchar(50) NOT NULL,
     network varchar(50) NOT NULL,
     http_address varchar(255) NOT NULL,
     websocket_address varchar(255) NOT NULL
 );
-INSERT INTO paas_chain (name, network, http_address, websocket_address)
+INSERT INTO t_cl_chain (name, network, http_address, websocket_address)
 VALUES (
         'ethereum',
         'mainnet',
@@ -88,9 +90,9 @@ VALUES (
         'https://polygon.api.hamsternet.io',
         ''
     );
-DROP TABLE IF EXISTS paas_code_examples;
-CREATE TABLE IF NOT EXISTS paas_code_examples (
-    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+DROP TABLE IF EXISTS t_cl_code_examples;
+CREATE TABLE IF NOT EXISTS t_cl_code_examples (
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     chain varchar(50) NOT NULL,
     cli TEXT NOT NULL,

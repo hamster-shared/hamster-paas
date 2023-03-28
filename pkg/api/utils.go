@@ -15,6 +15,15 @@ func Success(c *gin.Context, data any) {
 	})
 }
 
+func SuccessWithPagination(c *gin.Context, data any, p models.Pagination) {
+	c.JSON(http.StatusOK, models.ApiResponse{
+		Code:       0,
+		Message:    "success",
+		Data:       data,
+		Pagination: p,
+	})
+}
+
 func Fail(c *gin.Context, message string) {
 	c.JSON(http.StatusBadRequest, models.ApiResponse{
 		Code:    -1,
