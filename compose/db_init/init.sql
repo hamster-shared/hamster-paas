@@ -1,12 +1,12 @@
-DROP TABLE IF EXISTS accounts;
-CREATE TABLE IF NOT EXISTS accounts (
+DROP TABLE IF EXISTS paas_account;
+CREATE TABLE IF NOT EXISTS paas_account (
     address varchar(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     app_id_index int NOT NULL,
     PRIMARY KEY (address)
 );
-DROP TABLE IF EXISTS apps;
-CREATE TABLE IF NOT EXISTS apps (
+DROP TABLE IF EXISTS paas_app;
+CREATE TABLE IF NOT EXISTS paas_app (
     account varchar(50) NOT NULL,
     id int NOT NULL,
     name varchar(50) NOT NULL,
@@ -19,15 +19,15 @@ CREATE TABLE IF NOT EXISTS apps (
     websocket_link varchar(100) NOT NULL,
     PRIMARY KEY (account, id)
 );
-DROP TABLE IF EXISTS chains;
-CREATE TABLE IF NOT EXISTS chains (
+DROP TABLE IF EXISTS paas_chain;
+CREATE TABLE IF NOT EXISTS paas_chain (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name varchar(50) NOT NULL,
     network varchar(50) NOT NULL,
     http_address varchar(255) NOT NULL,
     websocket_address varchar(255) NOT NULL
 );
-INSERT INTO chains (name, network, http_address, websocket_address)
+INSERT INTO paas_chain (name, network, http_address, websocket_address)
 VALUES (
         'ethereum',
         'mainnet',
@@ -88,8 +88,8 @@ VALUES (
         'https://polygon.api.hamsternet.io',
         ''
     );
-DROP TABLE IF EXISTS code_examples;
-CREATE TABLE IF NOT EXISTS code_examples (
+DROP TABLE IF EXISTS paas_code_examples;
+CREATE TABLE IF NOT EXISTS paas_code_examples (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     chain varchar(50) NOT NULL,
