@@ -17,6 +17,8 @@ func Serve(port string) {
 	r.POST("/app", createApp)
 	r.DELETE("/app/:account/:app_id", deleteApp)
 
+	r.GET("/subscription/overview", subscriptionOverview)
+
 	r.Run(fmt.Sprintf("0.0.0.0:%s", port))
 }
 
@@ -68,3 +70,9 @@ func deleteApp(c *gin.Context) {
 		"message": "deleteApp",
 	})
 }
+
+func subscriptionOverview(c *gin.Context) {
+
+}
+
+
