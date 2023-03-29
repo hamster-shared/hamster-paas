@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hamster-paas/pkg/models"
 	"os"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func Serve(port string) {
 	r.GET("/networks/:chain", networks)
 	r.GET("/apps/:account", getApps)
 	r.POST("/app", createApp)
-	r.DELETE("/app/:account/:app_id", deleteApp)
+	r.DELETE("/app/:account/:appId", deleteApp)
 
 	r.GET("/subscription/overview", subscriptionOverview)
 
@@ -57,11 +58,21 @@ func getApps(c *gin.Context) {
 		Fail(c, "invalid params")
 		return
 	}
-	var pagination models.ApiRequestPagination
-	if err := c.ShouldBindQuery(&pagination); err != nil {
+	page := c.Query("page")
+	size := c.Query("size")
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
 		Fail(c, "invalid params")
 		return
 	}
+	sizeInt, err := strconv.Atoi(size)
+	if err != nil {
+		Fail(c, "invalid params")
+		return
+	}
+	var pagination models.Pagination
+	pagination.Page = pageInt
+	pagination.Size = sizeInt
 	a, err := models.GetAccount(account)
 	if err != nil {
 		Fail(c, err.Error())
@@ -81,17 +92,61 @@ func createApp(c *gin.Context) {
 		Fail(c, "invalid params")
 		return
 	}
-	// TODO: create app
-
-	c.JSON(200, gin.H{
-		"message": "createApp",
-	})
+	chain, err := models.ParseChainType(appParams.Chain)
+	if err != nil {
+		Fail(c, "invalid params for chain")
+		return
+	}
+	network, err := models.ParseNetworkType(appParams.Network)
+	if err != nil {
+		Fail(c, "invalid params for network")
+		return
+	}
+	a, err := models.GetAccount(appParams.Account)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	app, err := a.CreateApp(appParams.Name, appParams.Description, chain, network)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	Success(c, app)
 }
 
 func deleteApp(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "deleteApp",
-	})
+	account, ok := c.Params.Get("account")
+	if !ok {
+		Fail(c, "invalid params")
+		return
+	}
+	appId, ok := c.Params.Get("appId")
+	if !ok {
+		Fail(c, "invalid params")
+		return
+	}
+	appIdInt, err := strconv.Atoi(appId)
+	if err != nil {
+		Fail(c, "invalid params")
+		return
+	}
+	a, err := models.GetAccount(account)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	_, err = a.GetApp(appIdInt)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	err = a.DeleteApp(appIdInt)
+	if err != nil {
+		Fail(c, err.Error())
+		return
+	}
+	Success(c, nil)
 }
 
 func subscriptionOverview(c *gin.Context) {

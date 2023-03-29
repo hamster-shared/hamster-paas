@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS t_cl_account (
     address varchar(255) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     app_id_index int NOT NULL
 );
 DROP TABLE IF EXISTS t_cl_app;
@@ -17,6 +18,8 @@ CREATE TABLE IF NOT EXISTS t_cl_app (
     network varchar(50) NOT NULL,
     api_key varchar(50) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     http_link varchar(100) NOT NULL,
     websocket_link varchar(100) NOT NULL,
     UNIQUE KEY (app_id, account)
@@ -27,7 +30,10 @@ CREATE TABLE IF NOT EXISTS t_cl_chain (
     name varchar(50) NOT NULL,
     network varchar(50) NOT NULL,
     http_address varchar(255) NOT NULL,
-    websocket_address varchar(255) NOT NULL
+    websocket_address varchar(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 );
 INSERT INTO t_cl_chain (name, network, http_address, websocket_address)
 VALUES (
@@ -94,6 +100,8 @@ DROP TABLE IF EXISTS t_cl_code_examples;
 CREATE TABLE IF NOT EXISTS t_cl_code_examples (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL,
     chain varchar(50) NOT NULL,
     cli TEXT NOT NULL,
     javascript TEXT NOT NULL,

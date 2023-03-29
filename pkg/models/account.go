@@ -38,6 +38,9 @@ func GetAccount(address string) (*Account, error) {
 	}
 	var account Account
 	if err := db.Where("address = ?", address).First(&account).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return NewAccount(address)
+		}
 		return nil, fmt.Errorf("failed to get account: %s", err)
 	}
 	account.db = db
@@ -52,7 +55,7 @@ func (a *Account) DeleteApp(id int) error {
 	return DeleteApp(a.Address, id)
 }
 
-func (a *Account) GetApps(p ApiRequestPagination) ([]*App, Pagination, error) {
+func (a *Account) GetApps(p Pagination) ([]*App, Pagination, error) {
 	return GetApps(a.Address, p)
 }
 

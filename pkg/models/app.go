@@ -35,6 +35,9 @@ func (a *App) save() error {
 	if err != nil {
 		return err
 	}
+	if err := db.Model(&Account{}).Where("address = ?", a.Account).Update("app_id_index", gorm.Expr("app_id_index + ?", 1)).Error; err != nil {
+		return err
+	}
 	return db.Create(a).Error
 }
 
@@ -58,18 +61,17 @@ func GetApp(account string, id int) (*App, error) {
 	return &app, nil
 }
 
-func GetApps(account string, pagination ApiRequestPagination) ([]*App, Pagination, error) {
-	var p Pagination
-	p.Page = pagination.Page
-	p.Size = pagination.Size
+func GetApps(account string, pagination Pagination) ([]*App, Pagination, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
-		return nil, p, err
+		return nil, pagination, err
 	}
 	var apps []*App
-	if err := db.Where("account = ?", account).Order("app_id desc").Limit(pagination.Size).Offset((pagination.Page - 1) * pagination.Size).Find(&apps).Error; err != nil {
-		return nil, p, err
+	limit := pagination.Size
+	offset := (pagination.Page - 1) * pagination.Size
+	if err := db.Where("account = ?", account).Order("app_id desc").Limit(limit).Offset(offset).Find(&apps).Error; err != nil {
+		return nil, pagination, err
 	}
-	db.Model(&App{}).Where("account = ?", account).Count(&p.Total)
-	return apps, p, nil
+	db.Model(&App{}).Where("account = ?", account).Count(&pagination.Total)
+	return apps, pagination, nil
 }
