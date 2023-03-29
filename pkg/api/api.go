@@ -29,7 +29,7 @@ func (h *HttpServer) StartHttpServer() {
 	logger.Infof("start api server on port %s", h.port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
-	r.Use()
+	r.Use(h.handlerServer.Authorize())
 	r.GET("/chains", chains)
 	r.GET("/networks/:chain", networks)
 	r.GET("/apps/:account", getApps)
