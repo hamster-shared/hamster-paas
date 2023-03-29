@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"hamster-paas/pkg/logger"
 	"hamster-paas/pkg/models"
 	"os"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 )
 
 func Serve(port string) {
+	logger.Infof("start api server on port %s", port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
 	r.GET("/chains", chains)
