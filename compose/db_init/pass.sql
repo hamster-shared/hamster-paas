@@ -20,13 +20,13 @@ CREATE TABLE IF NOT EXISTS t_cl_subscription (
     admin char(42) NOT NULL,
     transaction_tx char(42) NOT NULL,
     status char(20) NOT NULL,
-    UNIQUE INDEX(user_id)
+    INDEX(user_id)
     );
 
 DROP TABLE IF EXISTS t_cl_consumer;
 CREATE TABLE IF NOT EXISTS t_cl_consumer (
     id BIGINT NOT NULL PRIMARY KEY,
-    subscription BIGINT NOT NULL,
+    subscription_id BIGINT NOT NULL,
     created datetime NOT NULL,
     consumer_address char(42) NOT NULL,
     transaction_tx char(42) NOT NULL,
