@@ -2,12 +2,14 @@ package api
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/logger"
 	"hamster-paas/pkg/models"
+	"log"
 	"os"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
 func Serve(port string) {
@@ -20,7 +22,8 @@ func Serve(port string) {
 	r.POST("/app", createApp)
 	r.DELETE("/app/:account/:appId", deleteApp)
 
-	r.GET("/subscription/overview", subscriptionOverview)
+	// subscription
+	r.GET("/subscription/overview", getSubscriptionOverview)
 
 	r.Run(fmt.Sprintf("0.0.0.0:%s", port))
 }
@@ -151,6 +154,27 @@ func deleteApp(c *gin.Context) {
 	Success(c, nil)
 }
 
-func subscriptionOverview(c *gin.Context) {
+func getSubscriptionOverview(c *gin.Context) {
+	userId := c.Query("userid")
+	network := c.Query("network")
 
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		panic(err)
+	}
+
+	type overview struct {
+		TotalSubscription int
+		TotalConsumers    int
+		TotalBalance      float64
+	}
+	var ov overview
+
+	sql := "select COUNT(*) as total_subscription, SUM(consumers) as total_consumers, SUM(balance) as total_balance from t_cl_subscription where user_id = ? AND chain = ?"
+	err = db.Raw(sql, userId, network).Scan(&ov).Error
+	if err != nil {
+		log.Println(err)
+	}
+
+	Success(c, ov)
 }
