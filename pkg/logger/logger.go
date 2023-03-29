@@ -42,34 +42,34 @@ func Sugar() *zap.SugaredLogger {
 	return sugarLogger
 }
 
-func Info(args ...interface{}) {
+func Info(args ...any) {
 	sugarLogger.Info(args...)
 }
 
-func Infof(template string, args ...interface{}) {
+func Infof(template string, args ...any) {
 	sugarLogger.Infof(template, args...)
 }
 
-func Debug(args ...interface{}) {
+func Debug(args ...any) {
 	sugarLogger.Debug(args...)
 }
 
-func Debugf(template string, args ...interface{}) {
+func Debugf(template string, args ...any) {
 	sugarLogger.Debugf(template, args...)
 }
 
-func Warn(args ...interface{}) {
+func Warn(args ...any) {
 	sugarLogger.Warn(args...)
 }
 
-func Warnf(template string, args ...interface{}) {
+func Warnf(template string, args ...any) {
 	sugarLogger.Warnf(template, args...)
 }
 
-func Error(args ...interface{}) {
+func Error(args ...any) {
 	sugarLogger.Error(args...)
 }
 
-func Errorf(template string, args ...interface{}) {
+func Errorf(template string, args ...any) {
 	sugarLogger.Errorf(template, args...)
 }
