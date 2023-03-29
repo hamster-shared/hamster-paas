@@ -12,7 +12,7 @@ import (
 
 func InitDB() {
 	DSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
-		os.Getenv("ALINE_DB_USER"), os.Getenv("ALINE_BD_PASSWORD"), os.Getenv("ALINE_DB_HOST"), os.Getenv("ALINE_DB_PORT"), os.Getenv("ALINE_DB_NAME"))
+		os.Getenv("ALINE_DB_USER"), os.Getenv("ALINE_DB_PASSWORD"), os.Getenv("ALINE_DB_HOST"), os.Getenv("ALINE_DB_PORT"), os.Getenv("ALINE_DB_NAME"))
 	alineDb, err := gorm.Open(mysql.New(mysql.Config{
 		DSN:                       DSN,   // data source name
 		DefaultStringSize:         256,   // default size for string fields
