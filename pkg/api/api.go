@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/application"
+	"hamster-paas/pkg/handler"
 	"hamster-paas/pkg/logger"
 	"hamster-paas/pkg/models"
 	"log"
@@ -12,10 +13,23 @@ import (
 	"strconv"
 )
 
-func Serve(port string) {
-	logger.Infof("start api server on port %s", port)
+type HttpServer struct {
+	handlerServer handler.HandlerServer
+	port          string
+}
+
+func NewHttpService(handlerServer handler.HandlerServer, port string) *HttpServer {
+	return &HttpServer{
+		handlerServer: handlerServer,
+		port:          port,
+	}
+}
+
+func (h *HttpServer) StartHttpServer() {
+	logger.Infof("start api server on port %s", h.port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
+	r.Use()
 	r.GET("/chains", chains)
 	r.GET("/networks/:chain", networks)
 	r.GET("/apps/:account", getApps)
@@ -25,7 +39,7 @@ func Serve(port string) {
 	// subscription
 	r.GET("/subscription/overview", getSubscriptionOverview)
 
-	r.Run(fmt.Sprintf("0.0.0.0:%s", port))
+	r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }
 
 func chains(c *gin.Context) {

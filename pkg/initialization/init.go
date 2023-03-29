@@ -1,9 +1,13 @@
 package initialization
 
 import (
-	"hamster-paas/pkg/logger"
-
 	"github.com/joho/godotenv"
+	"hamster-paas/pkg/aline/service"
+	"hamster-paas/pkg/api"
+	"hamster-paas/pkg/application"
+	"hamster-paas/pkg/handler"
+	"hamster-paas/pkg/logger"
+	"os"
 )
 
 func Init() {
@@ -13,4 +17,9 @@ func Init() {
 	}
 	logger.InitLogger()
 	InitDB()
+	httpHandler := handler.NewHandlerServer()
+	userService := service.NewUserService()
+	application.SetBean[*service.UserService]("userService", userService)
+
+	api.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
 }
