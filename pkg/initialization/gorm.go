@@ -14,7 +14,7 @@ func InitDB() {
 	db, err := gorm.Open(mysql.Open(os.Getenv("MYSQL_DSN")), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
-			TablePrefix:   "paas_",
+			TablePrefix:   "t_cl_",
 		},
 	})
 	if err != nil {

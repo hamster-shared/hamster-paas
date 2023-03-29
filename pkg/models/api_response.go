@@ -8,7 +8,7 @@ type ApiResponse struct {
 }
 
 type Pagination struct {
-	Total int `json:"total"`
-	Page  int `json:"page"`
-	Size  int `json:"size"`
+	Total int64 `json:"total,omitempty"`
+	Page  int   `json:"page,omitempty"`
+	Size  int   `json:"size,omitempty"`
 }
