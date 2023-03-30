@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/gin-gonic/gin"
+	"hamster-paas/pkg/models"
 	"net/http"
 )
 
@@ -39,5 +40,14 @@ func Failed(code int, message string, c *gin.Context) {
 		Code:    code,
 		Message: message,
 		Data:    nil,
+	})
+}
+
+func SuccessWithPagination(data any, p models.Pagination, c *gin.Context) {
+	c.JSON(http.StatusOK, models.ApiResponse{
+		Code:       0,
+		Message:    "success",
+		Data:       data,
+		Pagination: p,
 	})
 }

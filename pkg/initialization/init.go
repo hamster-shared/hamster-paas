@@ -2,11 +2,10 @@ package initialization
 
 import (
 	"github.com/joho/godotenv"
-	"hamster-paas/pkg/aline/service"
-	"hamster-paas/pkg/api"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/handler"
-	"hamster-paas/pkg/logger"
+	"hamster-paas/pkg/rpc/aline"
+	"hamster-paas/pkg/utils"
 	"os"
 )
 
@@ -15,11 +14,14 @@ func Init() {
 	if err != nil {
 		panic("Error loading .env file")
 	}
-	logger.InitLogger()
+	utils.InitLogger()
 	InitDB()
 	httpHandler := handler.NewHandlerServer()
-	userService := service.NewUserService()
-	application.SetBean[*service.UserService]("userService", userService)
+	userService := aline.NewUserService()
+	application.SetBean[*aline.UserService]("userService", userService)
 
-	api.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
+	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
+	if err != nil {
+		panic(err)
+	}
 }
