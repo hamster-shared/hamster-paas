@@ -1,10 +1,13 @@
 package db
 
+import "time"
+
 type User struct {
-	UserID  int64  `gorm:"column:user_id" json:"user_id"`
-	Type    string `json:"type"`
-	Chain   string `json:"chain"`
-	Network string `json:"network"`
+	UserId     int64     `gorm:"column:user_id" json:"userId"`
+	Type       string    `json:"type"`
+	Chain      string    `json:"chain"`
+	Network    string    `json:"network"`
+	CreateTime time.Time `gorm:"column:create_time;default:current_timestamp" json:"createTime"`
 }
 
 func (m User) TableName() string {

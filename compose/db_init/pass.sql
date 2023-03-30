@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS t_user_middleware (
     type VARCHAR(50) NOT NULL,
     chain VARCHAR(50) NOT NULL,
     network VARCHAR(50) NOT NULL
+    create_time timestamp NULL DEFAULT CURRENT_TIMESTAMP comment 'create time'
     );
 
 DROP TABLE IF EXISTS t_cl_subscription;
@@ -20,6 +21,7 @@ CREATE TABLE IF NOT EXISTS t_cl_subscription (
     admin char(42) NOT NULL,
     transaction_tx char(42) NOT NULL,
     status char(20) NOT NULL,
+    create_time timestamp NULL DEFAULT CURRENT_TIMESTAMP comment 'create time',
     INDEX(user_id)
     );
 
@@ -32,6 +34,7 @@ CREATE TABLE IF NOT EXISTS t_cl_consumer (
     consumer_address char(42) NOT NULL,
     transaction_tx char(42) NOT NULL,
     status char(20) NOT NULL,
+    create_time timestamp NULL DEFAULT CURRENT_TIMESTAMP comment 'create time',
     INDEX(user_id)
     );
 
@@ -42,7 +45,8 @@ CREATE TABLE IF NOT EXISTS t_cl_request_template (
     created datetime NOT NULL,
     script text NOT NULL,
     author VARCHAR(20) NOT NULL,
-    description VARCHAR(255) NOT NULL
+    description VARCHAR(255) NOT NULL,
+    create_time timestamp NULL DEFAULT CURRENT_TIMESTAMP comment 'create time'
     );
 
 DROP TABLE IF EXISTS t_cl_request;
@@ -52,6 +56,7 @@ CREATE TABLE IF NOT EXISTS t_cl_request (
     created datetime NOT NULL,
     script text NOT NULL,
     user_id BIGINT NOT NULL,
+    create_time timestamp NULL DEFAULT CURRENT_TIMESTAMP comment 'create time',
     INDEX(user_id)
     );
 
@@ -65,6 +70,7 @@ CREATE TABLE IF NOT EXISTS t_cl_request_execute (
     transaction_tx char(42) NULL,
     status char(20),
     user_id BIGINT NOT NULL,
+    create_time timestamp NULL DEFAULT CURRENT_TIMESTAMP comment 'create time',
     INDEX(user_id)
     );
 
@@ -78,5 +84,6 @@ CREATE TABLE IF NOT EXISTS t_cl_deposit (
     transaction_tx char(42) NOT NULL,
     status char(20),
     user_id BIGINT NOT NULL,
+    create_time timestamp NULL DEFAULT CURRENT_TIMESTAMP comment 'create time',
     INDEX(user_id)
     );

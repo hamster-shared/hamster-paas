@@ -11,6 +11,7 @@ type Deposit struct {
 	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status          string    `json:"status,omitempty"`
 	UserId          uint64    `gorm:"column:user_id" json:"userId"`
+	CreateTime      time.Time `gorm:"column:create_time;default:current_timestamp" json:"createTime"`
 }
 
 func (m Deposit) TableName() string {
