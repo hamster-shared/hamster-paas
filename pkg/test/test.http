@@ -1,0 +1,34 @@
+### create chain link request
+POST http://localhost:9898/api/chainlink/request
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+{
+  "name": "request-two",
+  "script": "test script"
+}
+
+### query chain link request list
+GET http://localhost:9898/api/chainlink/requests?page=2&size=10
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+### update chain link request
+PUT http://localhost:9898/api/chainlink/request/1
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+{
+  "name": "request-one-one",
+  "script": "test script"
+}
+
+### query chain link request templates
+GET http://localhost:9898/api/chainlink/request/templates
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+### query chain link request template by id
+GET http://localhost:9898/api/chainlink/request/templates/1
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/

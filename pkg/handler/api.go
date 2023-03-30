@@ -29,9 +29,15 @@ func (h *HttpServer) StartHttpServer() error {
 	r.GET("/apps/:account", getApps)
 	r.POST("/app", createApp)
 	r.DELETE("/app/:account/:appId", deleteApp)
-
+	chainLinkApi := r.Group("/api/chainlink")
 	// subscription
 	r.GET("/subscription/overview", getSubscriptionOverview)
+	//chain link request
+	chainLinkApi.GET("/requests", h.handlerServer.RequestList)
+	chainLinkApi.POST("/request", h.handlerServer.SaveChainLinkRequest)
+	chainLinkApi.PUT("/request/:id", h.handlerServer.UpdateChainLinkRequest)
+	chainLinkApi.GET("/request/templates", h.handlerServer.ChainLinkRequestTemplateList)
+	chainLinkApi.GET("/request/templates/:id", h.handlerServer.GetRequestTemplateScript)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

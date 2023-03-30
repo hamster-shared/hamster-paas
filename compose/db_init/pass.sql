@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS t_cl_consumer (
 
 DROP TABLE IF EXISTS t_cl_request_template;
 CREATE TABLE IF NOT EXISTS t_cl_request_template (
-    id BIGINT NOT NULL PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     created datetime NOT NULL,
     script text NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS t_cl_request_template (
 
 DROP TABLE IF EXISTS t_cl_request;
 CREATE TABLE IF NOT EXISTS t_cl_request (
-    id BIGINT NOT NULL PRIMARY KEY ,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL,
     created datetime NOT NULL,
     script text NOT NULL,
