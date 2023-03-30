@@ -5,11 +5,12 @@ import "time"
 type Deposit struct {
 	Id              int64     `json:"id"`
 	Created         time.Time `json:"created"`
-	RequestName     string    `gorm:"column:request_name" json:"request_name"`
-	ConsumerAddress string    `gorm:"column:consumer_address" json:"consumer_address"`
+	RequestName     string    `gorm:"column:request_name" json:"requestName"`
+	ConsumerAddress string    `gorm:"column:consumer_address" json:"consumerAddress"`
 	Amount          float64   `json:"amount"`
-	TransactionTx   string    `gorm:"column:transaction_tx" json:"transaction_tx"`
+	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status          string    `json:"status,omitempty"`
+	UserId          uint64    `gorm:"column:user_id" json:"userId"`
 }
 
 func (m Deposit) TableName() string {

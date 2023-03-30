@@ -16,16 +16,18 @@ type Request struct {
 	Name    string    `json:"name"`
 	Created time.Time `json:"created"`
 	Script  string    `json:"script"`
+	UserId  uint64    `gorm:"column:user_id" json:"userId"`
 }
 
 type RequestExecute struct {
 	Id              int64  `json:"id"`
-	SubscriptionId  int64  `gorm:"column:subscription_id" json:"subscription_id"`
-	ConsumerAddress string `gorm:"column:consumer_address" json:"consumer_address"`
+	SubscriptionId  int64  `gorm:"column:subscription_id" json:"subscriptionId"`
+	ConsumerAddress string `gorm:"column:consumer_address" json:"consumerAddress"`
 	Secretsloction  int8   `json:"secretsloction"`
 	Args            string `json:"args"`
-	TransactionTx   string `gorm:"column:transaction_tx" json:"transaction_tx"`
+	TransactionTx   string `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status          string `json:"status"`
+	UserId          uint64 `gorm:"column:user_id" json:"userId"`
 }
 
 func (m RequestTemplate) TableName() string {

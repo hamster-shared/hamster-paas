@@ -26,11 +26,13 @@ CREATE TABLE IF NOT EXISTS t_cl_subscription (
 DROP TABLE IF EXISTS t_cl_consumer;
 CREATE TABLE IF NOT EXISTS t_cl_consumer (
     id BIGINT NOT NULL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
     subscription_id BIGINT NOT NULL,
     created datetime NOT NULL,
     consumer_address char(42) NOT NULL,
     transaction_tx char(42) NOT NULL,
-    status char(20) NOT NULL
+    status char(20) NOT NULL,
+    INDEX(user_id)
     );
 
 DROP TABLE IF EXISTS t_cl_request_template;
@@ -48,7 +50,9 @@ CREATE TABLE IF NOT EXISTS t_cl_request (
     id BIGINT NOT NULL PRIMARY KEY ,
     name VARCHAR(50) NOT NULL,
     created datetime NOT NULL,
-    script text NOT NULL
+    script text NOT NULL,
+    user_id BIGINT NOT NULL,
+    INDEX(user_id)
     );
 
 DROP TABLE IF EXISTS t_cl_request_execute;
@@ -59,7 +63,9 @@ CREATE TABLE IF NOT EXISTS t_cl_request_execute (
     secretsloction tinyint NOT NULL,
     args varchar(255) NOT NULL,
     transaction_tx char(42) NULL,
-    status char(20)
+    status char(20),
+    user_id BIGINT NOT NULL,
+    INDEX(user_id)
     );
 
 DROP TABLE IF EXISTS t_cl_deposit;
@@ -70,5 +76,7 @@ CREATE TABLE IF NOT EXISTS t_cl_deposit (
     consumer_address char(42) NOT NULL,
     amount decimal(18, 6) NOT NULL,
     transaction_tx char(42) NOT NULL,
-    status char(20)
+    status char(20),
+    user_id BIGINT NOT NULL,
+    INDEX(user_id)
     );
