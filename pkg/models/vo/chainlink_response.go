@@ -28,3 +28,9 @@ type ChainLinkSubscriptionOverview struct {
 	TotalConsumers    int     `json:"total_consumers"`
 	TotalBalance      float64 `json:"total_balance"`
 }
+
+type ChainLinkSINA struct {
+	SubscriptionId int64   `json:"subscription_id"`
+	Name           string  `json:"name"`
+	Balance        float64 `gorm:"balance" json:"balance"`
+}

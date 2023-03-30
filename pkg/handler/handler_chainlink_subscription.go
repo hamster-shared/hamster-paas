@@ -29,3 +29,15 @@ func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
 
 	Success(ov, c)
 }
+
+func (h *HandlerServer) getSINA(c *gin.Context) {
+	userAny, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	user := userAny.(aline.User)
+
+	sinas := h.chainLinkSubscriptionService.GetSINAByUserId(user.Id)
+	Success(sinas, c)
+}

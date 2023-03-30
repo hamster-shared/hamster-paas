@@ -34,13 +34,13 @@ func (s *ChainLinkSubscriptionService) GetSubscriptionOverview(userId uint, netw
 	return vo, nil
 }
 
-//// GetSINAByUserId ge t Subscription id,name,balance by user_id
-//func (s *ChainLinkSubscriptionService) GetSINAByUserId(UserId uint) []*SINA {
-//	var sinas []*SINA
-//	s.db.Table("t_cl_subscription").
-//		Select("subscription_id", "name", "balance").
-//		Where("user_id = ?", UserId).
-//		Scan(&sinas)
-//
-//	return sinas
-//}
+// GetSINAByUserId ge t Subscription id,name,balance by user_id
+func (s *ChainLinkSubscriptionService) GetSINAByUserId(UserId uint) []*vo.ChainLinkSINA {
+	var sinas []*vo.ChainLinkSINA
+	s.db.Table("t_cl_subscription").
+		Select("subscription_id", "name", "balance").
+		Where("user_id = ?", UserId).
+		Scan(&sinas)
+
+	return sinas
+}
