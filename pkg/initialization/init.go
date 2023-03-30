@@ -2,13 +2,15 @@ package initialization
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/handler"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/service"
+	"hamster-paas/pkg/service/nginx_log_parse"
 	"hamster-paas/pkg/utils/logger"
 	"os"
+
+	"gorm.io/gorm"
 
 	"github.com/joho/godotenv"
 )
@@ -33,4 +35,5 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+	nginx_log_parse.InitMeiliSearch()
 }

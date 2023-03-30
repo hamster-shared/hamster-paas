@@ -1,15 +1,14 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/models"
-	"log"
+	"hamster-paas/pkg/models/vo"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
-func chains(c *gin.Context) {
+func rpcGetChains(c *gin.Context) {
 	chains, err := models.GetChains()
 	if err != nil {
 		Fail(err.Error(), c)
@@ -18,7 +17,7 @@ func chains(c *gin.Context) {
 	Success(chains, c)
 }
 
-func networks(c *gin.Context) {
+func rpcGetNetworks(c *gin.Context) {
 	// 路径参数
 	chain, ok := c.Params.Get("chain")
 	if !ok {
@@ -38,7 +37,7 @@ func networks(c *gin.Context) {
 	Success(networks, c)
 }
 
-func getApps(c *gin.Context) {
+func rpcGetApps(c *gin.Context) {
 	account, ok := c.Params.Get("account")
 	if !ok {
 		Fail("invalid params", c)
@@ -72,8 +71,8 @@ func getApps(c *gin.Context) {
 	SuccessWithPagination(apps, p, c)
 }
 
-func createApp(c *gin.Context) {
-	var appParams models.ApiRequestCreateApp
+func rpcCreateApp(c *gin.Context) {
+	var appParams vo.ApiRequestRpcCreateApp
 	if err := c.ShouldBindJSON(&appParams); err != nil {
 		Fail("invalid params", c)
 		return
@@ -101,7 +100,7 @@ func createApp(c *gin.Context) {
 	Success(app, c)
 }
 
-func deleteApp(c *gin.Context) {
+func rpcDeleteApp(c *gin.Context) {
 	account, ok := c.Params.Get("account")
 	if !ok {
 		Fail("invalid params", c)
@@ -133,29 +132,4 @@ func deleteApp(c *gin.Context) {
 		return
 	}
 	Success("", c)
-}
-
-func getSubscriptionOverview(c *gin.Context) {
-	userId := c.Query("userid")
-	network := c.Query("network")
-
-	db, err := application.GetBean[*gorm.DB]("db")
-	if err != nil {
-		panic(err)
-	}
-
-	type overview struct {
-		TotalSubscription int
-		TotalConsumers    int
-		TotalBalance      float64
-	}
-	var ov overview
-
-	sql := "select COUNT(*) as total_subscription, SUM(consumers) as total_consumers, SUM(balance) as total_balance from t_cl_subscription where user_id = ? AND chain = ?"
-	err = db.Raw(sql, userId, network).Scan(&ov).Error
-	if err != nil {
-		log.Println(err)
-	}
-
-	Success(ov, c)
 }

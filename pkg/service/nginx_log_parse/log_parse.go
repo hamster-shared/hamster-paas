@@ -15,6 +15,14 @@ type LogParser struct {
 	latestTime int64
 }
 
+func InitMeiliSearch() {
+	p, err := NewLogParser()
+	if err != nil {
+		panic(err)
+	}
+	application.SetBean("meiliSearch", p.client)
+}
+
 func NewLogParser() (*LogParser, error) {
 	// 创建一个美丽搜索客户端
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
@@ -63,8 +71,6 @@ func NewLogParser() (*LogParser, error) {
 	// 定时更新文档，每 1 秒
 	go p.TimedUpdate(1)
 
-	// set bean
-	application.SetBean("logParser", p)
 	return p, nil
 }
 

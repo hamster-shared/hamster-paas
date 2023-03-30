@@ -2,9 +2,10 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/utils/logger"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 type HttpServer struct {
@@ -23,15 +24,16 @@ func (h *HttpServer) StartHttpServer() error {
 	logger.Infof("start api server on port %s", h.port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
-	r.Use(h.handlerServer.Authorize())
-	r.GET("/chains", chains)
-	r.GET("/networks/:chain", networks)
-	r.GET("/apps/:account", getApps)
-	r.POST("/app", createApp)
-	r.DELETE("/app/:account/:appId", deleteApp)
+
+	rpcApi := r.Group("/api/rpc")
+	rpcApi.GET("/chains", rpcGetChains)
+	rpcApi.GET("/networks/:chain", rpcGetNetworks)
+	rpcApi.GET("/apps/:account", rpcGetApps)
+	rpcApi.POST("/app", rpcCreateApp)
+	rpcApi.DELETE("/app/:account/:appId", rpcDeleteApp)
+
 	chainLinkApi := r.Group("/api/chainlink")
-	// subscription
-	r.GET("/subscription/overview", getSubscriptionOverview)
+	chainLinkApi.Use(h.handlerServer.Authorize())
 	//chain link request
 	chainLinkApi.GET("/requests", h.handlerServer.RequestList)
 	chainLinkApi.POST("/request", h.handlerServer.SaveChainLinkRequest)
