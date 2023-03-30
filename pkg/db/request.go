@@ -3,10 +3,12 @@ package db
 import "time"
 
 type RequestTemplate struct {
-	Id      int64     `json:"id"`
-	Name    string    `json:"name"`
-	Created time.Time `json:"created"`
-	Script  string    `json:"script"`
+	Id          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Created     time.Time `json:"created"`
+	Script      string    `json:"script"`
+	Author      string    `json:"author"`
+	Description string    `json:"description"`
 }
 
 type Request struct {
