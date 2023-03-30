@@ -3,7 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"hamster-paas/pkg/utils"
+	"hamster-paas/pkg/utils/logger"
 	"os"
 )
 
@@ -20,7 +20,7 @@ func NewHttpService(handlerServer HandlerServer, port string) *HttpServer {
 }
 
 func (h *HttpServer) StartHttpServer() error {
-	utils.Infof("start api server on port %s", h.port)
+	logger.Infof("start api server on port %s", h.port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
 	r.Use(h.handlerServer.Authorize())

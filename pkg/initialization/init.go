@@ -5,7 +5,7 @@ import (
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/handler"
 	"hamster-paas/pkg/rpc/aline"
-	"hamster-paas/pkg/utils"
+	"hamster-paas/pkg/utils/logger"
 	"os"
 )
 
@@ -14,7 +14,7 @@ func Init() {
 	if err != nil {
 		panic("Error loading .env file")
 	}
-	utils.InitLogger()
+	logger.InitLogger()
 	InitDB()
 	httpHandler := handler.NewHandlerServer()
 	userService := aline.NewUserService()
