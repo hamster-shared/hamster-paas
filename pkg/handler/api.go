@@ -43,7 +43,7 @@ func (h *HttpServer) StartHttpServer() error {
 	// chain link subscription
 	chainLinkApi.GET("/subscription/overview", h.handlerServer.getSubscriptionOverview)
 	chainLinkApi.GET("/subscription/sina", h.handlerServer.getSINA)
-	//chainLinkApi.POST("/subscription/create-subscription", h.handlerServer.createSubscription)
+	chainLinkApi.POST("/subscription/create-subscription", h.handlerServer.createSubscription)
 	//// chain link consumer
 	//chainLinkApi.POST("/consumer/add-consumer", h.handlerServer.createConsumer)
 
