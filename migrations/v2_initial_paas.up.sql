@@ -39,11 +39,11 @@ CREATE TABLE IF NOT EXISTS t_cl_consumer (
 DROP TABLE IF EXISTS t_cl_request_template;
 CREATE TABLE IF NOT EXISTS t_cl_request_template (
     id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
     created datetime NOT NULL,
     script text NOT NULL,
     author VARCHAR(20) NOT NULL,
-    description VARCHAR(255) NOT NULL
+    description VARCHAR(500) NOT NULL
     );
 
 DROP TABLE IF EXISTS t_cl_request;
