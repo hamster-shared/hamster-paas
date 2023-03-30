@@ -15,7 +15,6 @@ type Subscription struct {
 	Admin          string    `json:"admin"`
 	TransactionTx  string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status         string    `json:"status"`
-	CreateTime     time.Time `gorm:"column:create_time;default:current_timestamp" json:"createTime"`
 }
 
 func (m Subscription) TableName() string {

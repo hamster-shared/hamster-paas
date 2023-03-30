@@ -9,16 +9,14 @@ type RequestTemplate struct {
 	Script      string    `json:"script"`
 	Author      string    `json:"author"`
 	Description string    `json:"description"`
-	CreateTime  time.Time `gorm:"column:create_time;default:current_timestamp" json:"createTime"`
 }
 
 type Request struct {
-	Id         int64     `json:"id"`
-	Name       string    `json:"name"`
-	Created    time.Time `json:"created"`
-	Script     string    `json:"script"`
-	UserId     uint64    `gorm:"column:user_id" json:"userId"`
-	CreateTime time.Time `gorm:"column:create_time;default:current_timestamp" json:"createTime"`
+	Id      int64     `json:"id"`
+	Name    string    `json:"name"`
+	Created time.Time `json:"created"`
+	Script  string    `json:"script"`
+	UserId  uint64    `gorm:"column:user_id" json:"userId"`
 }
 
 type RequestExecute struct {
@@ -30,7 +28,7 @@ type RequestExecute struct {
 	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status          string    `json:"status"`
 	UserId          uint64    `gorm:"column:user_id" json:"userId"`
-	CreateTime      time.Time `gorm:"column:create_time;default:current_timestamp" json:"createTime"`
+	Created         time.Time `json:"created"`
 }
 
 func (m RequestTemplate) TableName() string {
