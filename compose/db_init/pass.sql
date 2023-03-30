@@ -38,7 +38,9 @@ CREATE TABLE IF NOT EXISTS t_cl_request_template (
     id BIGINT NOT NULL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     created datetime NOT NULL,
-    script text NOT NULL
+    script text NOT NULL,
+    author VARCHAR(20) NOT NULL,
+    description VARCHAR(255) NOT NULL
     );
 
 DROP TABLE IF EXISTS t_cl_request;
