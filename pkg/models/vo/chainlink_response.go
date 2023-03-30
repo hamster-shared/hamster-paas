@@ -22,3 +22,9 @@ type RequestTemplateVo struct {
 	Author      string `json:"author"`
 	Description string `json:"description"`
 }
+
+type ChainLinkSubscriptionOverview struct {
+	TotalSubscription int     `json:"total_subscription"`
+	TotalConsumers    int     `json:"total_consumers"`
+	TotalBalance      float64 `json:"total_balance"`
+}

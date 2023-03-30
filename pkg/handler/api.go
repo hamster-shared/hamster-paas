@@ -40,6 +40,12 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.PUT("/request/:id", h.handlerServer.UpdateChainLinkRequest)
 	chainLinkApi.GET("/request/templates", h.handlerServer.ChainLinkRequestTemplateList)
 	chainLinkApi.GET("/request/templates/:id", h.handlerServer.GetRequestTemplateScript)
+	// chain link subscription
+	chainLinkApi.GET("/subscription/overview", h.handlerServer.getSubscriptionOverview)
+	//chainLinkApi.GET("/subscription/sina", h.handlerServer.getSINA)
+	//chainLinkApi.POST("/subscription/create-subscription", h.handlerServer.createSubscription)
+	//// chain link consumer
+	//chainLinkApi.POST("/consumer/add-consumer", h.handlerServer.createConsumer)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }
