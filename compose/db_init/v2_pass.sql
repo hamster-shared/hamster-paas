@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS t_user_middleware (
 
 DROP TABLE IF EXISTS t_cl_subscription;
 CREATE TABLE IF NOT EXISTS t_cl_subscription (
-    id BIGINT PRIMARY KEY,
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
     subscription_id BIGINT,
     name VARCHAR(50) NOT NULL,
     created DATETIME NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS t_cl_subscription (
 
 DROP TABLE IF EXISTS t_cl_consumer;
 CREATE TABLE IF NOT EXISTS t_cl_consumer (
-    id BIGINT NOT NULL PRIMARY KEY,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     user_id BIGINT NOT NULL,
     subscription_id BIGINT NOT NULL,
     created datetime NOT NULL,
