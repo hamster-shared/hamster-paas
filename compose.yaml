@@ -23,9 +23,19 @@ services:
       - ./compose/nginx/config/nginx.conf:/etc/nginx/nginx.conf
       - ./compose/nginx/log:/var/log/nginx
 
+  meilisearch:
+    container_name: hamster-paas-meilisearch
+    image: getmeili/meilisearch:v1.0
+    restart: always
+    ports:
+      - 7700:7700
+    volumes:
+      - hamster-paas-meilisearch-data:/meili_data
+
 networks:
   default:
     name: hamster-paas-network
 
 volumes:
   hamster-paas-db-data: {}
+  hamster-paas-meilisearch-data: {}

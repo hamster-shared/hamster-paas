@@ -1,7 +1,7 @@
 package initialization
 
 import (
-	"github.com/joho/godotenv"
+	"fmt"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/handler"
@@ -9,12 +9,14 @@ import (
 	"hamster-paas/pkg/service"
 	"hamster-paas/pkg/utils/logger"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 func Init() {
 	err := godotenv.Load()
 	if err != nil {
-		panic("Error loading .env file")
+		panic(fmt.Errorf("error loading .env file: %s", err))
 	}
 	logger.InitLogger()
 	InitDB()
