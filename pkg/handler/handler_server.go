@@ -10,6 +10,7 @@ import (
 type HandlerServer struct {
 	chainLinkRequestService      service.ChainLinkRequestService
 	chainLinkSubscriptionService service.ChainLinkSubscriptionService
+	chainLinkConsumerService     service.ChainLinkConsumerService
 }
 
 func NewHandlerServer() *HandlerServer {
@@ -27,6 +28,13 @@ func NewHandlerServer() *HandlerServer {
 		panic(fmt.Sprintf("application get chainlink service failed: %s", err.Error()))
 	}
 	handlerServer.chainLinkSubscriptionService = *chainLinkSubscriptionService
+
+	chainLinkConsumerService, err := application.GetBean[*service.ChainLinkConsumerService]("chainLinkConsumerService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get chainlink service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get chainlink service failed: %s", err.Error()))
+	}
+	handlerServer.chainLinkConsumerService = *chainLinkConsumerService
 
 	return &handlerServer
 }

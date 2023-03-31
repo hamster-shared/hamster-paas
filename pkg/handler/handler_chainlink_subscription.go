@@ -1,9 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
+	"hamster-paas/pkg/utils/logger"
 	"log"
 	"strconv"
 	"time"
@@ -88,7 +90,11 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		Created:        time.Now(),
 	}
 
-	h.chainLinkSubscriptionService.CreateSubscription(s)
+	if err := h.chainLinkSubscriptionService.CreateSubscription(s); err != nil {
+		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
 
 	Success(nil, c)
 }

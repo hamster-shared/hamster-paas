@@ -29,8 +29,10 @@ func Init() {
 	}
 	chainLinkRequestService := service.NewChainLinkRequestService(db)
 	chainLinkSubscriptionService := service.NewChainLinkSubscriptionService(db)
+	chainLinkConsumerService := service.NewChainLinkConsumerService(db)
 	application.SetBean[*service.ChainLinkRequestService]("chainLinkRequestService", chainLinkRequestService)
 	application.SetBean[*service.ChainLinkSubscriptionService]("chainLinkSubscriptionService", chainLinkSubscriptionService)
+	application.SetBean[*service.ChainLinkConsumerService]("chainLinkConsumerService", chainLinkConsumerService)
 	httpHandler := handler.NewHandlerServer()
 	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
 	if err != nil {
