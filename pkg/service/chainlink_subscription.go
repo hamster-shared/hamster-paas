@@ -73,3 +73,17 @@ func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subs
 
 	return subscription, nil
 }
+
+func (s *ChainLinkSubscriptionService) AddFundsForSubscription(subscriptionId int, incr float64) error {
+	subscription, err := s.GetSubscriptionById(subscriptionId)
+	if err != nil {
+		return err
+	}
+
+	err = s.db.Table("t_cl_subscription").Where("subscription_id = ?", subscriptionId).Update("balance", subscription.Balance+incr).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

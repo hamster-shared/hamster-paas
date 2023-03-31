@@ -47,6 +47,7 @@ func (h *HttpServer) StartHttpServer() error {
 	// chain link consumer
 	chainLinkApi.POST("/consumer/add-consumer", h.handlerServer.createConsumer)
 	// chain link found
+	chainLinkApi.PUT("/found/add-found", h.handlerServer.addFound)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }
