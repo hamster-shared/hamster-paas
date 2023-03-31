@@ -67,7 +67,6 @@ func (h *HandlerServer) getConsumerList(c *gin.Context) {
 	var pagination models.Pagination
 	pagination.Page = pageInt
 	pagination.Size = sizeInt
-
 	// 查询hamster的可用合约列表
 	var consumerList []vo.ChainLinkConsumers
 	if pagination.Page > 1 {

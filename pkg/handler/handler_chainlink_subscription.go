@@ -18,20 +18,17 @@ func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
 		return
 	}
 	user := userAny.(aline.User)
-
 	network := c.Query("network")
 	if network == "" {
 		Fail("network not valid", c)
 		return
 	}
-
 	ov, err := h.chainLinkSubscriptionService.GetSubscriptionOverview(user.Id, network)
 	if err != nil {
 		log.Println(err)
 		Fail(err.Error(), c)
 		return
 	}
-
 	Success(ov, c)
 }
 
@@ -42,7 +39,6 @@ func (h *HandlerServer) getSINA(c *gin.Context) {
 		return
 	}
 	user := userAny.(aline.User)
-
 	sinas := h.chainLinkSubscriptionService.GetSINAByUserId(user.Id)
 	Success(sinas, c)
 }
@@ -54,33 +50,16 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		return
 	}
 	user := userAny.(aline.User)
-
-	// get chain
-	chain := c.Query("chain")
-	if chain == "" {
-		Fail("chain not valid", c)
-		return
-	}
-	// get network
-	network := c.Query("network")
-	if network == "" {
-		Fail("network not valid", c)
-		return
-	}
-	// get name
-	name := c.Query("name")
-	if name == "" {
-		Fail("name not valid", c)
-		return
-	}
-	// get id
-	Id := c.Query("subscriptionId")
-	subscriptionId, err := strconv.Atoi(Id)
+	chain := c.PostForm("chain")
+	network := c.PostForm("network")
+	name := c.PostForm("name")
+	idString := c.PostForm("subscriptionId")
+	subscriptionId, err := strconv.Atoi(idString)
 	if err != nil {
+		logger.Error(fmt.Sprintf("createSubscription failed: %s", err.Error()))
 		Fail("invalid params", c)
 		return
 	}
-
 	s := models.Subscription{
 		SubscriptionId: uint(subscriptionId),
 		Name:           name,
@@ -89,13 +68,11 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		UserId:         uint64(user.Id),
 		Created:        time.Now(),
 	}
-
 	if err := h.chainLinkSubscriptionService.CreateSubscription(s); err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
-
 	Success(nil, c)
 }
 
