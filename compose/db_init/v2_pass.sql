@@ -58,23 +58,26 @@ CREATE TABLE IF NOT EXISTS t_cl_request (
 
 DROP TABLE IF EXISTS t_cl_request_execute;
 CREATE TABLE IF NOT EXISTS t_cl_request_execute (
-    id BIGINT NOT NULL PRIMARY KEY ,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     subscription_id BIGINT NOT NULL,
+    request_name   varchar(50) NOT NULL,
     consumer_address char(42) NOT NULL,
     secretsloction tinyint NOT NULL,
+    secret_url varchar(100) NOT NULL,
     args varchar(255) NOT NULL,
     transaction_tx char(42) NULL,
     status char(20),
     user_id BIGINT NOT NULL,
     created datetime NOT NULL,
+    amount decimal(18, 6) NOT NULL DEFAULT 0.0,
     INDEX(user_id)
     );
 
 DROP TABLE IF EXISTS t_cl_deposit;
 CREATE TABLE IF NOT EXISTS t_cl_deposit (
     id BIGINT NOT NULL PRIMARY KEY ,
+    subscription_id BIGINT NOT NULL,
     created datetime NOT NULL,
-    request_name char(50) NOT NULL,
     consumer_address char(42) NOT NULL,
     amount decimal(18, 6) NOT NULL,
     transaction_tx char(42) NOT NULL,

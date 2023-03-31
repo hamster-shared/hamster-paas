@@ -35,20 +35,25 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi := r.Group("/api/chainlink")
 	chainLinkApi.Use(h.handlerServer.Authorize())
 	//chain link request
-	chainLinkApi.GET("/requests", h.handlerServer.RequestList)
-	chainLinkApi.POST("/request", h.handlerServer.SaveChainLinkRequest)
-	chainLinkApi.PUT("/request/:id", h.handlerServer.UpdateChainLinkRequest)
-	chainLinkApi.GET("/request/templates", h.handlerServer.ChainLinkRequestTemplateList)
-	chainLinkApi.GET("/request/templates/:id", h.handlerServer.GetRequestTemplateScript)
+	chainLinkApi.GET("/requests", h.handlerServer.requestList)
+	chainLinkApi.POST("/request", h.handlerServer.saveChainLinkRequest)
+	chainLinkApi.POST("/request/exec", h.handlerServer.saveChainLinkRequestExec)
+	chainLinkApi.PUT("/request/:id", h.handlerServer.updateChainLinkRequest)
+	chainLinkApi.GET("/request/templates", h.handlerServer.chainLinkRequestTemplateList)
+	chainLinkApi.GET("/request/templates/:id", h.handlerServer.getRequestTemplateScript)
 	// chain link subscription
 	chainLinkApi.GET("/subscription/overview", h.handlerServer.getSubscriptionOverview)
 	chainLinkApi.GET("/subscription/sina", h.handlerServer.getSINA)
 	chainLinkApi.POST("/subscription/create-subscription", h.handlerServer.createSubscription)
-	// chain link consumer
+	chainLinkApi.GET("/subscription/:id", h.handlerServer.subscriptionDetail)
+	chainLinkApi.GET("/subscriptions", h.handlerServer.subscriptionList)
+	//// chain link consumer
 	chainLinkApi.POST("/consumer/add-consumer", h.handlerServer.createConsumer)
 	chainLinkApi.GET("/consumer/get-avail-consumer", h.handlerServer.getConsumerList)
-	// chain link found
-	chainLinkApi.PUT("/found/add-found", h.handlerServer.addFound)
+	chainLinkApi.GET("/subscription/consumers", h.handlerServer.consumerList)
+	chainLinkApi.DELETE("/subscription/consumer/:id", h.handlerServer.deleteConsumer)
+	chainLinkApi.GET("/subscription/expenses", h.handlerServer.chainLinkExpenseList)
+	chainLinkApi.GET("/subscription/deposits", h.handlerServer.depositList)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

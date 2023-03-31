@@ -32,3 +32,52 @@ Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
 GET http://localhost:9898/api/chainlink/request/templates/1
 Content-Type: application/json
 Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+
+
+### delete consumer by id
+DELETE http://localhost:9898/api/chainlink/subscription/consumer/1
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+
+### query subscription by id
+GET http://localhost:9898/api/chainlink/subscription/1
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+
+### query subscription list
+GET http://localhost:9898/api/chainlink/subscriptions?page=1&size=10
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+### save request exec data
+POST http://localhost:9898/api/chainlink/request/exec
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+{
+  "subscriptionId": 1,
+  "consumerAddress": "dsafadfafafa",
+  "secretsloction": 1,
+  "secretUrl": "ws:ssafaf",
+  "args": "one,tow,werw",
+  "transactionTx": "sdfsfsfsfsf",
+  "requestName": "one"
+}
+
+### query expense list
+GET http://localhost:9898/api/chainlink/subscription/expenses?page=1&size=10
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/### query expense list
+
+### query deposit list
+GET http://localhost:9898/api/chainlink/subscription/deposits?page=1&size=10
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+
+### query consumers list
+GET http://localhost:9898/api/chainlink/subscription/consumers?page=1&size=10
+Content-Type: application/json
+Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/

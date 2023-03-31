@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
@@ -86,4 +87,38 @@ func (s *ChainLinkSubscriptionService) AddFundsForSubscription(subscriptionId in
 	}
 
 	return nil
+}
+
+// SubscriptionList  query subscription list
+func (s *ChainLinkSubscriptionService) SubscriptionList(network string, page, size int, userId int64) (*vo.ChainLinkSubscriptionPage, error) {
+	var total int64
+	var chainLinkSubscriptionPage vo.ChainLinkSubscriptionPage
+	var chainLinkSubscriptionList []models.Subscription
+	var chainLinkSubscriptionVoList []vo.ChainLinkSubscriptionVo
+	tx := s.db.Model(models.Subscription{}).Where("user_id = ?", userId)
+	if network != "" {
+		tx = tx.Where("network = ?", network)
+	}
+	result := tx.Order("created DESC").Offset((page - 1) * size).Limit(size).Find(&chainLinkSubscriptionList).Offset(-1).Limit(-1).Count(&total)
+	if result.Error != nil {
+		return &chainLinkSubscriptionPage, result.Error
+	}
+	copier.Copy(&chainLinkSubscriptionVoList, &chainLinkSubscriptionList)
+	chainLinkSubscriptionPage.Data = chainLinkSubscriptionVoList
+	chainLinkSubscriptionPage.Total = total
+	chainLinkSubscriptionPage.Page = page
+	chainLinkSubscriptionPage.PageSize = size
+	return &chainLinkSubscriptionPage, nil
+}
+
+// SubscriptionDetail query subscription detail by id
+func (s *ChainLinkSubscriptionService) SubscriptionDetail(id int64) (vo.ChainLinkSubscriptionVo, error) {
+	var subscriptionData models.Subscription
+	var vo vo.ChainLinkSubscriptionVo
+	err := s.db.Model(models.Subscription{}).Where("id = ?", id).First(&subscriptionData).Error
+	if err != nil {
+		return vo, err
+	}
+	copier.Copy(&vo, &subscriptionData)
+	return vo, nil
 }

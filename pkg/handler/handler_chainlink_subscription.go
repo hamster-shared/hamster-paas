@@ -98,3 +98,50 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 
 	Success(nil, c)
 }
+
+func (h *HandlerServer) subscriptionList(gin *gin.Context) {
+	pageStr := gin.DefaultQuery("page", "1")
+	sizeStr := gin.DefaultQuery("size", "10")
+	network := gin.Query("network")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	userAny, exists := gin.Get("user")
+	if !exists {
+		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
+		Fail("user information does not exist", gin)
+		return
+	}
+	user, _ := userAny.(aline.User)
+	data, err := h.chainLinkSubscriptionService.SubscriptionList(network, page, size, int64(user.Id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(data, gin)
+}
+
+func (h *HandlerServer) subscriptionDetail(gin *gin.Context) {
+	idStr := gin.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("chainlink subscription id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	data, err := h.chainLinkSubscriptionService.SubscriptionDetail(int64(id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("get subscription detail failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(data, gin)
+}

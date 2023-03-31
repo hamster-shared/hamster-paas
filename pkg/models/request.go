@@ -24,10 +24,13 @@ type RequestExecute struct {
 	SubscriptionId  int64     `gorm:"column:subscription_id" json:"subscriptionId"`
 	ConsumerAddress string    `gorm:"column:consumer_address" json:"consumerAddress"`
 	Secretsloction  int8      `json:"secretsloction"`
+	SecretUrl       string    `json:"secretUrl"`
 	Args            string    `json:"args"`
 	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status          string    `json:"status"`
 	UserId          uint64    `gorm:"column:user_id" json:"userId"`
+	RequestName     string    `json:"requestName"`
+	Amount          float64   `json:"amount"`
 	Created         time.Time `json:"created"`
 }
 

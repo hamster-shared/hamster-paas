@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
+	"hamster-paas/pkg/utils/logger"
 	"strconv"
 	"time"
 )
@@ -89,4 +91,50 @@ func (h *HandlerServer) getConsumerList(c *gin.Context) {
 	})
 	SuccessWithPagination(consumerList, pagination, c)
 	return
+}
+
+func (h *HandlerServer) consumerList(gin *gin.Context) {
+	pageStr := gin.DefaultQuery("page", "1")
+	sizeStr := gin.DefaultQuery("size", "10")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	userAny, exists := gin.Get("user")
+	if !exists {
+		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
+		Fail("user information does not exist", gin)
+		return
+	}
+	user, _ := userAny.(aline.User)
+	data, err := h.chainLinkConsumerService.ConsumerList(page, size, int64(user.Id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("query consumer list failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(data, gin)
+}
+
+func (h *HandlerServer) deleteConsumer(gin *gin.Context) {
+	idStr := gin.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("chainlink consumer id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	err = h.chainLinkConsumerService.DeleteConsumer(int64(id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("delete consumer failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success("", gin)
 }

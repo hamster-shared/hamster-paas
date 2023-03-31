@@ -28,13 +28,13 @@ func Init() {
 		panic("application get db failed")
 	}
 	chainLinkRequestService := service.NewChainLinkRequestService(db)
-	chainLinkSubscriptionService := service.NewChainLinkSubscriptionService(db)
-	chainLinkConsumerService := service.NewChainLinkConsumerService(db)
-	chainLinkFoundService := service.NewChainLinkFoundService(db)
 	application.SetBean[*service.ChainLinkRequestService]("chainLinkRequestService", chainLinkRequestService)
+	chainLinkSubscriptionService := service.NewChainLinkSubscriptionService(db)
 	application.SetBean[*service.ChainLinkSubscriptionService]("chainLinkSubscriptionService", chainLinkSubscriptionService)
+	chainLinkConsumerService := service.NewChainLinkConsumerService(db)
 	application.SetBean[*service.ChainLinkConsumerService]("chainLinkConsumerService", chainLinkConsumerService)
-	application.SetBean[*service.ChainLinkFoundService]("chainLinkFoundService", chainLinkFoundService)
+	chainLinkDepositService := service.NewChainLinkDepositService(db)
+	application.SetBean[*service.ChainLinkDepositService]("chainLinkDepositService", chainLinkDepositService)
 	httpHandler := handler.NewHandlerServer()
 	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
 	if err != nil {

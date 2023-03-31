@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"time"
@@ -86,4 +87,39 @@ func (r *ChainLinkRequestService) GetRequestTemplateScript(id int64) (string, er
 		return "", err
 	}
 	return template.Script, nil
+}
+
+func (r *ChainLinkRequestService) ChainLinkExpenseList(page, size int, userId int64, requestName string) (*vo.ChainLinkExpensePage, error) {
+	var total int64
+	var chainLinkExpensePage vo.ChainLinkExpensePage
+	var chainLinkExpenseList []models.RequestExecute
+	var chainLinkExpenseVoList []vo.ChainLinkExpenseVo
+	tx := r.db.Model(models.RequestExecute{}).Where("user_id = ?", userId)
+	if requestName != "" {
+		tx = tx.Where("request_name like ? ", "%"+requestName+"%")
+	}
+	result := tx.Order("created DESC").Offset((page - 1) * size).Limit(size).Find(&chainLinkExpenseList).Offset(-1).Limit(-1).Count(&total)
+	if result.Error != nil {
+		return &chainLinkExpensePage, result.Error
+	}
+	copier.Copy(&chainLinkExpenseVoList, &chainLinkExpenseList)
+	chainLinkExpensePage.Data = chainLinkExpenseVoList
+	chainLinkExpensePage.Total = total
+	chainLinkExpensePage.Page = page
+	chainLinkExpensePage.PageSize = size
+	return &chainLinkExpensePage, nil
+}
+
+func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLinkRequestExecParam, userId uint64) error {
+	//todo 链上校验
+	var requestExec models.RequestExecute
+	copier.Copy(&requestExec, &saveData)
+	requestExec.Created = time.Now()
+	requestExec.UserId = userId
+	requestExec.Status = consts.PENDING
+	err := r.db.Create(&requestExec).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

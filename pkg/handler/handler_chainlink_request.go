@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func (h *HandlerServer) RequestList(gin *gin.Context) {
+func (h *HandlerServer) requestList(gin *gin.Context) {
 	pageStr := gin.DefaultQuery("page", "1")
 	sizeStr := gin.DefaultQuery("size", "10")
 	page, err := strconv.Atoi(pageStr)
@@ -38,7 +38,7 @@ func (h *HandlerServer) RequestList(gin *gin.Context) {
 	Success(data, gin)
 }
 
-func (h *HandlerServer) SaveChainLinkRequest(gin *gin.Context) {
+func (h *HandlerServer) saveChainLinkRequest(gin *gin.Context) {
 	createData := vo.ChainLinkRequestParam{}
 	err := gin.BindJSON(&createData)
 	if err != nil {
@@ -67,7 +67,7 @@ func (h *HandlerServer) SaveChainLinkRequest(gin *gin.Context) {
 	Success("", gin)
 }
 
-func (h *HandlerServer) UpdateChainLinkRequest(gin *gin.Context) {
+func (h *HandlerServer) updateChainLinkRequest(gin *gin.Context) {
 	idStr := gin.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -103,7 +103,7 @@ func (h *HandlerServer) UpdateChainLinkRequest(gin *gin.Context) {
 	Success("", gin)
 }
 
-func (h *HandlerServer) ChainLinkRequestTemplateList(gin *gin.Context) {
+func (h *HandlerServer) chainLinkRequestTemplateList(gin *gin.Context) {
 	data, err := h.chainLinkRequestService.ChainLinkRequestTemplateList()
 	if err != nil {
 		logger.Error(fmt.Sprintf("get chainlink request template failed: %s", err.Error()))
@@ -113,7 +113,7 @@ func (h *HandlerServer) ChainLinkRequestTemplateList(gin *gin.Context) {
 	Success(data, gin)
 }
 
-func (h *HandlerServer) GetRequestTemplateScript(gin *gin.Context) {
+func (h *HandlerServer) getRequestTemplateScript(gin *gin.Context) {
 	idStr := gin.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -128,4 +128,58 @@ func (h *HandlerServer) GetRequestTemplateScript(gin *gin.Context) {
 		return
 	}
 	Success(data, gin)
+}
+
+func (h *HandlerServer) chainLinkExpenseList(gin *gin.Context) {
+	pageStr := gin.DefaultQuery("page", "1")
+	sizeStr := gin.DefaultQuery("size", "10")
+	requestName := gin.Query("requestName")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	size, err := strconv.Atoi(sizeStr)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	userAny, exists := gin.Get("user")
+	if !exists {
+		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
+		Fail("user information does not exist", gin)
+		return
+	}
+	user, _ := userAny.(aline.User)
+	data, err := h.chainLinkRequestService.ChainLinkExpenseList(page, size, int64(user.Id), requestName)
+	if err != nil {
+		logger.Error(fmt.Sprintf("query chain link expense list failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(data, gin)
+}
+
+func (h *HandlerServer) saveChainLinkRequestExec(gin *gin.Context) {
+	createData := vo.ChainLinkRequestExecParam{}
+	err := gin.BindJSON(&createData)
+	if err != nil {
+		logger.Error(fmt.Sprintf("create chainlink request exec failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	userAny, exists := gin.Get("user")
+	if !exists {
+		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
+		Fail("user information does not exist", gin)
+		return
+	}
+	user, _ := userAny.(aline.User)
+	err = h.chainLinkRequestService.SaveChainLinkRequestExec(createData, uint64(user.Id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("save request exec failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success("", gin)
 }
