@@ -42,6 +42,7 @@ func (h *HandlerServer) getSINA(c *gin.Context) {
 	Success(sinas, c)
 }
 
+// TODO: 先存db，type = Pending，异步查Tx，TX正确，修改type=Success
 func (h *HandlerServer) createSubscription(c *gin.Context) {
 	userAny, ok := c.Get("user")
 	if !ok {
@@ -61,7 +62,6 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 	}
 	admin := c.PostForm("admin")
 	transactionTx := c.PostForm("transactionTx")
-	status := c.PostForm("status")
 	s := models.Subscription{
 		SubscriptionId: uint(subscriptionId),
 		Name:           name,
@@ -69,17 +69,17 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		Chain:          chain,
 		Network:        network,
 		Consumers:      0,
-		Balance:        0,
 		UserId:         uint64(user.Id),
 		Admin:          admin,
 		TransactionTx:  transactionTx,
-		Status:         status,
+		Status:         "Pending",
 	}
 	if err := h.chainLinkSubscriptionService.CreateSubscription(s); err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
+	// TODO: 异步查状态，如果tx正确，修改type = Success
 	Success(nil, c)
 }
 

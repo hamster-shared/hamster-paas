@@ -43,11 +43,10 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/request/templates/:id", h.handlerServer.getRequestTemplateScript)
 	// chain link subscription
 	chainLinkApi.GET("/subscription/overview", h.handlerServer.getSubscriptionOverview)
-	chainLinkApi.GET("/subscription/sina", h.handlerServer.getSINA)                            //TODO ... delete
-	chainLinkApi.POST("/subscription/create-subscription", h.handlerServer.createSubscription) //TODO... RESTFUL 规范
+	chainLinkApi.POST("/subscription/subscription", h.handlerServer.createSubscription)
 	chainLinkApi.GET("/subscription/:id", h.handlerServer.subscriptionDetail)
 	chainLinkApi.GET("/subscriptions", h.handlerServer.subscriptionList)
-	chainLinkApi.PUT("/subscriptions/add-found", h.handlerServer.addFound) //TODO... 对什么资源充值
+	chainLinkApi.POST("/subscription/:id/found", h.handlerServer.addFound)
 	//// chain link consumer
 	chainLinkApi.POST("//consumer/add-consumer", h.handlerServer.createConsumer)      //TODO...
 	chainLinkApi.GET("/consumer/get-avail-consumer", h.handlerServer.getConsumerList) //TODO...

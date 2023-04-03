@@ -24,9 +24,11 @@ func NewChainLinkSubscriptionService(db *gorm.DB) *ChainLinkSubscriptionService 
 // * error when subscription already exit.
 func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription) error {
 	var s_ *models.Subscription
-	// 判断subscription id是否存在
-	err := s.db.Model(models.Subscription{}).Where("subscription_id = ?", subscription.SubscriptionId).First(&s_).Error
-	// 不存在则创建
+	// 判断是否用已经成功的订阅存在
+	err := s.db.Model(models.Subscription{}).Where(
+		"subscription_id = ? AND chain = ? AND network = ? AND status = ?",
+		subscription.SubscriptionId, subscription.Chain, subscription.Network, "Success").First(&s_).Error
+	// 判断订阅是否存在
 	if err == gorm.ErrRecordNotFound {
 		err = s.db.Create(&subscription).Error
 		if err != nil {
@@ -34,8 +36,8 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 		}
 		return nil
 	}
-	// 已存在，返回错误
-	return errors.New(fmt.Sprintf("subscription :%d already exists", subscription.SubscriptionId))
+	// 订阅已存在，返回错误
+	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists", subscription.Chain, subscription.Network, subscription.SubscriptionId))
 }
 
 // GetSubscriptionOverview get subscription overview(subscription nums, consumer nums, balances)
@@ -76,18 +78,6 @@ func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subs
 		return nil, err
 	}
 	return subscription, nil
-}
-
-func (s *ChainLinkSubscriptionService) AddFundsForSubscription(subscriptionId int, incr float64) error {
-	subscription, err := s.GetSubscriptionById(subscriptionId)
-	if err != nil {
-		return err
-	}
-	err = s.db.Model(models.Subscription{}).Where("subscription_id = ?", subscriptionId).Update("balance", subscription.Balance+incr).Error
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // SubscriptionList  query subscription list

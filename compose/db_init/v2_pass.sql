@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS t_cl_request_execute (
 
 DROP TABLE IF EXISTS t_cl_deposit;
 CREATE TABLE IF NOT EXISTS t_cl_deposit (
-    id BIGINT NOT NULL PRIMARY KEY ,
+    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     subscription_id BIGINT NOT NULL,
     created datetime NOT NULL,
     consumer_address char(42) NOT NULL,
