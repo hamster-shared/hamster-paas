@@ -6,7 +6,6 @@ import (
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
-	"log"
 	"strconv"
 	"time"
 )
@@ -14,7 +13,7 @@ import (
 func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
 	userAny, ok := c.Get("user")
 	if !ok {
-		Fail("do not have token", c)
+		Fail("get user info error", c)
 		return
 	}
 	user := userAny.(aline.User)
@@ -25,7 +24,7 @@ func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
 	}
 	ov, err := h.chainLinkSubscriptionService.GetSubscriptionOverview(user.Id, network)
 	if err != nil {
-		log.Println(err)
+		logger.Error(fmt.Sprintf("getSubscriptionOverview failed: %s", err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
@@ -60,13 +59,21 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		Fail("invalid params", c)
 		return
 	}
+	admin := c.PostForm("admin")
+	transactionTx := c.PostForm("transactionTx")
+	status := c.PostForm("status")
 	s := models.Subscription{
 		SubscriptionId: uint(subscriptionId),
 		Name:           name,
+		Created:        time.Now(),
 		Chain:          chain,
 		Network:        network,
+		Consumers:      0,
+		Balance:        0,
 		UserId:         uint64(user.Id),
-		Created:        time.Now(),
+		Admin:          admin,
+		TransactionTx:  transactionTx,
+		Status:         status,
 	}
 	if err := h.chainLinkSubscriptionService.CreateSubscription(s); err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))

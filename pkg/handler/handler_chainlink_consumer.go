@@ -11,6 +11,11 @@ import (
 	"time"
 )
 
+// * @description Create consumer by subscription.
+// * @param consumer_address string.
+// @param transaction_tx string.
+// @param status string.
+// @return.
 func (h *HandlerServer) createConsumer(c *gin.Context) {
 	userAny, ok := c.Get("user")
 	if !ok {
@@ -19,34 +24,45 @@ func (h *HandlerServer) createConsumer(c *gin.Context) {
 	}
 	user := userAny.(aline.User)
 
-	subscriptionIdString := c.Query("subscription_id")
+	subscriptionIdString := c.PostForm("subscription_id")
 	subscriptionId, err := strconv.Atoi(subscriptionIdString)
 	if err != nil {
+		logger.Error(fmt.Sprintf("create consumer failed: %s", err.Error()))
 		Fail("invalid params", c)
 		return
 	}
+	consumerAddress := c.PostForm("consumer_address")
+	transactionTx := c.PostForm("transaction_tx")
+	status := c.PostForm("status")
 
 	consumer := models.Consumer{
-		SubscriptionId: int64(subscriptionId),
-		Created:        time.Now(),
-		UserId:         uint64(user.Id),
+		SubscriptionId:  int64(subscriptionId),
+		Created:         time.Now(),
+		ConsumerAddress: consumerAddress,
+		UserId:          uint64(user.Id),
+		TransactionTx:   transactionTx,
+		Status:          status,
 	}
-
 	// 确保订阅存在
 	subscription, err := h.chainLinkSubscriptionService.GetSubscriptionById(subscriptionId)
 	if err != nil {
+		logger.Error(fmt.Sprintf("add consumer in subscriptionL: %d failed: %s", subscription.SubscriptionId, err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
-
 	// 创建合约
-	consumerNums := h.chainLinkConsumerService.CreateConsumer(consumer, subscriptionId)
+	consumerNums, err := h.chainLinkConsumerService.CreateConsumer(consumer, subscriptionId)
+	if err != nil {
+		logger.Error(fmt.Sprintf("add consumer in subscriptionL: %d failed: %s", subscription.SubscriptionId, err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
 	// 往Subscription增加合约数量
 	if err := h.chainLinkSubscriptionService.AddConsumer(subscription.SubscriptionId, consumerNums); err != nil {
+		logger.Error(fmt.Sprintf("add consumer in subscriptionL: %d failed: %s", subscription.SubscriptionId, err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
-
 	Success(nil, c)
 }
 

@@ -7,7 +7,6 @@ import (
 	"gorm.io/gorm"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
-	"log"
 )
 
 type ChainLinkSubscriptionService struct {
@@ -20,10 +19,13 @@ func NewChainLinkSubscriptionService(db *gorm.DB) *ChainLinkSubscriptionService 
 	}
 }
 
+// CreateSubscription create subscription
+// * param subscription: new Subscription need to save in db.
+// * error when subscription already exit.
 func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription) error {
 	var s_ *models.Subscription
 	// 判断subscription id是否存在
-	err := s.db.Table("t_cl_subscription").Where("subscription_id = ?", subscription.SubscriptionId).First(&s_).Error
+	err := s.db.Model(models.Subscription{}).Where("subscription_id = ?", subscription.SubscriptionId).First(&s_).Error
 	// 不存在则创建
 	if err == gorm.ErrRecordNotFound {
 		err = s.db.Create(&subscription).Error
@@ -36,23 +38,23 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 	return errors.New(fmt.Sprintf("subscription :%d already exists", subscription.SubscriptionId))
 }
 
+// GetSubscriptionOverview get subscription overview(subscription nums, consumer nums, balances)
+// * param userId: user id.
+// * param network: Test or Main
+// * return overview.
 func (s *ChainLinkSubscriptionService) GetSubscriptionOverview(userId uint, network string) (*vo.ChainLinkSubscriptionOverview, error) {
-
 	var vo *vo.ChainLinkSubscriptionOverview
-
 	sql := "select COUNT(*) as total_subscription, SUM(consumers) as total_consumers, SUM(balance) as total_balance from t_cl_subscription where user_id = ? AND network = ?"
 	if err := s.db.Raw(sql, userId, network).Scan(&vo).Error; err != nil {
-		log.Println(err)
 		return nil, err
 	}
-
 	return vo, nil
 }
 
 // GetSINAByUserId ge t Subscription id,name,balance by user_id
 func (s *ChainLinkSubscriptionService) GetSINAByUserId(UserId uint) []*vo.ChainLinkSINA {
 	var sinas []*vo.ChainLinkSINA
-	s.db.Table("t_cl_subscription").
+	s.db.Model(models.Subscription{}).
 		Select("subscription_id", "name", "balance").
 		Where("user_id = ?", UserId).
 		Scan(&sinas)
@@ -60,18 +62,19 @@ func (s *ChainLinkSubscriptionService) GetSINAByUserId(UserId uint) []*vo.ChainL
 	return sinas
 }
 
+// AddConsumer add consumer for subscription
+// param subscriptionId: which subscription
+// param consumerNums: the subscription new consumer nums
 func (s *ChainLinkSubscriptionService) AddConsumer(subscriptionId uint, consumerNums int64) error {
-	s.db.Table("t_cl_subscription").Where("subscription_id = ?", subscriptionId).Update("consumers", consumerNums)
+	s.db.Model(models.Subscription{}).Where("subscription_id = ?", subscriptionId).Update("consumers", consumerNums)
 	return nil
 }
 
 func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subscription, error) {
 	var subscription *models.Subscription
-
-	if err := s.db.Table("t_cl_subscription").Where("subscription_id = ?", id).First(&subscription).Error; err != nil {
+	if err := s.db.Model(models.Subscription{}).Where("subscription_id = ?", id).First(&subscription).Error; err != nil {
 		return nil, err
 	}
-
 	return subscription, nil
 }
 
@@ -80,12 +83,10 @@ func (s *ChainLinkSubscriptionService) AddFundsForSubscription(subscriptionId in
 	if err != nil {
 		return err
 	}
-
-	err = s.db.Table("t_cl_subscription").Where("subscription_id = ?", subscriptionId).Update("balance", subscription.Balance+incr).Error
+	err = s.db.Model(models.Subscription{}).Where("subscription_id = ?", subscriptionId).Update("balance", subscription.Balance+incr).Error
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
