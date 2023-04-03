@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/models"
@@ -17,11 +19,16 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 	}
 }
 
-func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionId int) int64 {
-	c.db.Create(&consumer)
-	var count int64
-	c.db.Table("t_cl_consumer").Where("subscription_id = ?", subscriptionId).Count(&count)
-	return count
+func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionId int) (int64, error) {
+	var isExited int64
+	err := c.db.Model(models.Consumer{}).Where("subscription_id = ? AND consumer_address = ?", subscriptionId, consumer.ConsumerAddress).Count(&isExited).Error
+	if err == gorm.ErrRecordNotFound {
+		c.db.Create(&consumer)
+		var count int64
+		c.db.Model(models.Consumer{}).Where("subscription_id = ?", subscriptionId).Count(&count)
+		return count, nil
+	}
+	return 0, errors.New(fmt.Sprintf("consumer address :%s already exists in subscription id: %d", consumer.ConsumerAddress, subscriptionId))
 }
 
 // ConsumerList get consumer list
