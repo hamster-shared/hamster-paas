@@ -26,4 +26,5 @@ type ChainLinkRequestExecParam struct {
 	Args            string `json:"args"`
 	TransactionTx   string `json:"transactionTx"`
 	RequestName     string `json:"requestName"`
+	RequestId       string `json:"requestId"`
 }

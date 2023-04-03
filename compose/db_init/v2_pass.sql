@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS t_cl_request_execute (
     id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     subscription_id BIGINT NOT NULL,
     request_name   varchar(50) NOT NULL,
+    request_id     varchar(200) NOT NULL,
     consumer_address char(42) NOT NULL,
     secretsloction tinyint NOT NULL,
     secret_url varchar(100) NOT NULL,
