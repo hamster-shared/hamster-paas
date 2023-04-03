@@ -34,7 +34,7 @@ func NewLogParser() (*LogParser, error) {
 	// 读取 nginx 日志文件
 	file, err := os.Open(os.Getenv("NGINX_LOG_PATH"))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("open file: %s, error: %s", os.Getenv("NGINX_LOG_PATH"), err)
 	}
 	defer file.Close()
 

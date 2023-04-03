@@ -12,6 +12,7 @@ type HandlerServer struct {
 	chainLinkSubscriptionService service.ChainLinkSubscriptionService
 	chainLinkConsumerService     service.ChainLinkConsumerService
 	chainLinkDepositService      service.ChainLinkDepositService
+	chainlinkDashboardService    service.ChainLinkDashboardService
 }
 
 func NewHandlerServer() *HandlerServer {
@@ -42,6 +43,12 @@ func NewHandlerServer() *HandlerServer {
 		panic(fmt.Sprintf("application get chainLink deposit service failed: %s", err.Error()))
 	}
 	handlerServer.chainLinkDepositService = *chainLinkDepositService
+	chainLinkDashboardService, err := application.GetBean[*service.ChainLinkDashboardService]("chainLinkDashboardService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get chainLink dashboard service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get chainLink dashboard service failed: %s", err.Error()))
+	}
+	handlerServer.chainlinkDashboardService = *chainLinkDashboardService
 
 	return &handlerServer
 }

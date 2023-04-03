@@ -55,6 +55,9 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.DELETE("/subscription/consumer/:id", h.handlerServer.deleteConsumer)
 	chainLinkApi.GET("/subscription/expenses", h.handlerServer.chainLinkExpenseList)
 	chainLinkApi.GET("/subscription/deposits", h.handlerServer.depositList)
+	chainLinkApi.GET("/dashboard/all", h.handlerServer.dashboardAll)
+	chainLinkApi.GET("/dashboard/rpc", h.handlerServer.dashboardRpc)
+	chainLinkApi.GET("/dashboard/oracle", h.handlerServer.dashboardOracle)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

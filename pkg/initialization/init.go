@@ -35,10 +35,11 @@ func Init() {
 	application.SetBean[*service.ChainLinkConsumerService]("chainLinkConsumerService", chainLinkConsumerService)
 	chainLinkDepositService := service.NewChainLinkDepositService(db)
 	application.SetBean[*service.ChainLinkDepositService]("chainLinkDepositService", chainLinkDepositService)
+	application.SetBean("chainLinkDashboardService", service.NewChainLinkDashboardService(db))
+	nginx_log_parse.InitMeiliSearch()
 	httpHandler := handler.NewHandlerServer()
 	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
 	if err != nil {
 		panic(err)
 	}
-	nginx_log_parse.InitMeiliSearch()
 }

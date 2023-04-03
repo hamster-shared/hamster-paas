@@ -1,6 +1,20 @@
 version: '3.1'
 
 services:
+  paas:
+    container_name: hamster-paas
+    image: hamster-paas
+    restart: always
+    ports:
+      - 9898:9898
+    volumes:
+      - ./.docker.env:/.env
+    env_file:
+      - ./.docker.env
+    depends_on:
+      - db
+      - nginx
+      - meilisearch
 
   db:
     container_name: hamster-paas-db

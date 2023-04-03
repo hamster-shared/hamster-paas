@@ -55,7 +55,7 @@ func (a *Account) DeleteApp(id int) error {
 	return DeleteApp(a.Address, id)
 }
 
-func (a *Account) GetApps(p Pagination) ([]*App, Pagination, error) {
+func (a *Account) GetApps(p Pagination) ([]*ApiResponseApp, Pagination, error) {
 	return GetApps(a.Address, p)
 }
 

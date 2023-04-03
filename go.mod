@@ -3,8 +3,8 @@ module hamster-paas
 go 1.20
 
 require (
-	github.com/davecgh/go-spew v1.1.1
 	github.com/gin-gonic/gin v1.9.0
+	github.com/google/uuid v1.3.0
 	github.com/jinzhu/copier v0.3.5
 	github.com/joho/godotenv v1.5.1
 	github.com/meilisearch/meilisearch-go v0.23.1
