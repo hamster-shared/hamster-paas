@@ -32,12 +32,12 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 }
 
 // ConsumerList get consumer list
-func (c *ChainLinkConsumerService) ConsumerList(page, size int, userId int64) (*vo.ChainLinkConsumerPage, error) {
+func (c *ChainLinkConsumerService) ConsumerList(subscriptionId, page, size int, userId int64) (*vo.ChainLinkConsumerPage, error) {
 	var total int64
 	var chainLinkConsumerPage vo.ChainLinkConsumerPage
 	var chainLinkConsumerList []models.Consumer
 	var chainLinkConsumerVoList []vo.ChainLinkConsumerVo
-	tx := c.db.Model(models.Consumer{}).Where("user_id = ?", userId)
+	tx := c.db.Model(models.Consumer{}).Where("user_id = ? and subscription_id", userId, subscriptionId)
 	result := tx.Order("created DESC").Offset((page - 1) * size).Limit(size).Find(&chainLinkConsumerList).Offset(-1).Limit(-1).Count(&total)
 	if result.Error != nil {
 		return &chainLinkConsumerPage, result.Error
@@ -51,8 +51,23 @@ func (c *ChainLinkConsumerService) ConsumerList(page, size int, userId int64) (*
 }
 
 // DeleteConsumer delete consumer by id
-func (c *ChainLinkConsumerService) DeleteConsumer(id int64) error {
-	err := c.db.Debug().Where("id = ? ", id).Delete(&models.Consumer{}).Error
+func (c *ChainLinkConsumerService) DeleteConsumer(subscriptionId, consumerId int64) error {
+	err := c.db.Transaction(func(tx *gorm.DB) error {
+		if err := c.db.Debug().Where("id = ? and subscription_id = ", consumerId, subscriptionId).Delete(&models.Consumer{}).Error; err != nil {
+			return err
+		}
+		var subscriptionData models.Subscription
+		if err := c.db.Where("id = ?", subscriptionId).First(&subscriptionData).Error; err != nil {
+			return err
+		}
+		if subscriptionData.Consumers > 0 {
+			subscriptionData.Consumers = subscriptionData.Consumers - 1
+			if err := c.db.Save(&subscriptionData).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
 		return err
 	}

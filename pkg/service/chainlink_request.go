@@ -89,12 +89,12 @@ func (r *ChainLinkRequestService) GetRequestTemplateScript(id int64) (string, er
 	return template.Script, nil
 }
 
-func (r *ChainLinkRequestService) ChainLinkExpenseList(page, size int, userId int64, requestName string) (*vo.ChainLinkExpensePage, error) {
+func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, size int, userId int64, requestName string) (*vo.ChainLinkExpensePage, error) {
 	var total int64
 	var chainLinkExpensePage vo.ChainLinkExpensePage
 	var chainLinkExpenseList []models.RequestExecute
 	var chainLinkExpenseVoList []vo.ChainLinkExpenseVo
-	tx := r.db.Model(models.RequestExecute{}).Where("user_id = ?", userId)
+	tx := r.db.Model(models.RequestExecute{}).Where("user_id = ? and subscription_id = ?", userId, subscriptionId)
 	if requestName != "" {
 		tx = tx.Where("request_name like ? ", "%"+requestName+"%")
 	}

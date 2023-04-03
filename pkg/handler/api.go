@@ -48,13 +48,13 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/subscription/:id", h.handlerServer.subscriptionDetail)
 	chainLinkApi.GET("/subscriptions", h.handlerServer.subscriptionList)
 	chainLinkApi.PUT("/subscriptions/add-found", h.handlerServer.addFound) //TODO... 对什么资源充值
-	//chain link consumer
+	//// chain link consumer
 	chainLinkApi.POST("//consumer/add-consumer", h.handlerServer.createConsumer)      //TODO...
 	chainLinkApi.GET("/consumer/get-avail-consumer", h.handlerServer.getConsumerList) //TODO...
-	chainLinkApi.GET("/subscription/consumers", h.handlerServer.consumerList)
-	chainLinkApi.DELETE("/subscription/consumer/:id", h.handlerServer.deleteConsumer)
-	chainLinkApi.GET("/subscription/expenses", h.handlerServer.chainLinkExpenseList)
-	chainLinkApi.GET("/subscription/deposits", h.handlerServer.depositList)
+	chainLinkApi.GET("/subscription/:id/consumers", h.handlerServer.consumerList)
+	chainLinkApi.DELETE("/subscription/:id/consumer/:consumerId", h.handlerServer.deleteConsumer)
+	chainLinkApi.GET("/subscription/:id/expenses", h.handlerServer.chainLinkExpenseList)
+	chainLinkApi.GET("/subscription/:id/deposits", h.handlerServer.depositList)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }
