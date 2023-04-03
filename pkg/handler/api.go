@@ -43,14 +43,14 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/request/templates/:id", h.handlerServer.getRequestTemplateScript)
 	// chain link subscription
 	chainLinkApi.GET("/subscription/overview", h.handlerServer.getSubscriptionOverview)
-	chainLinkApi.GET("/subscription/sina", h.handlerServer.getSINA)
-	chainLinkApi.POST("/subscription/create-subscription", h.handlerServer.createSubscription)
+	chainLinkApi.GET("/subscription/sina", h.handlerServer.getSINA)                            //TODO ... delete
+	chainLinkApi.POST("/subscription/create-subscription", h.handlerServer.createSubscription) //TODO... RESTFUL 规范
 	chainLinkApi.GET("/subscription/:id", h.handlerServer.subscriptionDetail)
 	chainLinkApi.GET("/subscriptions", h.handlerServer.subscriptionList)
-	chainLinkApi.PUT("/subscriptions/add-found", h.handlerServer.addFound)
+	chainLinkApi.PUT("/subscriptions/add-found", h.handlerServer.addFound) //TODO... 对什么资源充值
 	//chain link consumer
-	chainLinkApi.POST("/consumer/add-consumer", h.handlerServer.createConsumer)
-	chainLinkApi.GET("/consumer/get-avail-consumer", h.handlerServer.getConsumerList)
+	chainLinkApi.POST("//consumer/add-consumer", h.handlerServer.createConsumer)      //TODO...
+	chainLinkApi.GET("/consumer/get-avail-consumer", h.handlerServer.getConsumerList) //TODO...
 	chainLinkApi.GET("/subscription/consumers", h.handlerServer.consumerList)
 	chainLinkApi.DELETE("/subscription/consumer/:id", h.handlerServer.deleteConsumer)
 	chainLinkApi.GET("/subscription/expenses", h.handlerServer.chainLinkExpenseList)
