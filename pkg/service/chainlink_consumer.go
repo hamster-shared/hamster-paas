@@ -19,16 +19,27 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 	}
 }
 
-func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionId int) (int64, error) {
-	var isExited int64
-	err := c.db.Model(models.Consumer{}).Where("subscription_id = ? AND consumer_address = ?", subscriptionId, consumer.ConsumerAddress).Count(&isExited).Error
-	if err == gorm.ErrRecordNotFound {
-		c.db.Create(&consumer)
-		var count int64
-		c.db.Model(models.Consumer{}).Where("subscription_id = ?", subscriptionId).Count(&count)
-		return count, nil
+// CreateConsumer
+// @param consumer中的subscription id指的是subscription表主键id
+// TODO: 需要监听链更改状态
+func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService) error {
+	// 确认subscription存在
+	subscription, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
+	if err != nil {
+		return err
 	}
-	return 0, errors.New(fmt.Sprintf("consumer address :%s already exists in subscription id: %d", consumer.ConsumerAddress, subscriptionId))
+	var isExited int64
+	// 判断该consumer是否存在
+	c.db.Model(models.Consumer{}).Where("subscription_id = ? AND consumer_address = ? AND (status = ? OR status = ?)", consumer.SubscriptionId, consumer.TransactionTx, "Success", "Pending").Count(&isExited)
+	if isExited > 0 {
+		return errors.New(fmt.Sprintf("consumer address :%s already exists in subscription id: %d", consumer.ConsumerAddress, consumer.SubscriptionId))
+	}
+	// 不存在就创建
+	c.db.Create(&consumer)
+	// 更新subscription的consumer数量
+	subscriptionService.UpdateConsumerNums(uint(consumer.SubscriptionId), int64(subscription.Consumers+1))
+	// TODO 异步监听，更改状态
+	return nil
 }
 
 // ConsumerList get consumer list

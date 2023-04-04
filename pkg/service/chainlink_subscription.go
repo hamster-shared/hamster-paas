@@ -64,17 +64,17 @@ func (s *ChainLinkSubscriptionService) GetSINAByUserId(UserId uint) []*vo.ChainL
 	return sinas
 }
 
-// AddConsumer add consumer for subscription
+// UpdateConsumerNums update consumer for subscription
 // param subscriptionId: which subscription
 // param consumerNums: the subscription new consumer nums
-func (s *ChainLinkSubscriptionService) AddConsumer(subscriptionId uint, consumerNums int64) error {
-	s.db.Model(models.Subscription{}).Where("subscription_id = ?", subscriptionId).Update("consumers", consumerNums)
+func (s *ChainLinkSubscriptionService) UpdateConsumerNums(subscriptionId uint, newConsumerNums int64) error {
+	s.db.Model(models.Subscription{}).Where("id = ?", subscriptionId).Update("consumers", newConsumerNums)
 	return nil
 }
 
 func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subscription, error) {
 	var subscription *models.Subscription
-	if err := s.db.Model(models.Subscription{}).Where("subscription_id = ?", id).First(&subscription).Error; err != nil {
+	if err := s.db.Model(models.Subscription{}).Where("id = ? AND status = ?", id, "Success").First(&subscription).Error; err != nil {
 		return nil, err
 	}
 	return subscription, nil
