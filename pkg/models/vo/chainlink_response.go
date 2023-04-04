@@ -24,9 +24,8 @@ type RequestTemplateVo struct {
 }
 
 type ChainLinkSubscriptionOverview struct {
-	TotalSubscription int     `json:"total_subscription"`
-	TotalConsumers    int     `json:"total_consumers"`
-	TotalBalance      float64 `json:"total_balance"`
+	TotalSubscription int `json:"total_subscription"`
+	TotalConsumers    int `json:"total_consumers"`
 }
 
 type ChainLinkSINA struct {
