@@ -38,7 +38,12 @@ func (d *ChainLinkDepositService) DepositList(subscriptionId, page, size int, us
 }
 
 // AddDeposit TODO 需要异步检查
-func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddress string, incr float64, transactionTx string, userId int64) error {
+func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddress string, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService) error {
+	// 检查该id是否存在且success
+	_, err := subscriptionService.GetSubscriptionById(int(subscriptionId))
+	if err != nil {
+		return err
+	}
 	var deposit models.Deposit
 	deposit.SubscriptionId = subscriptionId
 	deposit.Created = time.Now()

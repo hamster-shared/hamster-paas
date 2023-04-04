@@ -32,7 +32,7 @@ func (h *HandlerServer) addFound(c *gin.Context) {
 		return
 	}
 	transactionTx := c.PostForm("transactionTx")
-	err = h.chainLinkDepositService.AddDeposit(int64(subscriptionId), consumerAddress, incr, transactionTx, int64(user.Id))
+	err = h.chainLinkDepositService.AddDeposit(int64(subscriptionId), consumerAddress, incr, transactionTx, int64(user.Id), h.chainLinkSubscriptionService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("addFound failed: %s", err.Error()))
 		Fail(err.Error(), c)
