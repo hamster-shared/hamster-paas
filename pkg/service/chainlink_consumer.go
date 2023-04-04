@@ -24,7 +24,7 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 // TODO: 需要监听链更改状态
 func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService) error {
 	// 确认subscription存在
-	subscription, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
+	_, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
 	if err != nil {
 		return err
 	}
@@ -36,9 +36,10 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	}
 	// 不存在就创建
 	c.db.Create(&consumer)
-	// 更新subscription的consumer数量
-	subscriptionService.UpdateConsumerNums(uint(consumer.SubscriptionId), int64(subscription.Consumers+1))
 	// TODO 异步监听，更改状态
+	// 事务成功才增加subscription的consumer数量
+	// 更新subscription的consumer数量
+	//subscriptionService.UpdateConsumerNums(uint(consumer.SubscriptionId), int64(subscription.Consumers+1))
 	return nil
 }
 
