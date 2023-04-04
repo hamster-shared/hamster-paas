@@ -26,8 +26,8 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 	var s_ *models.Subscription
 	// 判断是否用已经成功的订阅存在
 	err := s.db.Model(models.Subscription{}).Where(
-		"subscription_id = ? AND chain = ? AND network = ? AND status = ?",
-		subscription.SubscriptionId, subscription.Chain, subscription.Network, "Success").First(&s_).Error
+		"chain_subscription_id = ? AND chain = ? AND network = ? AND (status = ? OR status = ?)",
+		subscription.ChainSubscriptionId, subscription.Chain, subscription.Network, "Success", "Pending").First(&s_).Error
 	// 判断订阅是否存在
 	if err == gorm.ErrRecordNotFound {
 		err = s.db.Create(&subscription).Error
@@ -37,7 +37,7 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 		return nil
 	}
 	// 订阅已存在，返回错误
-	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists", subscription.Chain, subscription.Network, subscription.SubscriptionId))
+	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists, status: %s", subscription.Chain, subscription.Network, subscription.ChainSubscriptionId, subscription.Status))
 }
 
 // GetSubscriptionOverview get subscription overview(subscription nums, consumer nums, balances)
@@ -64,17 +64,17 @@ func (s *ChainLinkSubscriptionService) GetSINAByUserId(UserId uint) []*vo.ChainL
 	return sinas
 }
 
-// AddConsumer add consumer for subscription
+// UpdateConsumerNums update consumer for subscription
 // param subscriptionId: which subscription
 // param consumerNums: the subscription new consumer nums
-func (s *ChainLinkSubscriptionService) AddConsumer(subscriptionId uint, consumerNums int64) error {
-	s.db.Model(models.Subscription{}).Where("subscription_id = ?", subscriptionId).Update("consumers", consumerNums)
+func (s *ChainLinkSubscriptionService) UpdateConsumerNums(subscriptionId uint, newConsumerNums int64) error {
+	s.db.Model(models.Subscription{}).Where("id = ?", subscriptionId).Update("consumers", newConsumerNums)
 	return nil
 }
 
 func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subscription, error) {
 	var subscription *models.Subscription
-	if err := s.db.Model(models.Subscription{}).Where("subscription_id = ?", id).First(&subscription).Error; err != nil {
+	if err := s.db.Model(models.Subscription{}).Where("id = ? AND status = ?", id, "Success").First(&subscription).Error; err != nil {
 		return nil, err
 	}
 	return subscription, nil
