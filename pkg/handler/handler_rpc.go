@@ -1,10 +1,7 @@
 package handler
 
 import (
-	"hamster-paas/pkg/models"
-	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,12 +21,7 @@ func (h *HandlerServer) rpcOverview(c *gin.Context) {
 }
 
 func (h *HandlerServer) rpcGetChains(c *gin.Context) {
-	user, ok := c.Get("user")
-	if !ok {
-		Fail("do not have token", c)
-		return
-	}
-	chains, err := h.rpcService.GetChains(user.(aline.User))
+	chains, err := h.rpcService.GetChains()
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -51,99 +43,49 @@ func (h *HandlerServer) rpcGetNetworks(c *gin.Context) {
 	Success(networks, c)
 }
 
-// func (h *HandlerServer) rpcGetApps(c *gin.Context) {
-// 	user, ok := c.Get("user")
-// 	if !ok {
-// 		Fail("do not have token", c)
-// 		return
-// 	}
-// 	chains, err := h.rpcService.GetApps(user.(aline.User))
-// 	if err != nil {
-// 		Fail(err.Error(), c)
-// 		return
-// 	}
-// 	Success(chains, c)
-
-// }
-
-func rpcGetApps(c *gin.Context) {
-	account, ok := c.Params.Get("account")
+func (h *HandlerServer) rpcChainDetail(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	chain, ok := c.Params.Get("chain")
 	if !ok {
 		Fail("invalid params", c)
 		return
 	}
-	a, err := models.GetRpcAccount(account)
+	chainDetail, err := h.rpcService.ChainDetail(user.(aline.User), chain)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	apps, err := a.GetApps()
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-	Success(apps, c)
+	Success(chainDetail, c)
 }
 
-func rpcCreateApp(c *gin.Context) {
-	var appParams vo.ApiRequestRpcCreateApp
-	if err := c.ShouldBindJSON(&appParams); err != nil {
-		Fail("invalid params", c)
+func (h *HandlerServer) rpcRequestLog(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
 		return
 	}
-	chain, err := models.ParseChainType(appParams.Chain)
-	if err != nil {
-		Fail("invalid params for chain", c)
-		return
-	}
-	network, err := models.ParseNetworkType(appParams.Network)
-	if err != nil {
-		Fail("invalid params for network", c)
-		return
-	}
-	a, err := models.GetRpcAccount(appParams.Account)
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-	app, err := a.CreateApp(appParams.Name, appParams.Description, chain, network)
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-	Success(app, c)
-}
-
-func rpcDeleteApp(c *gin.Context) {
-	account, ok := c.Params.Get("account")
+	appKey, ok := c.Params.Get("appKey")
 	if !ok {
 		Fail("invalid params", c)
 		return
 	}
-	appId, ok := c.Params.Get("appId")
-	if !ok {
-		Fail("invalid params", c)
-		return
+	var page, size string
+	page = c.Query("page")
+	if page == "" {
+		page = "1"
 	}
-	appIdInt, err := strconv.Atoi(appId)
-	if err != nil {
-		Fail("invalid params", c)
-		return
+	size = c.Query("size")
+	if size == "" {
+		size = "10"
 	}
-	a, err := models.GetRpcAccount(account)
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-	_, err = a.GetApp(appIdInt)
+	requestLog, p, err := h.rpcService.AppRequestLog(user.(aline.User), appKey, page, size)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	err = a.DeleteApp(appIdInt)
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-	Success("", c)
+	SuccessWithPagination(requestLog, *p, c)
 }

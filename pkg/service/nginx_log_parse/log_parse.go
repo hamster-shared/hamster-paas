@@ -40,6 +40,10 @@ func NewLogParser() (*LogParser, error) {
 
 	// 创建索引
 	index := p.client.Index("nginx")
+	// 美丽搜索默认是容错的，我们不需要这个功能，禁用它
+	index.UpdateTypoTolerance(&meilisearch.TypoTolerance{
+		Enabled: false,
+	})
 	// 添加文档，主键为 request_id
 	taskInfo, err := index.AddDocumentsNdjsonFromReader(file, "request_id")
 	if err != nil {

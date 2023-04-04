@@ -1,7 +1,9 @@
 package service
 
 import (
+	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
+	"hamster-paas/pkg/utils/logger"
 
 	"gorm.io/gorm"
 )
@@ -17,14 +19,13 @@ func NewChainLinkDashboardService(db *gorm.DB) *ChainLinkDashboardService {
 }
 
 type DashboardAll struct {
-	Rpc     *DashboardRpc     `json:"rpc"`
+	Rpc     []models.RpcChain `json:"rpc"`
 	Oracle  *DashboardOracle  `json:"oracle"`
 	Storage *DashboardStorage `json:"storage"`
 	Graph   *DashboardGraph   `json:"graph"`
 	Zkp     *DashboardZkp     `json:"zkp"`
 	Others  *DashboardOthers  `json:"others"`
 }
-type DashboardRpc struct{}
 type DashboardOracle struct{}
 type DashboardStorage struct{}
 type DashboardGraph struct{}
@@ -33,7 +34,7 @@ type DashboardOthers struct{}
 
 func (c *ChainLinkDashboardService) GetDashboardAll(user aline.User) *DashboardAll {
 	all := &DashboardAll{}
-	all.Rpc = c.getMyDashboardRpc(user)
+	all.Rpc = c.GetDashboardRpc(user)
 	all.Oracle = c.getMyDashboardOracle(user)
 	all.Storage = c.getMyDashboardStorage(user)
 	all.Graph = c.getMyDashboardGraph(user)
@@ -42,20 +43,20 @@ func (c *ChainLinkDashboardService) GetDashboardAll(user aline.User) *DashboardA
 	return all
 }
 
-func (c *ChainLinkDashboardService) GetDashboardOracle(user aline.User) *DashboardOracle {
+func (c *ChainLinkDashboardService) GetDashboardOracle(user aline.User) {
 
-	return &DashboardOracle{}
 }
 
-func (c *ChainLinkDashboardService) GetDashboardRpc(user aline.User) *DashboardRpc {
-
-	return &DashboardRpc{}
+func (c *ChainLinkDashboardService) GetDashboardRpc(user aline.User) []models.RpcChain {
+	s := NewRpcService(c.db)
+	chains, err := s.GetChains()
+	if err != nil {
+		logger.Errorf("GetDashboardRpc error: %s", err)
+		return []models.RpcChain{}
+	}
+	return chains
 }
 
-func (c *ChainLinkDashboardService) getMyDashboardRpc(user aline.User) *DashboardRpc {
-
-	return &DashboardRpc{}
-}
 func (c *ChainLinkDashboardService) getMyDashboardOracle(user aline.User) *DashboardOracle {
 
 	return &DashboardOracle{}

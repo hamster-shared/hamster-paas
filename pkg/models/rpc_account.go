@@ -74,21 +74,35 @@ func (a *RpcAccount) CreateAppByString(name, description, chain, network string)
 }
 
 func (a *RpcAccount) CreateApp(name, description string, chain ChainType, network NetworkType) (*RpcApp, error) {
-	return NewApp(a.Address, name, description, chain, network)
+	return newApp(a.Address, name, description, chain, network)
 }
 
 func (a *RpcAccount) DeleteApp(id int) error {
-	return DeleteApp(a.Address, id)
+	return deleteApp(a.Address, id)
 }
 
 func (a *RpcAccount) GetApps() ([]*ApiResponseRpcApp, error) {
-	return GetApps(a.Address)
+	return getApps(a.Address)
 }
 
 func (a *RpcAccount) GetApp(id int) (*RpcApp, error) {
-	return GetApp(a.Address, id)
+	return getApp(a.Address, id)
 }
 
 func (a *RpcAccount) GetAppByName(name string) (*ApiResponseRpcApp, error) {
-	return GetAppByName(a.Address, name)
+	return getAppByName(a.Address, name)
+}
+
+func (a *RpcAccount) GetAppByChainNetwork(chain ChainType, network NetworkType) (*ApiResponseRpcApp, error) {
+	return getAppByChainNetwork(a.Address, chain, network)
+}
+
+func (a *RpcAccount) GetAppRequestLogs(appKey string, p Pagination) ([]*RpcAppRequestLog, *Pagination, error) {
+	if !accountHaveApp(a.Address, appKey) {
+		return nil, &p, fmt.Errorf("account have not app %s", appKey)
+	}
+	rpcApp := &RpcApp{
+		ApiKey: appKey,
+	}
+	return rpcApp.getAppRequestLogs(appKey, p)
 }

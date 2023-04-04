@@ -27,14 +27,11 @@ func (h *HttpServer) StartHttpServer() error {
 
 	rpcApi := r.Group("/api/rpc")
 	rpcApi.Use(h.handlerServer.Authorize())
-
-	rpcApi.GET("/apps/:account", rpcGetApps)
-	rpcApi.POST("/app", rpcCreateApp)
-	rpcApi.DELETE("/app/:account/:appId", rpcDeleteApp)
-
 	rpcApi.GET("/chains", h.handlerServer.rpcGetChains)
 	rpcApi.GET("/networks/:chain", h.handlerServer.rpcGetNetworks)
 	rpcApi.GET("/overview", h.handlerServer.rpcOverview)
+	rpcApi.GET("/chain/:chain",h.handlerServer.rpcChainDetail)
+	rpcApi.GET("/request-log/:appKey",h.handlerServer.rpcRequestLog)
 
 	chainLinkApi := r.Group("/api/chainlink")
 	chainLinkApi.Use(h.handlerServer.Authorize())
@@ -59,8 +56,6 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/subscription/:id/expenses", h.handlerServer.chainLinkExpenseList)
 	chainLinkApi.GET("/subscription/:id/deposits", h.handlerServer.depositList)
 	chainLinkApi.GET("/dashboard/all", h.handlerServer.dashboardAll)
-	chainLinkApi.GET("/dashboard/rpc", h.handlerServer.dashboardRpc)
-	chainLinkApi.GET("/dashboard/oracle", h.handlerServer.dashboardOracle)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

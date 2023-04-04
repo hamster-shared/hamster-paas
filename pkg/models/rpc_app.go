@@ -32,7 +32,7 @@ type ApiResponseRpcApp struct {
 
 type RpcCodeExample struct{}
 
-func NewApp(account string, name, description string, chain ChainType, network NetworkType) (*RpcApp, error) {
+func newApp(account string, name, description string, chain ChainType, network NetworkType) (*RpcApp, error) {
 	a := &RpcApp{
 		Account:     account,
 		Name:        name,
@@ -43,6 +43,16 @@ func NewApp(account string, name, description string, chain ChainType, network N
 	err := a.generateKey()
 	if err != nil {
 		return nil, err
+	}
+	httpLink, wsLink, err := GetChainLink(chain, network)
+	if err != nil {
+		logger.Errorf("failed to get chain link: %s", err)
+	}
+	if httpLink != "" {
+		a.HttpLink = fmt.Sprintf("%s/%s", httpLink, a.ApiKey)
+	}
+	if wsLink != "" {
+		a.WebsocketLink = fmt.Sprintf("%s/%s", wsLink, a.ApiKey)
 	}
 	return a, a.save()
 }
@@ -65,7 +75,7 @@ func (a *RpcApp) save() error {
 	return db.Model(&RpcApp{}).Create(a).Error
 }
 
-func DeleteApp(account string, id int) error {
+func deleteApp(account string, id int) error {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
 		return err
@@ -73,7 +83,7 @@ func DeleteApp(account string, id int) error {
 	return db.Delete(&RpcApp{}, "account = ? AND app_id = ?", account, id).Error
 }
 
-func GetApp(account string, id int) (*RpcApp, error) {
+func getApp(account string, id int) (*RpcApp, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
 		return nil, err
@@ -85,7 +95,7 @@ func GetApp(account string, id int) (*RpcApp, error) {
 	return &app, nil
 }
 
-func GetAppByName(account string, name string) (*ApiResponseRpcApp, error) {
+func getAppByName(account string, name string) (*ApiResponseRpcApp, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
 		return nil, err
@@ -107,7 +117,41 @@ func GetAppByName(account string, name string) (*ApiResponseRpcApp, error) {
 	return &appResp, nil
 }
 
-func GetApps(account string) ([]*ApiResponseRpcApp, error) {
+func accountHaveApp(account string, appKey string) bool {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return false
+	}
+	var app RpcApp
+	if err := db.Where("account = ? AND api_key = ?", account, appKey).First(&app).Error; err != nil {
+		return false
+	}
+	return true
+}
+
+func getAppByChainNetwork(account string, chain ChainType, network NetworkType) (*ApiResponseRpcApp, error) {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return nil, err
+	}
+	var app RpcApp
+	if err := db.Where("account = ? AND chain = ? AND network = ?", account, chain.String(), network.String()).First(&app).Error; err != nil {
+		return nil, err
+	}
+	var appResp ApiResponseRpcApp
+	appResp.RpcApp = &app
+	appResp.TotalRequestsToday, err = app.getTotalRequestsTodayWithStatusAll()
+	if err != nil {
+		logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
+	}
+	appResp.DaylyRequests7Days, err = app.getDaylyRequests7DaysWithStatusAll()
+	if err != nil {
+		logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
+	}
+	return &appResp, nil
+}
+
+func getApps(account string) ([]*ApiResponseRpcApp, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
 		return nil, err
@@ -235,4 +279,77 @@ func (a *RpcApp) getDaylyRequests7DaysWithStatusAll() ([]int64, error) {
 }
 func (a *RpcApp) getDaylyRequests7DaysWithStatusIsNot200() ([]int64, error) {
 	return a.getDaylyRequests7Days("status != 200")
+}
+
+type RpcAppRequestLog struct {
+	Number        int64  `json:"number"`
+	Time          string `json:"time"`
+	RequestEvent  string `json:"request_event"`
+	RequestResult string `json:"request_result"`
+}
+
+type NginxAccessLog struct {
+	Msec                   float64 `json:"msec"`
+	Connection             string  `json:"connection"`
+	ConnectionRequests     string  `json:"connection_requests"`
+	Pid                    string  `json:"pid"`
+	RequestID              string  `json:"request_id"`
+	RequestLength          string  `json:"request_length"`
+	RemoteAddr             string  `json:"remote_addr"`
+	RemoteUser             string  `json:"remote_user"`
+	RemotePort             string  `json:"remote_port"`
+	TimeLocal              string  `json:"time_local"`
+	TimeISO8601            string  `json:"time_iso8601"`
+	Request                string  `json:"request"`
+	RequestURI             string  `json:"request_uri"`
+	Args                   string  `json:"args"`
+	Status                 string  `json:"status"`
+	BodyBytesSent          string  `json:"body_bytes_sent"`
+	BytesSent              string  `json:"bytes_sent"`
+	HttpReferer            string  `json:"http_referer"`
+	HttpUserAgent          string  `json:"http_user_agent"`
+	HttpXForwardedFor      string  `json:"http_x_forwarded_for"`
+	HttpHost               string  `json:"http_host"`
+	ServerName             string  `json:"server_name"`
+	RequestTime            string  `json:"request_time"`
+	Upstream               string  `json:"upstream"`
+	UpstreamConnectTime    string  `json:"upstream_connect_time"`
+	UpstreamHeaderTime     string  `json:"upstream_header_time"`
+	UpstreamResponseTime   string  `json:"upstream_response_time"`
+	UpstreamResponseLength string  `json:"upstream_response_length"`
+	UpstreamCacheStatus    string  `json:"upstream_cache_status"`
+	SslProtocol            string  `json:"ssl_protocol"`
+	SslCipher              string  `json:"ssl_cipher"`
+	Scheme                 string  `json:"scheme"`
+	RequestMethod          string  `json:"request_method"`
+	ServerProtocol         string  `json:"server_protocol"`
+	Pipe                   string  `json:"pipe"`
+	GzipRatio              string  `json:"gzip_ratio"`
+	HttpCFRay              string  `json:"http_cf_ray"`
+}
+
+func (a *RpcApp) getAppRequestLogs(appKey string, p Pagination) ([]*RpcAppRequestLog, *Pagination, error) {
+	meili, err := application.GetBean[*meilisearch.Client]("meiliSearch")
+	if err != nil {
+		return nil, &p, err
+	}
+	resp, err := meili.Index("nginx").Search(a.ApiKey, &meilisearch.SearchRequest{
+		Limit:  int64(p.Size),
+		Offset: int64(p.Size * (p.Page - 1)),
+		Sort:   []string{"msec:desc"},
+	})
+	if err != nil {
+		return nil, &p, err
+	}
+	p.Total = resp.EstimatedTotalHits
+	var logs []*RpcAppRequestLog
+	for i := range resp.Hits {
+		log := &RpcAppRequestLog{}
+		log.Number = resp.EstimatedTotalHits - int64(i) - int64(p.Size*(p.Page-1))
+		log.Time = resp.Hits[i].(map[string]any)["time_iso8601"].(string)
+		log.RequestEvent = resp.Hits[i].(map[string]any)["args"].(string)
+		log.RequestResult = resp.Hits[i].(map[string]any)["status"].(string)
+		logs = append(logs, log)
+	}
+	return logs, &p, nil
 }

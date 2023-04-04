@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/models"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Result struct {
@@ -44,10 +45,17 @@ func Failed(code int, message string, c *gin.Context) {
 }
 
 func SuccessWithPagination(data any, p models.Pagination, c *gin.Context) {
-	c.JSON(http.StatusOK, models.ApiResponse{
+	c.JSON(http.StatusOK, ApiResponse{
 		Code:       0,
 		Message:    "success",
 		Data:       data,
 		Pagination: p,
 	})
+}
+
+type ApiResponse struct {
+	Code       int               `json:"code"`
+	Message    string            `json:"message"`
+	Data       any               `json:"data,omitempty"`
+	Pagination models.Pagination `json:"pagination,omitempty"`
 }
