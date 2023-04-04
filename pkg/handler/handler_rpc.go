@@ -3,13 +3,33 @@ package handler
 import (
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"hamster-paas/pkg/rpc/aline"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
-func rpcGetChains(c *gin.Context) {
-	chains, err := models.GetChains()
+func (h *HandlerServer) rpcOverview(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	appResp, err := h.rpcService.Overview(user.(aline.User))
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	Success(appResp, c)
+}
+
+func (h *HandlerServer) rpcGetChains(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	chains, err := h.rpcService.GetChains(user.(aline.User))
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -17,19 +37,13 @@ func rpcGetChains(c *gin.Context) {
 	Success(chains, c)
 }
 
-func rpcGetNetworks(c *gin.Context) {
-	// 路径参数
+func (h *HandlerServer) rpcGetNetworks(c *gin.Context) {
 	chain, ok := c.Params.Get("chain")
 	if !ok {
 		Fail("invalid params", c)
 		return
 	}
-	chainType, err := models.ParseChainType(chain)
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-	networks, err := models.GetNetworks(chainType)
+	networks, err := h.rpcService.GetNetworks(chain)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -37,38 +51,38 @@ func rpcGetNetworks(c *gin.Context) {
 	Success(networks, c)
 }
 
+// func (h *HandlerServer) rpcGetApps(c *gin.Context) {
+// 	user, ok := c.Get("user")
+// 	if !ok {
+// 		Fail("do not have token", c)
+// 		return
+// 	}
+// 	chains, err := h.rpcService.GetApps(user.(aline.User))
+// 	if err != nil {
+// 		Fail(err.Error(), c)
+// 		return
+// 	}
+// 	Success(chains, c)
+
+// }
+
 func rpcGetApps(c *gin.Context) {
 	account, ok := c.Params.Get("account")
 	if !ok {
 		Fail("invalid params", c)
 		return
 	}
-	page := c.Query("page")
-	size := c.Query("size")
-	pageInt, err := strconv.Atoi(page)
-	if err != nil {
-		Fail("invalid params", c)
-		return
-	}
-	sizeInt, err := strconv.Atoi(size)
-	if err != nil {
-		Fail("invalid params", c)
-		return
-	}
-	var pagination models.Pagination
-	pagination.Page = pageInt
-	pagination.Size = sizeInt
-	a, err := models.GetAccount(account)
+	a, err := models.GetRpcAccount(account)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	apps, p, err := a.GetApps(pagination)
+	apps, err := a.GetApps()
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	SuccessWithPagination(apps, p, c)
+	Success(apps, c)
 }
 
 func rpcCreateApp(c *gin.Context) {
@@ -87,7 +101,7 @@ func rpcCreateApp(c *gin.Context) {
 		Fail("invalid params for network", c)
 		return
 	}
-	a, err := models.GetAccount(appParams.Account)
+	a, err := models.GetRpcAccount(appParams.Account)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -116,7 +130,7 @@ func rpcDeleteApp(c *gin.Context) {
 		Fail("invalid params", c)
 		return
 	}
-	a, err := models.GetAccount(account)
+	a, err := models.GetRpcAccount(account)
 	if err != nil {
 		Fail(err.Error(), c)
 		return

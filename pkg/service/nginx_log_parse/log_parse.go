@@ -26,7 +26,7 @@ func InitMeiliSearch() {
 func NewLogParser() (*LogParser, error) {
 	// 创建一个美丽搜索客户端
 	client := meilisearch.NewClient(meilisearch.ClientConfig{
-		Host: "http://localhost:7700",
+		Host: os.Getenv("MEILI_SEARCH"),
 	})
 	p := &LogParser{
 		client: client,

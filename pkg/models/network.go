@@ -19,6 +19,10 @@ func (n NetworkType) String() string {
 	return [...]string{"Mainnet", "TestnetGoerli", "TestnetRopsten", "TestnetKovan", "TestnetRinkeby"}[n]
 }
 
+func (n NetworkType) StringLower() string {
+	return [...]string{"mainnet", "testnet-goerli", "testnet-ropsten", "testnet-kovan", "testnet-rinkeby"}[n]
+}
+
 func ParseNetworkType(s string) (NetworkType, error) {
 	switch strings.ToLower(s) {
 	case "mainnet":

@@ -13,6 +13,7 @@ type HandlerServer struct {
 	chainLinkConsumerService     service.ChainLinkConsumerService
 	chainLinkDepositService      service.ChainLinkDepositService
 	chainlinkDashboardService    service.ChainLinkDashboardService
+	rpcService                   service.RpcService
 }
 
 func NewHandlerServer() *HandlerServer {
@@ -49,6 +50,12 @@ func NewHandlerServer() *HandlerServer {
 		panic(fmt.Sprintf("application get chainLink dashboard service failed: %s", err.Error()))
 	}
 	handlerServer.chainlinkDashboardService = *chainLinkDashboardService
+	rpcService, err := application.GetBean[*service.RpcService]("rpcService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get rpc service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get rpc service failed: %s", err.Error()))
+	}
+	handlerServer.rpcService = *rpcService
 
 	return &handlerServer
 }

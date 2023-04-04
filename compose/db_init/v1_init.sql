@@ -1,18 +1,16 @@
-DROP TABLE IF EXISTS t_cl_account;
-CREATE TABLE IF NOT EXISTS t_cl_account (
+DROP TABLE IF EXISTS t_cl_rpc_account;
+CREATE TABLE IF NOT EXISTS t_cl_rpc_account (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     address varchar(255) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    app_id_index int NOT NULL
+    deleted_at TIMESTAMP NULL DEFAULT NULL
 );
-DROP TABLE IF EXISTS t_cl_app;
-CREATE TABLE IF NOT EXISTS t_cl_app (
+DROP TABLE IF EXISTS t_cl_rpc_app;
+CREATE TABLE IF NOT EXISTS t_cl_rpc_app (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    app_id int NOT NULL,
-    account varchar(50) NOT NULL,
-    name varchar(50) NOT NULL,
+    account varchar(255) NOT NULL,
+    name varchar(255) NOT NULL,
     description varchar(255) NOT NULL,
     chain varchar(50) NOT NULL,
     network varchar(50) NOT NULL,
@@ -22,10 +20,10 @@ CREATE TABLE IF NOT EXISTS t_cl_app (
     deleted_at TIMESTAMP NULL DEFAULT NULL,
     http_link varchar(100) NOT NULL,
     websocket_link varchar(100) NOT NULL,
-    UNIQUE KEY (app_id, account)
+    UNIQUE KEY (account, name)
 );
-DROP TABLE IF EXISTS t_cl_chain;
-CREATE TABLE IF NOT EXISTS t_cl_chain (
+DROP TABLE IF EXISTS t_cl_rpc_chain;
+CREATE TABLE IF NOT EXISTS t_cl_rpc_chain (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     name varchar(50) NOT NULL,
     network varchar(50) NOT NULL,
@@ -35,7 +33,7 @@ CREATE TABLE IF NOT EXISTS t_cl_chain (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL DEFAULT NULL
 );
-INSERT INTO t_cl_chain (name, network, http_address, websocket_address)
+INSERT INTO t_cl_rpc_chain (name, network, http_address, websocket_address)
 VALUES (
         'ethereum',
         'mainnet',
@@ -73,7 +71,7 @@ VALUES (
         ''
     ),
     (
-        'starkware',
+        'starknet',
         'mainnet',
         'https://starkware.api.hamsternet.io',
         ''
@@ -96,8 +94,8 @@ VALUES (
         'https://polygon.api.hamsternet.io',
         ''
     );
-DROP TABLE IF EXISTS t_cl_code_examples;
-CREATE TABLE IF NOT EXISTS t_cl_code_examples (
+DROP TABLE IF EXISTS t_cl_rpc_code_examples;
+CREATE TABLE IF NOT EXISTS t_cl_rpc_code_examples (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

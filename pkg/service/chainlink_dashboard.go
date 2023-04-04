@@ -75,3 +75,7 @@ func (c *ChainLinkDashboardService) getMyDashboardZkp(user aline.User) *Dashboar
 func (c *ChainLinkDashboardService) getMyDashboardOthers(user aline.User) *DashboardOthers {
 	return &DashboardOthers{}
 }
+
+func (c *ChainLinkDashboardService) getRpcOveriew(user aline.User) *DashboardOthers {
+	return &DashboardOthers{}
+}

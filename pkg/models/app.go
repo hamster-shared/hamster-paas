@@ -12,8 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type App struct {
-	AppId         int    `json:"app_id"`
+type RpcApp struct {
 	Account       string `json:"account"`
 	Name          string `json:"name"`
 	Description   string `json:"description"`
@@ -24,19 +23,18 @@ type App struct {
 	WebsocketLink string `json:"websocket_link"`
 }
 
-type ApiResponseApp struct {
-	*App
-	CodeExamples       []CodeExample `json:"code_examples"`
-	TotalRequestsToday int64         `json:"total_requests_today"`
-	DaylyRequests7Days []int64       `json:"dayly_requests_7days"`
+type ApiResponseRpcApp struct {
+	*RpcApp
+	CodeExamples       []RpcCodeExample `json:"code_examples"`
+	TotalRequestsToday int64            `json:"total_requests_today"`
+	DaylyRequests7Days []int64          `json:"dayly_requests_7days"`
 }
 
-type CodeExample struct{}
+type RpcCodeExample struct{}
 
-func NewApp(account string, id int, name, description string, chain ChainType, network NetworkType) (*App, error) {
-	a := &App{
+func NewApp(account string, name, description string, chain ChainType, network NetworkType) (*RpcApp, error) {
+	a := &RpcApp{
 		Account:     account,
-		AppId:       id,
 		Name:        name,
 		Description: description,
 		Chain:       chain.String(),
@@ -49,25 +47,22 @@ func NewApp(account string, id int, name, description string, chain ChainType, n
 	return a, a.save()
 }
 
-func (a *App) generateKey() error {
+func (a *RpcApp) generateKey() error {
 	newUUID, err := uuid.NewRandom()
 	if err != nil {
 		return err
 	}
-	str := fmt.Sprintf("%s-%d-%s", a.Account, a.AppId, newUUID.String())
+	str := fmt.Sprintf("%s-%s-%s", a.Account, a.Name, newUUID.String())
 	a.ApiKey = fmt.Sprintf("%x", md5.Sum([]byte(str)))
 	return nil
 }
 
-func (a *App) save() error {
+func (a *RpcApp) save() error {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
 		return err
 	}
-	if err := db.Model(&Account{}).Where("address = ?", a.Account).Update("app_id_index", gorm.Expr("app_id_index + ?", 1)).Error; err != nil {
-		return err
-	}
-	return db.Model(&App{}).Create(a).Error
+	return db.Model(&RpcApp{}).Create(a).Error
 }
 
 func DeleteApp(account string, id int) error {
@@ -75,37 +70,56 @@ func DeleteApp(account string, id int) error {
 	if err != nil {
 		return err
 	}
-	return db.Delete(&App{}, "account = ? AND app_id = ?", account, id).Error
+	return db.Delete(&RpcApp{}, "account = ? AND app_id = ?", account, id).Error
 }
 
-func GetApp(account string, id int) (*App, error) {
+func GetApp(account string, id int) (*RpcApp, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
 		return nil, err
 	}
-	var app App
+	var app RpcApp
 	if err := db.Where("account = ? AND app_id = ?", account, id).First(&app).Error; err != nil {
 		return nil, err
 	}
 	return &app, nil
 }
 
-func GetApps(account string, pagination Pagination) ([]*ApiResponseApp, Pagination, error) {
+func GetAppByName(account string, name string) (*ApiResponseRpcApp, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
-		return nil, pagination, err
+		return nil, err
 	}
-	var apps []*App
-	limit := pagination.Size
-	offset := (pagination.Page - 1) * pagination.Size
-	if err := db.Model(&App{}).Where("account = ?", account).Order("app_id desc").Limit(limit).Offset(offset).Find(&apps).Error; err != nil {
-		return nil, pagination, err
+	var app RpcApp
+	if err := db.Where("account = ? AND name = ?", account, name).First(&app).Error; err != nil {
+		return nil, err
 	}
-	db.Model(&App{}).Where("account = ?", account).Count(&pagination.Total)
-	var apiResponseApps []*ApiResponseApp
+	var appResp ApiResponseRpcApp
+	appResp.RpcApp = &app
+	appResp.TotalRequestsToday, err = app.getTotalRequestsTodayWithStatusAll()
+	if err != nil {
+		logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
+	}
+	appResp.DaylyRequests7Days, err = app.getDaylyRequests7DaysWithStatusAll()
+	if err != nil {
+		logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
+	}
+	return &appResp, nil
+}
+
+func GetApps(account string) ([]*ApiResponseRpcApp, error) {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return nil, err
+	}
+	var apps []*RpcApp
+	if err := db.Model(&RpcApp{}).Where("account = ?", account).Order("id desc").Find(&apps).Error; err != nil {
+		return nil, err
+	}
+	var apiResponseApps []*ApiResponseRpcApp
 	for i := range apps {
-		var appResp ApiResponseApp
-		appResp.App = apps[i]
+		var appResp ApiResponseRpcApp
+		appResp.RpcApp = apps[i]
 		appResp.TotalRequestsToday, err = apps[i].getTotalRequestsTodayWithStatusAll()
 		if err != nil {
 			logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
@@ -116,11 +130,11 @@ func GetApps(account string, pagination Pagination) ([]*ApiResponseApp, Paginati
 		}
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
-	return apiResponseApps, pagination, nil
+	return apiResponseApps, nil
 }
 
 // 获取总请求数
-func (a *App) getTotalRequests(statusFilter string) (int64, error) {
+func (a *RpcApp) getTotalRequests(statusFilter string) (int64, error) {
 	meili, err := application.GetBean[*meilisearch.Client]("meiliSearch")
 	if err != nil {
 		return 0, err
@@ -135,22 +149,22 @@ func (a *App) getTotalRequests(statusFilter string) (int64, error) {
 }
 
 // 获取总请求数状态为 200
-func (a *App) getTotalRequests200() (int64, error) {
+func (a *RpcApp) getTotalRequests200() (int64, error) {
 	return a.getTotalRequests("status = 200")
 }
 
 // 获取总请求数状态为全部
-func (a *App) getTotalRequestsAll() (int64, error) {
+func (a *RpcApp) getTotalRequestsAll() (int64, error) {
 	return a.getTotalRequests("")
 }
 
 // 获取总请求数状态不为 200
-func (a *App) getTotalRequestsNot200() (int64, error) {
+func (a *RpcApp) getTotalRequestsNot200() (int64, error) {
 	return a.getTotalRequests("status != 200")
 }
 
 // 获取今日请求数
-func (a *App) getTotalRequestsToday(statusFilter string) (int64, error) {
+func (a *RpcApp) getTotalRequestsToday(statusFilter string) (int64, error) {
 	meili, err := application.GetBean[*meilisearch.Client]("meiliSearch")
 	if err != nil {
 		logger.Errorf("getTotalRequestsToday err: %s", err)
@@ -168,20 +182,20 @@ func (a *App) getTotalRequestsToday(statusFilter string) (int64, error) {
 	return resp.EstimatedTotalHits, nil
 }
 
-func (a *App) getTotalRequestsTodayWithStatus200() (int64, error) {
+func (a *RpcApp) getTotalRequestsTodayWithStatus200() (int64, error) {
 	return a.getTotalRequestsToday("status = 200")
 }
 
-func (a *App) getTotalRequestsTodayWithStatusAll() (int64, error) {
+func (a *RpcApp) getTotalRequestsTodayWithStatusAll() (int64, error) {
 	return a.getTotalRequestsToday("")
 }
 
-func (a *App) getTotalRequestsTodayWithStatusIsNot200() (int64, error) {
+func (a *RpcApp) getTotalRequestsTodayWithStatusIsNot200() (int64, error) {
 	return a.getTotalRequestsToday("status != 200")
 }
 
 // 获取 7 天请求数
-func (a *App) getDaylyRequests7Days(statusFilter string) ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7Days(statusFilter string) ([]int64, error) {
 	meili, err := application.GetBean[*meilisearch.Client]("meiliSearch")
 	if err != nil {
 		return nil, err
@@ -200,18 +214,25 @@ func (a *App) getDaylyRequests7Days(statusFilter string) ([]int64, error) {
 		}
 		result = append(result, resp.EstimatedTotalHits)
 	}
-	return result, nil
+	return reverse(result), nil
+}
+
+func reverse(in []int64) []int64 {
+	for i, j := 0, len(in)-1; i < j; i, j = i+1, j-1 {
+		in[i], in[j] = in[j], in[i]
+	}
+	return in
 }
 
 // 获取 7 天请求数状态码为 200 的数据
-func (a *App) getDaylyRequests7DaysWithStatus200() ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7DaysWithStatus200() ([]int64, error) {
 	return a.getDaylyRequests7Days("status = 200")
 }
 
 // 获取 7 天请求数所有状态
-func (a *App) getDaylyRequests7DaysWithStatusAll() ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7DaysWithStatusAll() ([]int64, error) {
 	return a.getDaylyRequests7Days("")
 }
-func (a *App) getDaylyRequests7DaysWithStatusIsNot200() ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7DaysWithStatusIsNot200() ([]int64, error) {
 	return a.getDaylyRequests7Days("status != 200")
 }

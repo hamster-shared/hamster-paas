@@ -26,11 +26,15 @@ func (h *HttpServer) StartHttpServer() error {
 	r := gin.New()
 
 	rpcApi := r.Group("/api/rpc")
-	rpcApi.GET("/chains", rpcGetChains)
-	rpcApi.GET("/networks/:chain", rpcGetNetworks)
+	rpcApi.Use(h.handlerServer.Authorize())
+
 	rpcApi.GET("/apps/:account", rpcGetApps)
 	rpcApi.POST("/app", rpcCreateApp)
 	rpcApi.DELETE("/app/:account/:appId", rpcDeleteApp)
+
+	rpcApi.GET("/chains", h.handlerServer.rpcGetChains)
+	rpcApi.GET("/networks/:chain", h.handlerServer.rpcGetNetworks)
+	rpcApi.GET("/overview", h.handlerServer.rpcOverview)
 
 	chainLinkApi := r.Group("/api/chainlink")
 	chainLinkApi.Use(h.handlerServer.Authorize())

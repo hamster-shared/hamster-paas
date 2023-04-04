@@ -26,34 +26,8 @@ func (c ChainType) String() string {
 	return [...]string{"Ethereum", "Bsc", "Polygon", "Avalanche", "Optimism", "StarkNet", "Near", "Aptos", "Sui"}[c]
 }
 
-func GetChains() ([]Chain, error) {
-	db, err := application.GetBean[*gorm.DB]("db")
-	if err != nil {
-		return nil, err
-	}
-	var chains []Chain
-	err = db.Model(&Chain{}).Find(&chains).Error
-	if err != nil {
-		return nil, err
-	}
-	return chains, nil
-}
-
-func GetNetworks(chain ChainType) ([]string, error) {
-	db, err := application.GetBean[*gorm.DB]("db")
-	if err != nil {
-		return nil, err
-	}
-	var chains []Chain
-	err = db.Model(&Chain{}).Where("name = ?", chain.String()).Find(&chains).Error
-	if err != nil {
-		return nil, err
-	}
-	var networks []string
-	for _, chain := range chains {
-		networks = append(networks, chain.Network)
-	}
-	return networks, nil
+func (c ChainType) StringLower() string {
+	return [...]string{"ethereum", "bsc", "polygon", "avalanche", "optimism", "starknet", "near", "aptos", "sui"}[c]
 }
 
 func ParseChainType(s string) (ChainType, error) {
@@ -81,7 +55,7 @@ func ParseChainType(s string) (ChainType, error) {
 	}
 }
 
-type Chain struct {
+type RpcChain struct {
 	Name             string `json:"name"`
 	Network          string `json:"network"`
 	HttpAddress      string `json:"http_address"`
@@ -93,10 +67,23 @@ func GetChainLink(chain ChainType, network NetworkType) (string, string, error) 
 	if err != nil {
 		return "", "", err
 	}
-	var c Chain
-	err = db.Model(&Chain{}).Where("name = ? and network = ?", chain.String(), network.String()).First(&c).Error
+	var c RpcChain
+	err = db.Model(&RpcChain{}).Where("name = ? and network = ?", chain.String(), network.String()).First(&c).Error
 	if err != nil {
 		return "", "", err
 	}
 	return c.HttpAddress, c.WebsocketAddress, nil
+}
+
+func (c ChainType) HaveNetwork(network NetworkType) bool {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return false
+	}
+	var count int64
+	err = db.Model(&RpcChain{}).Where("name = ? and network = ?", c.StringLower(), network.StringLower()).Count(&count).Error
+	if err != nil {
+		return false
+	}
+	return count > 0
 }
