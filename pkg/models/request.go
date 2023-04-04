@@ -22,6 +22,7 @@ type Request struct {
 type RequestExecute struct {
 	Id              int64     `json:"id"`
 	SubscriptionId  int64     `gorm:"column:subscription_id" json:"subscriptionId"`
+	RequestId       string    `json:"requestId"`
 	ConsumerAddress string    `gorm:"column:consumer_address" json:"consumerAddress"`
 	Secretsloction  int8      `json:"secretsloction"`
 	SecretUrl       string    `json:"secretUrl"`

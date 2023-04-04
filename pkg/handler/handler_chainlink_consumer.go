@@ -109,6 +109,13 @@ func (h *HandlerServer) getConsumerList(c *gin.Context) {
 }
 
 func (h *HandlerServer) consumerList(gin *gin.Context) {
+	idStr := gin.Param("id")
+	subscriptionId, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("subscription id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
 	pageStr := gin.DefaultQuery("page", "1")
 	sizeStr := gin.DefaultQuery("size", "10")
 	page, err := strconv.Atoi(pageStr)
@@ -128,7 +135,7 @@ func (h *HandlerServer) consumerList(gin *gin.Context) {
 		return
 	}
 	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkConsumerService.ConsumerList(page, size, int64(user.Id))
+	data, err := h.chainLinkConsumerService.ConsumerList(subscriptionId, page, size, int64(user.Id))
 	if err != nil {
 		logger.Error(fmt.Sprintf("query consumer list failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -139,13 +146,20 @@ func (h *HandlerServer) consumerList(gin *gin.Context) {
 
 func (h *HandlerServer) deleteConsumer(gin *gin.Context) {
 	idStr := gin.Param("id")
-	id, err := strconv.Atoi(idStr)
+	subscriptionId, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("chainlink subscription id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	consumerIdStr := gin.Param("consumerId")
+	consumerId, err := strconv.Atoi(consumerIdStr)
 	if err != nil {
 		logger.Error(fmt.Sprintf("chainlink consumer id question: %s", err.Error()))
 		Fail(err.Error(), gin)
 		return
 	}
-	err = h.chainLinkConsumerService.DeleteConsumer(int64(id))
+	err = h.chainLinkConsumerService.DeleteConsumer(int64(subscriptionId), int64(consumerId))
 	if err != nil {
 		logger.Error(fmt.Sprintf("delete consumer failed: %s", err.Error()))
 		Fail(err.Error(), gin)

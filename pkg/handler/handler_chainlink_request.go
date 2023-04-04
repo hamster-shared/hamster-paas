@@ -131,6 +131,13 @@ func (h *HandlerServer) getRequestTemplateScript(gin *gin.Context) {
 }
 
 func (h *HandlerServer) chainLinkExpenseList(gin *gin.Context) {
+	idStr := gin.Param("id")
+	subscriptionId, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("subscription id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
 	pageStr := gin.DefaultQuery("page", "1")
 	sizeStr := gin.DefaultQuery("size", "10")
 	requestName := gin.Query("requestName")
@@ -151,7 +158,7 @@ func (h *HandlerServer) chainLinkExpenseList(gin *gin.Context) {
 		return
 	}
 	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkRequestService.ChainLinkExpenseList(page, size, int64(user.Id), requestName)
+	data, err := h.chainLinkRequestService.ChainLinkExpenseList(subscriptionId, page, size, int64(user.Id), requestName)
 	if err != nil {
 		logger.Error(fmt.Sprintf("query chain link expense list failed: %s", err.Error()))
 		Fail(err.Error(), gin)
