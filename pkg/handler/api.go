@@ -30,8 +30,8 @@ func (h *HttpServer) StartHttpServer() error {
 	rpcApi.GET("/chains", h.handlerServer.rpcGetChains)
 	rpcApi.GET("/networks/:chain", h.handlerServer.rpcGetNetworks)
 	rpcApi.GET("/overview", h.handlerServer.rpcOverview)
-	rpcApi.GET("/chain/:chain",h.handlerServer.rpcChainDetail)
-	rpcApi.GET("/request-log/:appKey",h.handlerServer.rpcRequestLog)
+	rpcApi.GET("/chain/:chain", h.handlerServer.rpcChainDetail)
+	rpcApi.GET("/request-log/:appKey", h.handlerServer.rpcRequestLog)
 
 	chainLinkApi := r.Group("/api/chainlink")
 	chainLinkApi.Use(h.handlerServer.Authorize())
@@ -50,7 +50,8 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.POST("/subscription/:id/found", h.handlerServer.addFound)
 	//// chain link consumer
 	chainLinkApi.POST("/consumer", h.handlerServer.createConsumer)
-	chainLinkApi.GET("/consumer/:Warehouse/hamster-consumer", h.handlerServer.getHamsterConsumerList)
+	chainLinkApi.GET("/consumer/hamster-consumer", h.handlerServer.getHamsterConsumerList)
+	chainLinkApi.GET("/consumer/projects", h.handlerServer.getProjectList)
 	chainLinkApi.GET("/subscription/:id/consumers", h.handlerServer.consumerList)
 	chainLinkApi.DELETE("/subscription/:id/consumer/:consumerId", h.handlerServer.deleteConsumer)
 	chainLinkApi.GET("/subscription/:id/expenses", h.handlerServer.chainLinkExpenseList)

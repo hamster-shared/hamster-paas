@@ -38,4 +38,6 @@ func (a *AlineRpc) Init() {
 	application.SetBean[*gorm.DB]("alineDb", alineDb)
 	userService := NewUserService()
 	application.SetBean[*UserService]("userService", userService)
+	projectService := NewAlineProjectService(alineDb)
+	application.SetBean[*ProjectService]("projectService", projectService)
 }

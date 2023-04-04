@@ -70,9 +70,9 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 	pagination.Page = pageInt
 	pagination.Size = sizeInt
 
-	warehouse := c.Param("Warehouse")
-	if warehouse == "" {
-		Fail("invalid params: Warehouse", c)
+	projectId := c.Param("projectId")
+	if projectId == "" {
+		Fail("invalid params: projectId", c)
 		return
 	}
 	chain := c.Query("chain")
