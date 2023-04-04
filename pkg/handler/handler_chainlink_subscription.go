@@ -63,16 +63,16 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 	admin := c.PostForm("admin")
 	transactionTx := c.PostForm("transactionTx")
 	s := models.Subscription{
-		SubscriptionId: uint(subscriptionId),
-		Name:           name,
-		Created:        time.Now(),
-		Chain:          chain,
-		Network:        network,
-		Consumers:      0,
-		UserId:         uint64(user.Id),
-		Admin:          admin,
-		TransactionTx:  transactionTx,
-		Status:         "Pending",
+		ChainSubscriptionId: uint(subscriptionId),
+		Name:                name,
+		Created:             time.Now(),
+		Chain:               chain,
+		Network:             network,
+		Consumers:           0,
+		UserId:              uint64(user.Id),
+		Admin:               admin,
+		TransactionTx:       transactionTx,
+		Status:              "Pending",
 	}
 	if err := h.chainLinkSubscriptionService.CreateSubscription(s); err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))

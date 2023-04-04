@@ -10,13 +10,12 @@ CREATE TABLE IF NOT EXISTS t_user_middleware (
 DROP TABLE IF EXISTS t_cl_subscription;
 CREATE TABLE IF NOT EXISTS t_cl_subscription (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    subscription_id BIGINT,
+    chain_subscription_id BIGINT,
     name VARCHAR(50) NOT NULL,
     created DATETIME NOT NULL,
     chain varchar(50) NOT NULL,
     network varchar(50) NOT NULL,
     consumers TINYINT(3) NOT NULL,
-    balance decimal(18, 6) NOT NULL,
     user_id bigint NOT NULL,
     admin char(42) NOT NULL,
     transaction_tx char(42) NOT NULL,

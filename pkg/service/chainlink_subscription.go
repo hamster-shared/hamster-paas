@@ -26,8 +26,8 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 	var s_ *models.Subscription
 	// 判断是否用已经成功的订阅存在
 	err := s.db.Model(models.Subscription{}).Where(
-		"subscription_id = ? AND chain = ? AND network = ? AND status = ?",
-		subscription.SubscriptionId, subscription.Chain, subscription.Network, "Success").First(&s_).Error
+		"chain_subscription_id = ? AND chain = ? AND network = ? AND (status = ? OR status = ?)",
+		subscription.ChainSubscriptionId, subscription.Chain, subscription.Network, "Success", "Pending").First(&s_).Error
 	// 判断订阅是否存在
 	if err == gorm.ErrRecordNotFound {
 		err = s.db.Create(&subscription).Error
@@ -37,7 +37,7 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 		return nil
 	}
 	// 订阅已存在，返回错误
-	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists", subscription.Chain, subscription.Network, subscription.SubscriptionId))
+	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists, status: %s", subscription.Chain, subscription.Network, subscription.ChainSubscriptionId, subscription.Status))
 }
 
 // GetSubscriptionOverview get subscription overview(subscription nums, consumer nums, balances)
