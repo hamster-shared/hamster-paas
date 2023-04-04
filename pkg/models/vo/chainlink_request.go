@@ -19,12 +19,13 @@ type ChainLinkConsumers struct {
 }
 
 type ChainLinkRequestExecParam struct {
-	SubscriptionId  int64  `json:"subscriptionId"`
-	ConsumerAddress string `json:"consumerAddress"`
-	Secretsloction  int8   `json:"secretsloction"`
-	SecretUrl       string `json:"secretUrl"`
-	Args            string `json:"args"`
-	TransactionTx   string `json:"transactionTx"`
-	RequestName     string `json:"requestName"`
-	RequestId       string `json:"requestId"`
+	SubscriptionId  int64   `json:"subscriptionId"`
+	ConsumerAddress string  `json:"consumerAddress"`
+	Secretsloction  int8    `json:"secretsloction"`
+	SecretUrl       string  `json:"secretUrl"`
+	Args            string  `json:"args"`
+	TransactionTx   string  `json:"transactionTx"`
+	RequestName     string  `json:"requestName"`
+	RequestId       string  `json:"requestId"`
+	Amount          float64 `json:"amount"`
 }
