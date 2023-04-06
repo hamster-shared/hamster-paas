@@ -78,6 +78,6 @@ Content-Type: application/json
 Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
 
 ### query consumers list
-GET http://localhost:9898/api/chainlink/subscription/consumers?page=1&size=10
+GET http://localhost:9898/api/chainlink/subscription/1/consumers?page=1&size=10
 Content-Type: application/json
 Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/

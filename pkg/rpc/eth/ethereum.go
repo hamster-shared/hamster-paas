@@ -2,11 +2,15 @@ package eth
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/utils/logger"
+	"math/big"
 )
 
 type EthNetwork string
@@ -33,6 +37,7 @@ func init() {
 
 type EthereumProxy interface {
 	TransactionByHash(hash string) (tx *types.Transaction, isPending bool, err error)
+	WatchRequestResult(contractAddress string) error
 }
 
 type EthereumProxyFactory struct {
@@ -84,4 +89,47 @@ func (rpc *RPCEthereumProxy) TransactionByHash(hash string) (tx *types.Transacti
 	ctx := context.Background()
 	hashTx := common.Hash(common.FromHex(hash))
 	return rpc.client.TransactionByHash(ctx, hashTx)
+}
+
+func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
+	// 要监听的合约地址
+	oracleContractAddress := common.HexToAddress(contractAddress)
+	// 监听请求结果
+	query := ethereum.FilterQuery{
+		Addresses: []common.Address{oracleContractAddress},
+		Topics: [][]common.Hash{
+			{
+				// 用于监听请求结果的事件签名
+				common.HexToHash(consts.EventSignature),
+			},
+		},
+	}
+	logs := make(chan types.Log)
+	sub, err := rpc.client.SubscribeFilterLogs(context.Background(), query, logs)
+	if err != nil {
+		//logger.Error("Error subscribing to logs:", err)
+		fmt.Println("--------------------------")
+		fmt.Println(err.Error())
+		fmt.Println("--------------------------")
+		return err
+	}
+
+	// 处理请求结果
+	for {
+		select {
+		case err := <-sub.Err():
+			fmt.Println("Error in subscription:", err)
+			return errors.New(fmt.Sprintf("Error in subscription:%s", err.Error()))
+		case log := <-logs:
+			fmt.Println("++++++++++++++++++++++++++++++++++++++")
+			fmt.Println(log)
+			fmt.Println("++++++++++++++++++++++++++++++++++++++")
+			// 比对 Request ID
+			requestID := log.Topics[1].Big()
+			expectedRequestID := big.NewInt(123)
+			if requestID.Cmp(expectedRequestID) == 0 {
+				fmt.Println("data")
+			}
+		}
+	}
 }

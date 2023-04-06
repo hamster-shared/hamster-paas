@@ -36,3 +36,8 @@ func GetTransaction(network EthNetwork, tx string) error {
 	fmt.Println(isPending)
 	return err
 }
+
+func TestWatchRequestRes(t *testing.T) {
+	client := NewEthereumProxyFactory().GetClient(HAMSTER)
+	client.WatchRequestResult("0xeEA29418eBF986D5Fd18afA0005efEAC2069ac98")
+}

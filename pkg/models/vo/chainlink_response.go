@@ -50,6 +50,7 @@ type ChainLinkSubscriptionVo struct {
 	Consumers     int8      `json:"consumers"`
 	Balance       float64   `json:"balance"`
 	TransactionTx string    `json:"transactionTx"`
+	Admin         string    `json:"admin"`
 	Status        string    `json:"status"`
 }
 

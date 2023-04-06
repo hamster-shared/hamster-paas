@@ -49,7 +49,7 @@ func (c *ChainLinkConsumerService) ConsumerList(subscriptionId, page, size int, 
 	var chainLinkConsumerPage vo.ChainLinkConsumerPage
 	var chainLinkConsumerList []models.Consumer
 	var chainLinkConsumerVoList []vo.ChainLinkConsumerVo
-	tx := c.db.Model(models.Consumer{}).Where("user_id = ? and subscription_id", userId, subscriptionId)
+	tx := c.db.Model(models.Consumer{}).Where("user_id = ? and subscription_id = ?", userId, subscriptionId)
 	result := tx.Order("created DESC").Offset((page - 1) * size).Limit(size).Find(&chainLinkConsumerList).Offset(-1).Limit(-1).Count(&total)
 	if result.Error != nil {
 		return &chainLinkConsumerPage, result.Error
