@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"time"
@@ -51,7 +52,7 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddre
 	deposit.Amount = incr
 	deposit.TransactionTx = transactionTx
 	deposit.UserId = uint64(userId)
-	deposit.Status = "Pending"
+	deposit.Status = consts.PENDING
 	d.db.Model(models.Deposit{}).Create(&deposit)
 	// TODO 异步检查
 	return nil

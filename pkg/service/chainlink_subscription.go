@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 )
@@ -27,7 +28,7 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 	// 判断是否用已经成功的订阅存在
 	err := s.db.Model(models.Subscription{}).Where(
 		"chain_subscription_id = ? AND chain = ? AND network = ? AND (status = ? OR status = ?)",
-		subscription.ChainSubscriptionId, subscription.Chain, subscription.Network, "Success", "Pending").First(&s_).Error
+		subscription.ChainSubscriptionId, subscription.Chain, subscription.Network, consts.PENDING, consts.SUCCESS).First(&s_).Error
 	// 判断订阅是否存在
 	if err == gorm.ErrRecordNotFound {
 		err = s.db.Create(&subscription).Error
@@ -47,7 +48,7 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 func (s *ChainLinkSubscriptionService) GetSubscriptionOverview(userId uint, network string) (*vo.ChainLinkSubscriptionOverview, error) {
 	var vo *vo.ChainLinkSubscriptionOverview
 	sql := "select COUNT(*) as total_subscription, SUM(consumers) as total_consumers from t_cl_subscription where user_id = ? AND network = ? AND status = ?"
-	if err := s.db.Raw(sql, userId, network, "Success").Scan(&vo).Error; err != nil {
+	if err := s.db.Raw(sql, userId, network, consts.SUCCESS).Scan(&vo).Error; err != nil {
 		return nil, err
 	}
 	return vo, nil
@@ -74,7 +75,7 @@ func (s *ChainLinkSubscriptionService) UpdateConsumerNums(subscriptionId uint, n
 
 func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subscription, error) {
 	var subscription *models.Subscription
-	if err := s.db.Model(models.Subscription{}).Where("id = ? AND status = ?", id, "Success").First(&subscription).Error; err != nil {
+	if err := s.db.Model(models.Subscription{}).Where("id = ? AND status = ?", id, consts.SUCCESS).First(&subscription).Error; err != nil {
 		return nil, err
 	}
 	return subscription, nil
