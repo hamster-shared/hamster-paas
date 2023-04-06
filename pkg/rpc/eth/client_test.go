@@ -28,9 +28,7 @@ func TestGetTransaction(t *testing.T) {
 }
 
 func GetTransaction(network EthNetwork, tx string) error {
-
 	client := NewEthereumProxyFactory().GetClient(network)
-
 	transaction, isPending, err := client.TransactionByHash(tx)
 	fmt.Println(transaction.Hash(), transaction.Gas())
 	fmt.Println(isPending)
@@ -40,4 +38,13 @@ func GetTransaction(network EthNetwork, tx string) error {
 func TestWatchRequestRes(t *testing.T) {
 	client := NewEthereumProxyFactory().GetClient(HAMSTER)
 	client.WatchRequestResult("0xeEA29418eBF986D5Fd18afA0005efEAC2069ac98")
+}
+
+func TestGetReceipt(t *testing.T) {
+	client := NewEthereumProxyFactory().GetClient(GOERLI)
+	receipt, err := client.TransactionReceipt("0x5b906d7dd1f0dc3644c20ad1f2369bbfa7f07638a38bf104dbd2498e76d77e8a")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(receipt.Status)
 }

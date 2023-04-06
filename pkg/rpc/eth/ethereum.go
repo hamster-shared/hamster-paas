@@ -38,6 +38,7 @@ func init() {
 type EthereumProxy interface {
 	TransactionByHash(hash string) (tx *types.Transaction, isPending bool, err error)
 	WatchRequestResult(contractAddress string) error
+	TransactionReceipt(hash string) (*types.Receipt, error)
 }
 
 type EthereumProxyFactory struct {
@@ -131,4 +132,10 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
 			}
 		}
 	}
+}
+
+// TransactionReceipt 通过Receipt.status来判断交易事务状态，0 -> 失败， 1 -> 成功
+func (rpc *RPCEthereumProxy) TransactionReceipt(hash string) (*types.Receipt, error) {
+	hashTx := common.Hash(common.FromHex(hash))
+	return rpc.client.TransactionReceipt(context.Background(), hashTx)
 }
