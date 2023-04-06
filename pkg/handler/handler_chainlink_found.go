@@ -24,7 +24,6 @@ func (h *HandlerServer) addFound(c *gin.Context) {
 	}
 	consumerAddress := c.PostForm("consumerAddress")
 	incrString := c.PostForm("incr")
-	fmt.Println("incr : ", incrString)
 	incr, err := strconv.ParseFloat(incrString, 64)
 	if err != nil || incr <= 0 {
 		logger.Errorf("addFound failed: incr not valid")
@@ -32,7 +31,7 @@ func (h *HandlerServer) addFound(c *gin.Context) {
 		return
 	}
 	transactionTx := c.PostForm("transactionTx")
-	err = h.chainLinkDepositService.AddDeposit(int64(subscriptionId), consumerAddress, incr, transactionTx, int64(user.Id), h.chainLinkSubscriptionService)
+	err = h.chainLinkDepositService.AddDeposit(int64(subscriptionId), consumerAddress, incr, transactionTx, int64(user.Id), h.chainLinkSubscriptionService, h.chainlinkPoolService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("addFound failed: %s", err.Error()))
 		Fail(err.Error(), c)

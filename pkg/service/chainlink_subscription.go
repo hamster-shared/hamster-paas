@@ -8,6 +8,8 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"hamster-paas/pkg/utils/logger"
+	"time"
 )
 
 type ChainLinkSubscriptionService struct {
@@ -23,7 +25,7 @@ func NewChainLinkSubscriptionService(db *gorm.DB) *ChainLinkSubscriptionService 
 // CreateSubscription create subscription
 // * param subscription: new Subscription need to save in db.
 // * error when subscription already exit.
-func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription) error {
+func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription, poolService PoolService) error {
 	var s_ *models.Subscription
 	// 判断是否用已经成功的订阅存在
 	err := s.db.Model(models.Subscription{}).Where(
@@ -35,6 +37,13 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 		if err != nil {
 			return err
 		}
+		// 异步检查订阅交易事务是否成功
+		poolService.Submit(func() {
+			time.Sleep(time.Second * 20)
+			s.db.Model(models.Subscription{}).Where("chain_subscription_id = ? AND chain = ? AND network = ?", subscription.ChainSubscriptionId, subscription.Chain, subscription.Network).
+				Update("status", consts.SUCCESS)
+			logger.Info("create subscription: %d Tx valid, change status to success", subscription.ChainSubscriptionId)
+		})
 		return nil
 	}
 	// 订阅已存在，返回错误

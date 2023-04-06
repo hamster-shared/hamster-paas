@@ -74,7 +74,7 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		TransactionTx:       transactionTx,
 		Status:              "Pending",
 	}
-	if err := h.chainLinkSubscriptionService.CreateSubscription(s); err != nil {
+	if err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService); err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
 		Fail(err.Error(), c)
 		return

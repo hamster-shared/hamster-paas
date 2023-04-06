@@ -6,6 +6,7 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"hamster-paas/pkg/utils/logger"
 	"time"
 )
 
@@ -39,7 +40,7 @@ func (d *ChainLinkDepositService) DepositList(subscriptionId, page, size int, us
 }
 
 // AddDeposit TODO 需要异步检查
-func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddress string, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService) error {
+func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddress string, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService, poolService PoolService) error {
 	// 检查该id是否存在且success
 	_, err := subscriptionService.GetSubscriptionById(int(subscriptionId))
 	if err != nil {
@@ -55,5 +56,10 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddre
 	deposit.Status = consts.PENDING
 	d.db.Model(models.Deposit{}).Create(&deposit)
 	// TODO 异步检查
+	poolService.Submit(func() {
+		time.Sleep(time.Second * 20)
+		d.db.Model(models.Deposit{}).Where("id = ?", deposit.Id).Update("status", consts.SUCCESS)
+		logger.Infof("add deposit: %d Tx valid, change deposit status to success", deposit.Id)
+	})
 	return nil
 }

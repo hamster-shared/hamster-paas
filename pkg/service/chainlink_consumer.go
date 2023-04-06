@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"hamster-paas/pkg/utils/logger"
+	"time"
 )
 
 type ChainLinkConsumerService struct {
@@ -22,7 +25,7 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 // CreateConsumer
 // @param consumer中的subscription id指的是subscription表主键id
 // TODO: 需要监听链更改状态
-func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService) error {
+func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService, poolService PoolService) error {
 	// 确认subscription存在
 	_, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
 	if err != nil {
@@ -37,9 +40,14 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	// 不存在就创建
 	c.db.Create(&consumer)
 	// TODO 异步监听，更改状态
-	// 事务成功才增加subscription的consumer数量
-	// 更新subscription的consumer数量
-	//subscriptionService.UpdateConsumerNums(uint(consumer.SubscriptionId), int64(subscription.Consumers+1))
+	poolService.Submit(func() {
+		time.Sleep(time.Second * 20)
+		c.db.Model(models.Consumer{}).Where("id", consumer.Id).Update("status", consts.SUCCESS)
+		var consumerNums int64
+		c.db.Model(models.Subscription{}).Select("consumers").Where("id = ?", consumer.SubscriptionId).First(&consumerNums)
+		c.db.Model(models.Subscription{}).Where("id = ?", consumer.SubscriptionId).Update("consumers", consumerNums+1)
+		logger.Infof("create consumer: %d ,Tx valid, change subscription: %d consumers to %d", consumer.Id, consumer.SubscriptionId, consumerNums+1)
+	})
 	return nil
 }
 

@@ -43,7 +43,7 @@ func (h *HandlerServer) createConsumer(c *gin.Context) {
 		Status:          "Pending",
 	}
 	// 创建合约
-	err = h.chainLinkConsumerService.CreateConsumer(consumer, h.chainLinkSubscriptionService)
+	err = h.chainLinkConsumerService.CreateConsumer(consumer, h.chainLinkSubscriptionService, h.chainlinkPoolService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("add consumer in subscriptionL: %d failed: %s", subscriptionId, err.Error()))
 		Fail(err.Error(), c)

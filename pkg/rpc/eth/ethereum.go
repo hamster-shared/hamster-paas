@@ -85,7 +85,6 @@ func NewRPCEthereumProxy(endpoints string) (*RPCEthereumProxy, error) {
 }
 
 func (rpc *RPCEthereumProxy) TransactionByHash(hash string) (tx *types.Transaction, isPending bool, err error) {
-
 	ctx := context.Background()
 	hashTx := common.Hash(common.FromHex(hash))
 	return rpc.client.TransactionByHash(ctx, hashTx)

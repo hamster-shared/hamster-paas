@@ -13,6 +13,7 @@ type HandlerServer struct {
 	chainLinkConsumerService     service.ChainLinkConsumerService
 	chainLinkDepositService      service.ChainLinkDepositService
 	chainlinkDashboardService    service.ChainLinkDashboardService
+	chainlinkPoolService         service.PoolService
 	rpcService                   service.RpcService
 }
 
@@ -56,6 +57,11 @@ func NewHandlerServer() *HandlerServer {
 		panic(fmt.Sprintf("application get rpc service failed: %s", err.Error()))
 	}
 	handlerServer.rpcService = *rpcService
-
+	poolService, err := application.GetBean[*service.PoolService]("chainLinkPoolService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get pool service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get pool service failed: %s", err.Error()))
+	}
+	handlerServer.chainlinkPoolService = *poolService
 	return &handlerServer
 }

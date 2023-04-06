@@ -36,6 +36,8 @@ func Init() {
 	chainLinkDepositService := service.NewChainLinkDepositService(db)
 	application.SetBean[*service.ChainLinkDepositService]("chainLinkDepositService", chainLinkDepositService)
 	application.SetBean("chainLinkDashboardService", service.NewChainLinkDashboardService(db))
+	chainLinkPoolService := service.NewPoolService()
+	application.SetBean[*service.PoolService]("chainLinkPoolService", chainLinkPoolService)
 	application.SetBean("rpcService", service.NewRpcService(db))
 	nginx_log_parse.InitMeiliSearch()
 	httpHandler := handler.NewHandlerServer()
