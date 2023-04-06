@@ -7,8 +7,8 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/utils/logger"
 	"math/big"
 )
@@ -26,7 +26,9 @@ var netMap map[EthNetwork]string = make(map[EthNetwork]string)
 func setup() {
 	netMap[GOERLI] = "https://goerli.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
 	netMap[MAINNET] = "https://mainnet.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
-	netMap[HAMSTER] = "https://rpc-moonbeam.hamster.newtouch.com"
+	//netMap[HAMSTER] = "https://rpc-moonbeam.hamster.newtouch.com"
+	//netMap[HAMSTER] = "wss://ws-moonbeam.hamster.newtouch.com"
+	netMap[HAMSTER] = "wss://eth-sepolia.g.alchemy.com/v2/BgE-iyk7FqwXwyn6pHEeByyZpI56NYgO"
 	netMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
 	netMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
 }
@@ -94,13 +96,15 @@ func (rpc *RPCEthereumProxy) TransactionByHash(hash string) (tx *types.Transacti
 func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
 	// 要监听的合约地址
 	oracleContractAddress := common.HexToAddress(contractAddress)
+
 	// 监听请求结果
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{oracleContractAddress},
 		Topics: [][]common.Hash{
 			{
+				crypto.Keccak256Hash([]byte("OCRResponse(bytes32,bytes,bytes)")),
 				// 用于监听请求结果的事件签名
-				common.HexToHash(consts.EventSignature),
+				//common.HexToHash(consts.EventSignature),
 			},
 		},
 	}
@@ -132,6 +136,7 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
 			}
 		}
 	}
+	return nil
 }
 
 // TransactionReceipt 通过Receipt.status来判断交易事务状态，0 -> 失败， 1 -> 成功

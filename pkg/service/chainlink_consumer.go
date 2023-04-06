@@ -73,7 +73,7 @@ func (c *ChainLinkConsumerService) ConsumerList(subscriptionId, page, size int, 
 // DeleteConsumer delete consumer by id
 func (c *ChainLinkConsumerService) DeleteConsumer(subscriptionId, consumerId int64) error {
 	err := c.db.Transaction(func(tx *gorm.DB) error {
-		if err := c.db.Debug().Where("id = ? and subscription_id = ", consumerId, subscriptionId).Delete(&models.Consumer{}).Error; err != nil {
+		if err := c.db.Debug().Where("id = ? and subscription_id = ?", consumerId, subscriptionId).Delete(&models.Consumer{}).Error; err != nil {
 			return err
 		}
 		var subscriptionData models.Subscription
