@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
@@ -72,7 +73,7 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		UserId:              uint64(user.Id),
 		Admin:               admin,
 		TransactionTx:       transactionTx,
-		Status:              "Pending",
+		Status:              consts.PENDING,
 	}
 	if err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService); err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
