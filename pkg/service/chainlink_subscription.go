@@ -123,3 +123,12 @@ func (s *ChainLinkSubscriptionService) SubscriptionDetail(id int64) (vo.ChainLin
 	copier.Copy(&vo, &subscriptionData)
 	return vo, nil
 }
+
+func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.ChainLinkValidSubscriptionVo, error) {
+	var list []vo.ChainLinkValidSubscriptionVo
+	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND status = ?", userId, consts.SUCCESS).Find(&list).Error
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
+}

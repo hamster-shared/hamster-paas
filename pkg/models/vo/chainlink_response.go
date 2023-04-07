@@ -101,3 +101,14 @@ type ChainLinkExpenseVo struct {
 	Amount          float64   `json:"amount"`
 	Created         time.Time `json:"created"`
 }
+
+type ChainLinkValidSubscriptionVo struct {
+	Id            uint      `json:"id"`
+	Name          string    `json:"name"`
+	Created       time.Time `json:"created"`
+	Chain         string    `json:"chain"`
+	Network       string    `json:"network"`
+	TransactionTx string    `json:"transactionTx"`
+	Admin         string    `json:"admin"`
+	Status        string    `json:"status"`
+}

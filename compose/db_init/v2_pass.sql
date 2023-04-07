@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS t_cl_subscription (
     network varchar(50) NOT NULL,
     consumers TINYINT(3) NOT NULL,
     user_id bigint NOT NULL,
-    admin char(42) NOT NULL,
-    transaction_tx char(42) NOT NULL,
+    admin char(255) NOT NULL,
+    transaction_tx char(255) NOT NULL,
     status char(20) NOT NULL,
     INDEX(user_id)
     );
@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS t_cl_consumer (
     user_id BIGINT NOT NULL,
     subscription_id BIGINT NOT NULL,
     created datetime NOT NULL,
-    consumer_address char(42) NOT NULL,
-    transaction_tx char(42) NOT NULL,
+    consumer_address char(255) NOT NULL,
+    transaction_tx char(255) NOT NULL,
     status char(20) NOT NULL,
     INDEX(user_id)
     );
@@ -78,9 +78,9 @@ CREATE TABLE IF NOT EXISTS t_cl_deposit (
     id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     subscription_id BIGINT NOT NULL,
     created datetime NOT NULL,
-    consumer_address char(42) NOT NULL,
+    consumer_address char(255) NOT NULL,
     amount decimal(18, 6) NOT NULL,
-    transaction_tx char(42) NOT NULL,
+    transaction_tx char(255) NOT NULL,
     status char(20),
     user_id BIGINT NOT NULL,
     INDEX(user_id)

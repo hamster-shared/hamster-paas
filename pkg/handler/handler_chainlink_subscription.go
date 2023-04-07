@@ -126,3 +126,20 @@ func (h *HandlerServer) subscriptionDetail(gin *gin.Context) {
 	}
 	Success(data, gin)
 }
+
+func (h *HandlerServer) getValidSubscription(gin *gin.Context) {
+	userAny, ok := gin.Get("user")
+	if !ok {
+		Fail("do not have token", gin)
+		return
+	}
+	user := userAny.(aline.User)
+
+	list, err := h.chainLinkSubscriptionService.GetValidSubscription(int64(user.Id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("get valid subscription failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(list, gin)
+}
