@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/utils/logger"
 	"math/big"
+	"strings"
 )
 
 type EthNetwork string
@@ -93,16 +95,23 @@ func (rpc *RPCEthereumProxy) TransactionByHash(hash string) (tx *types.Transacti
 	return rpc.client.TransactionByHash(ctx, hashTx)
 }
 
+type OCRResponseEvent struct {
+	RequestId [32]byte
+	Result    []byte
+	Err       []byte
+}
+
 func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
 	// 要监听的合约地址
 	oracleContractAddress := common.HexToAddress(contractAddress)
-
+	contractAbi, err := abi.JSON(strings.NewReader(consts.ConsumerAbi))
 	// 监听请求结果
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{oracleContractAddress},
 		Topics: [][]common.Hash{
 			{
-				crypto.Keccak256Hash([]byte("OCRResponse(bytes32,bytes,bytes)")),
+				contractAbi.Events["OCRResponse"].ID,
+				//crypto.Keccak256Hash([]byte("OCRResponse(bytes32,bytes,bytes)")),
 				// 用于监听请求结果的事件签名
 				//common.HexToHash(consts.EventSignature),
 			},
@@ -126,8 +135,34 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
 			return errors.New(fmt.Sprintf("Error in subscription:%s", err.Error()))
 		case log := <-logs:
 			fmt.Println("++++++++++++++++++++++++++++++++++++++")
-			fmt.Println(log)
+			fmt.Println(log.Address)
+			fmt.Println(log.Data)
+			fmt.Println(log.Topics)
+			fmt.Println(log.BlockHash)
+			fmt.Println(log.Index)
+			fmt.Println(log.BlockNumber)
+			fmt.Println(log.TxIndex)
+			fmt.Println(log.TxHash)
+			if err != nil {
+				fmt.Println("---------------------------------------")
+				fmt.Println("Failed to parse ABI:", err.Error())
+				fmt.Println("---------------------------------------")
+			}
+
+			// 解析事件数据
+			var eventData OCRResponseEvent
+			err = contractAbi.UnpackIntoInterface(&eventData, "OCRResponse", log.Data)
+			if err != nil {
+				fmt.Println("---------------------------------------")
+				fmt.Println("Failed to unpack event data: ", err.Error())
+				fmt.Println("---------------------------------------")
+			}
 			fmt.Println("++++++++++++++++++++++++++++++++++++++")
+			fmt.Println("****************************************")
+			fmt.Printf("RequestId: %x\n", eventData.RequestId)
+			fmt.Printf("Result: %s\n", hexToString(eventData.Result))
+			fmt.Printf("Err: %s\n", string(eventData.Err))
+			fmt.Println("****************************************")
 			// 比对 Request ID
 			requestID := log.Topics[1].Big()
 			expectedRequestID := big.NewInt(123)
@@ -137,6 +172,14 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
 		}
 	}
 	return nil
+}
+
+func hexToString(hex []byte) string {
+	s := ""
+	for _, b := range hex {
+		s += fmt.Sprintf("%02x", b)
+	}
+	return s
 }
 
 // TransactionReceipt 通过Receipt.status来判断交易事务状态，0 -> 失败， 1 -> 成功

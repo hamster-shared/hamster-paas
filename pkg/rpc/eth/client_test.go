@@ -41,8 +41,8 @@ func TestWatchRequestRes(t *testing.T) {
 }
 
 func TestGetReceipt(t *testing.T) {
-	client := NewEthereumProxyFactory().GetClient(GOERLI)
-	receipt, err := client.TransactionReceipt("0x5b906d7dd1f0dc3644c20ad1f2369bbfa7f07638a38bf104dbd2498e76d77e8a")
+	client := NewEthereumProxyFactory().GetClient(HAMSTER)
+	receipt, err := client.TransactionReceipt("0xd19ea5989526949e501c1a4dafe578868acf2f95f5a22380023520dd1d7fc490")
 	if err != nil {
 		panic(err)
 	}
