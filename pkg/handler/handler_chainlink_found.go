@@ -44,3 +44,25 @@ func (h *HandlerServer) addFound(c *gin.Context) {
 	}
 	Success(nil, c)
 }
+
+func (h *HandlerServer) changeFoundStatus(gin *gin.Context) {
+	userAny, ok := gin.Get("user")
+	if !ok {
+		Fail("do not have token", gin)
+		return
+	}
+	user := userAny.(aline.User)
+	var paramJson vo.ChainLinkFoundUpdateParam
+	if err := gin.BindJSON(&paramJson); err != nil {
+		logger.Error(fmt.Sprintf("change Found Status failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	err := h.chainLinkDepositService.UpdateDepositStatus(uint64(user.Id), paramJson)
+	if err != nil {
+		logger.Error(fmt.Sprintf("change Found Status failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(nil, gin)
+}

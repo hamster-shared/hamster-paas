@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/consts"
@@ -57,16 +59,22 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddre
 	d.db.Model(models.Deposit{}).Create(&deposit)
 	// TODO 异步检查
 	poolService.Submit(func() {
-		//for begin := 0; begin < 10; begin++ {
-		//	logger.Infof("add deposit: %d Tx valid, change deposit status to success", deposit.Id)
-		//	if begin == 5 {
-		//		break
-		//	}
-		//	time.Sleep(time.Second * 30)
-		//}
 		time.Sleep(time.Second * 20)
 		d.db.Model(models.Deposit{}).Where("id = ?", deposit.Id).Update("status", consts.SUCCESS)
 		logger.Infof("add deposit: %d Tx valid, change deposit status to success", deposit.Id)
 	})
 	return nil
+}
+
+func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.ChainLinkFoundUpdateParam) error {
+	//获取id对应的记录
+	var deposit models.Deposit
+	d.db.Model(models.Deposit{}).Where("id = ?", param.Id).First(&deposit)
+	// 判断该deposit是否是符合要求
+
+	if deposit.TransactionTx == param.TransactionTx && deposit.ConsumerAddress == param.ConsumerAddress && deposit.UserId == userId && param.SubscriptionId == deposit.SubscriptionId {
+		d.db.Model(models.Deposit{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
+		return nil
+	}
+	return errors.New(fmt.Sprintf("consumer id :%s not valid, other col not confirm", param.Id))
 }

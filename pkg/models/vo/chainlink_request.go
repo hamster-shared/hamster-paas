@@ -50,3 +50,11 @@ type ChainLinkConsumerCreateParam struct {
 	ConsumerAddress string `json:"consumer_address"`
 	TransactionTx   string `json:"transactionTx"`
 }
+
+type ChainLinkFoundUpdateParam struct {
+	Id              int64  `json:"id"`
+	SubscriptionId  int64  `json:"subscriptionId"`
+	ConsumerAddress string `json:"consumerAddress"`
+	TransactionTx   string `json:"transactionTx"`
+	NewStatus       string `json:"newStatus"`
+}

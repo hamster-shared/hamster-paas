@@ -144,3 +144,7 @@ func (h *HandlerServer) getValidSubscription(gin *gin.Context) {
 	}
 	Success(list, gin)
 }
+
+func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
+
+}

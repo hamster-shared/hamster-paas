@@ -91,29 +91,6 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 		return
 	}
 	Success(data, c)
-	//// 查询hamster的可用合约列表
-	//var consumerList []vo.ChainLinkConsumers
-	//if pagination.Page > 1 {
-	//	SuccessWithPagination(consumerList, pagination, c)
-	//	return
-	//}
-	//consumerList = append(consumerList, vo.ChainLinkConsumers{
-	//	Address:    "0x123456789",
-	//	Network:    "Test",
-	//	DeployTime: time.Now(),
-	//})
-	//consumerList = append(consumerList, vo.ChainLinkConsumers{
-	//	Address:    "0x123456789",
-	//	Network:    "Test",
-	//	DeployTime: time.Now(),
-	//})
-	//consumerList = append(consumerList, vo.ChainLinkConsumers{
-	//	Address:    "0x123456789",
-	//	Network:    "Test",
-	//	DeployTime: time.Now(),
-	//})
-	//SuccessWithPagination(consumerList, pagination, c)
-	//return
 }
 
 func (h *HandlerServer) consumerList(gin *gin.Context) {
@@ -174,4 +151,8 @@ func (h *HandlerServer) deleteConsumer(gin *gin.Context) {
 		return
 	}
 	Success("", gin)
+}
+
+func (h *HandlerServer) changeConsumerStatus(gin *gin.Context) {
+
 }
