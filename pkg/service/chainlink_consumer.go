@@ -33,7 +33,7 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	}
 	var isExited int64
 	// 判断该consumer是否存在
-	c.db.Model(models.Consumer{}).Where("subscription_id = ? AND consumer_address = ? AND (status = ? OR status = ?)", consumer.SubscriptionId, consumer.TransactionTx, "Success", "Pending").Count(&isExited)
+	c.db.Model(models.Consumer{}).Where("subscription_id = ? AND consumer_address = ? AND (status = ? OR status = ?)", consumer.SubscriptionId, consumer.ConsumerAddress, consts.SUCCESS, consts.PENDING).Count(&isExited)
 	if isExited > 0 {
 		return errors.New(fmt.Sprintf("consumer address :%s already exists in subscription id: %d", consumer.ConsumerAddress, consumer.SubscriptionId))
 	}

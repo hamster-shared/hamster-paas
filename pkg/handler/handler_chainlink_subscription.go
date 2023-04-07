@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
+	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
@@ -51,28 +52,23 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		return
 	}
 	user := userAny.(aline.User)
-	chain := c.PostForm("chain")
-	network := c.PostForm("network")
-	name := c.PostForm("name")
-	idString := c.PostForm("subscriptionId")
-	subscriptionId, err := strconv.Atoi(idString)
+	subscriptionCreateParam := vo.ChainLinkSubscriptionCreateParam{}
+	err := c.BindJSON(&subscriptionCreateParam)
 	if err != nil {
-		logger.Error(fmt.Sprintf("createSubscription failed: %s", err.Error()))
-		Fail("invalid params", c)
+		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
+		Fail(err.Error(), c)
 		return
 	}
-	admin := c.PostForm("admin")
-	transactionTx := c.PostForm("transactionTx")
 	s := models.Subscription{
-		ChainSubscriptionId: uint(subscriptionId),
-		Name:                name,
+		ChainSubscriptionId: uint(subscriptionCreateParam.SubscriptionId),
+		Name:                subscriptionCreateParam.Name,
 		Created:             time.Now(),
-		Chain:               chain,
-		Network:             network,
+		Chain:               subscriptionCreateParam.Chain,
+		Network:             subscriptionCreateParam.Network,
 		Consumers:           0,
 		UserId:              uint64(user.Id),
-		Admin:               admin,
-		TransactionTx:       transactionTx,
+		Admin:               subscriptionCreateParam.Admin,
+		TransactionTx:       subscriptionCreateParam.TransactionTx,
 		Status:              consts.PENDING,
 	}
 	if err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService); err != nil {

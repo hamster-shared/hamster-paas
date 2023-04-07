@@ -50,7 +50,7 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.POST("/subscription/:id/found", h.handlerServer.addFound)
 	//// chain link consumer
 	chainLinkApi.POST("/consumer", h.handlerServer.createConsumer)
-	chainLinkApi.GET("/consumer/hamster-consumer", h.handlerServer.getHamsterConsumerList)
+	chainLinkApi.GET("/consumer/:id/hamster-consumer", h.handlerServer.getHamsterConsumerList)
 	chainLinkApi.GET("/consumer/projects", h.handlerServer.getProjectList)
 	chainLinkApi.GET("/subscription/:id/consumers", h.handlerServer.consumerList)
 	chainLinkApi.DELETE("/subscription/:id/consumer/:consumerId", h.handlerServer.deleteConsumer)

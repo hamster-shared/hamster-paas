@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
@@ -23,29 +24,26 @@ func (h *HandlerServer) createConsumer(c *gin.Context) {
 		return
 	}
 	user := userAny.(aline.User)
-	// subscription表主键id
-	subscriptionIdString := c.PostForm("subscription_id")
-	subscriptionId, err := strconv.Atoi(subscriptionIdString)
+	consumerCreateParam := vo.ChainLinkConsumerCreateParam{}
+	err := c.BindJSON(&consumerCreateParam)
 	if err != nil {
-		logger.Error(fmt.Sprintf("create consumer failed: %s", err.Error()))
-		Fail("invalid params", c)
+		logger.Error(fmt.Sprintf("add consumer params vaild %s", err.Error()))
+		Fail(err.Error(), c)
 		return
 	}
-	consumerAddress := c.PostForm("consumer_address")
-	transactionTx := c.PostForm("transaction_tx")
 
 	consumer := models.Consumer{
-		SubscriptionId:  int64(subscriptionId),
+		SubscriptionId:  consumerCreateParam.SubscriptionId,
 		Created:         time.Now(),
-		ConsumerAddress: consumerAddress,
+		ConsumerAddress: consumerCreateParam.ConsumerAddress,
 		UserId:          uint64(user.Id),
-		TransactionTx:   transactionTx,
-		Status:          "Pending",
+		TransactionTx:   consumerCreateParam.TransactionTx,
+		Status:          consts.PENDING,
 	}
 	// 创建合约
 	err = h.chainLinkConsumerService.CreateConsumer(consumer, h.chainLinkSubscriptionService, h.chainlinkPoolService)
 	if err != nil {
-		logger.Error(fmt.Sprintf("add consumer in subscriptionL: %d failed: %s", subscriptionId, err.Error()))
+		logger.Error(fmt.Sprintf("add consumer in subscriptionL: %d failed: %s", consumerCreateParam.SubscriptionId, err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
@@ -70,8 +68,9 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 	pagination.Page = pageInt
 	pagination.Size = sizeInt
 
-	projectId := c.Param("projectId")
-	if projectId == "" {
+	projectIdString := c.Param("id")
+	_, err = strconv.Atoi(projectIdString)
+	if err != nil {
 		Fail("invalid params: projectId", c)
 		return
 	}

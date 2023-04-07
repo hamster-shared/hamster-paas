@@ -29,3 +29,24 @@ type ChainLinkRequestExecParam struct {
 	RequestId       string  `json:"requestId"`
 	Amount          float64 `json:"amount"`
 }
+
+type ChainLinkSubscriptionCreateParam struct {
+	Chain          string `json:"chain"`
+	Network        string `json:"network"`
+	Name           string `json:"name"`
+	SubscriptionId int64  `json:"subscriptionId"`
+	Admin          string `json:"admin"`
+	TransactionTx  string `json:"transactionTx"`
+}
+
+type ChainLinkFoundParam struct {
+	ConsumerAddress string `json:"consumer_address"`
+	Incr            string `json:"incr"`
+	TransactionTx   string `json:"transaction_tx"`
+}
+
+type ChainLinkConsumerCreateParam struct {
+	SubscriptionId  int64  `json:"subscriptionId"`
+	ConsumerAddress string `json:"consumer_address"`
+	TransactionTx   string `json:"transactionTx"`
+}
