@@ -57,6 +57,13 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddre
 	d.db.Model(models.Deposit{}).Create(&deposit)
 	// TODO 异步检查
 	poolService.Submit(func() {
+		//for begin := 0; begin < 10; begin++ {
+		//	logger.Infof("add deposit: %d Tx valid, change deposit status to success", deposit.Id)
+		//	if begin == 5 {
+		//		break
+		//	}
+		//	time.Sleep(time.Second * 30)
+		//}
 		time.Sleep(time.Second * 20)
 		d.db.Model(models.Deposit{}).Where("id = ?", deposit.Id).Update("status", consts.SUCCESS)
 		logger.Infof("add deposit: %d Tx valid, change deposit status to success", deposit.Id)

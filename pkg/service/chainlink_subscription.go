@@ -47,7 +47,7 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 		return nil
 	}
 	// 订阅已存在，返回错误
-	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists, status: %s", subscription.Chain, subscription.Network, subscription.ChainSubscriptionId, subscription.Status))
+	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists, status: %s", subscription.Chain, subscription.Network, subscription.ChainSubscriptionId, s_.Status))
 }
 
 // GetSubscriptionOverview get subscription overview(subscription nums, consumer nums, balances)

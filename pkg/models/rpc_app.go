@@ -13,21 +13,30 @@ import (
 )
 
 type RpcApp struct {
-	Account       string `json:"account"`
-	Name          string `json:"name"`
-	Description   string `json:"description"`
-	Chain         string `json:"chain"`
-	Network       string `json:"network"`
-	ApiKey        string `json:"api_key"`
-	HttpLink      string `json:"http_link"`
-	WebsocketLink string `json:"websocket_link"`
+	AppID         int64     `json:"app_id"`
+	Account       string    `json:"account"`
+	Name          string    `json:"name"`
+	Description   string    `json:"description"`
+	Chain         string    `json:"chain"`
+	Network       string    `json:"network"`
+	ApiKey        string    `json:"api_key"`
+	HttpLink      string    `json:"http_link"`
+	WebsocketLink string    `json:"websocket_link"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type ApiResponseRpcApp struct {
 	*RpcApp
 	CodeExamples       []RpcCodeExample `json:"code_examples"`
-	TotalRequestsToday int64            `json:"total_requests_today"`
-	DaylyRequests7Days []int64          `json:"dayly_requests_7days"`
+	TotalRequests24h   int64            `json:"total_requests_24h"`
+	DaylyRequests7Days []DateRequest    `json:"dayly_requests_7days"`
+	TotalRequestsAll   int64            `json:"total_requests_all"`
+}
+
+type DateRequest struct {
+	StartTime     string `json:"start_time"`
+	EndTime       string `json:"end_time"`
+	RequestNumber int64  `json:"request"`
 }
 
 type RpcCodeExample struct{}
@@ -72,6 +81,12 @@ func (a *RpcApp) save() error {
 	if err != nil {
 		return err
 	}
+	// 获取 app_id
+	var appID int64
+	if err = db.Model(&RpcApp{}).Select("max(app_id)").Where("account = ?", a.Account).Scan(&appID).Error; err != nil {
+		appID = 0
+	}
+	a.AppID = appID + 1
 	return db.Model(&RpcApp{}).Create(a).Error
 }
 
@@ -106,7 +121,7 @@ func getAppByName(account string, name string) (*ApiResponseRpcApp, error) {
 	}
 	var appResp ApiResponseRpcApp
 	appResp.RpcApp = &app
-	appResp.TotalRequestsToday, err = app.getTotalRequestsTodayWithStatusAll()
+	appResp.TotalRequests24h, err = app.getTotalRequests24hWithStatusAll()
 	if err != nil {
 		logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
 	}
@@ -140,13 +155,17 @@ func getAppByChainNetwork(account string, chain ChainType, network NetworkType) 
 	}
 	var appResp ApiResponseRpcApp
 	appResp.RpcApp = &app
-	appResp.TotalRequestsToday, err = app.getTotalRequestsTodayWithStatusAll()
+	appResp.TotalRequests24h, err = app.getTotalRequests24hWithStatusAll()
 	if err != nil {
 		logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
 	}
 	appResp.DaylyRequests7Days, err = app.getDaylyRequests7DaysWithStatusAll()
 	if err != nil {
 		logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
+	}
+	appResp.TotalRequestsAll, err = app.getTotalRequestsAll()
+	if err != nil {
+		logger.Errorf("getTotalRequestsAll err: %s", err)
 	}
 	return &appResp, nil
 }
@@ -157,14 +176,15 @@ func getApps(account string) ([]*ApiResponseRpcApp, error) {
 		return nil, err
 	}
 	var apps []*RpcApp
-	if err := db.Model(&RpcApp{}).Where("account = ?", account).Order("id desc").Find(&apps).Error; err != nil {
+	if err := db.Model(&RpcApp{}).Where("account = ?", account).Order("id asc").Find(&apps).Error; err != nil {
 		return nil, err
 	}
 	var apiResponseApps []*ApiResponseRpcApp
 	for i := range apps {
+		apps[i].Account = ""
 		var appResp ApiResponseRpcApp
 		appResp.RpcApp = apps[i]
-		appResp.TotalRequestsToday, err = apps[i].getTotalRequestsTodayWithStatusAll()
+		appResp.TotalRequests24h, err = apps[i].getTotalRequests24hWithStatusAll()
 		if err != nil {
 			logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
 		}
@@ -172,9 +192,49 @@ func getApps(account string) ([]*ApiResponseRpcApp, error) {
 		if err != nil {
 			logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
 		}
+		appResp.TotalRequestsAll, err = apps[i].getTotalRequestsAll()
+		if err != nil {
+			logger.Errorf("getTotalRequestsAll err: %s", err)
+		}
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
 	return apiResponseApps, nil
+}
+
+func getAppsPagination(account string, p *Pagination) ([]*ApiResponseRpcApp, *Pagination, error) {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return nil, p, err
+	}
+	var apps []*RpcApp
+	if err := db.Model(&RpcApp{}).Limit(p.Size).Offset(p.Size*(p.Page-1)).Where("account = ?", account).Order("id asc").Find(&apps).Error; err != nil {
+		return nil, p, err
+	}
+	var apiResponseApps []*ApiResponseRpcApp
+	for i := range apps {
+		apps[i].Account = ""
+		var appResp ApiResponseRpcApp
+		appResp.RpcApp = apps[i]
+		appResp.TotalRequests24h, err = apps[i].getTotalRequests24hWithStatusAll()
+		if err != nil {
+			logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
+		}
+		appResp.DaylyRequests7Days, err = apps[i].getDaylyRequests7DaysWithStatusAll()
+		if err != nil {
+			logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
+		}
+		appResp.TotalRequestsAll, err = apps[i].getTotalRequestsAll()
+		if err != nil {
+			logger.Errorf("getTotalRequestsAll err: %s", err)
+		}
+		apiResponseApps = append(apiResponseApps, &appResp)
+	}
+	var count int64
+	if err := db.Model(&RpcApp{}).Where("account = ?", account).Count(&count).Error; err != nil {
+		return nil, p, err
+	}
+	p.Total = count
+	return apiResponseApps, p, nil
 }
 
 // 获取总请求数
@@ -187,6 +247,7 @@ func (a *RpcApp) getTotalRequests(statusFilter string) (int64, error) {
 		Filter: statusFilter,
 	})
 	if err != nil {
+		logger.Errorf("git total requests all error: %s", err)
 		return 0, err
 	}
 	return resp.EstimatedTotalHits, nil
@@ -208,7 +269,7 @@ func (a *RpcApp) getTotalRequestsNot200() (int64, error) {
 }
 
 // 获取今日请求数
-func (a *RpcApp) getTotalRequestsToday(statusFilter string) (int64, error) {
+func (a *RpcApp) getTotalRequests24h(statusFilter string) (int64, error) {
 	meili, err := application.GetBean[*meilisearch.Client]("meiliSearch")
 	if err != nil {
 		logger.Errorf("getTotalRequestsToday err: %s", err)
@@ -222,46 +283,55 @@ func (a *RpcApp) getTotalRequestsToday(statusFilter string) (int64, error) {
 		logger.Errorf("getTotalRequestsToday err: %s", err)
 		return 0, err
 	}
-	logger.Debugf("getTotalRequestsToday resp: status: %s,time: %.3f, count: %d", statusFilter, twentyFourHoursAgo, resp.EstimatedTotalHits)
 	return resp.EstimatedTotalHits, nil
 }
 
-func (a *RpcApp) getTotalRequestsTodayWithStatus200() (int64, error) {
-	return a.getTotalRequestsToday("status = 200")
+func (a *RpcApp) getTotalRequests24hWithStatus200() (int64, error) {
+	return a.getTotalRequests24h("status = 200")
 }
 
-func (a *RpcApp) getTotalRequestsTodayWithStatusAll() (int64, error) {
-	return a.getTotalRequestsToday("")
+func (a *RpcApp) getTotalRequests24hWithStatusAll() (int64, error) {
+	return a.getTotalRequests24h("")
 }
 
-func (a *RpcApp) getTotalRequestsTodayWithStatusIsNot200() (int64, error) {
-	return a.getTotalRequestsToday("status != 200")
+func (a *RpcApp) getTotalRequests24hWithStatusIsNot200() (int64, error) {
+	return a.getTotalRequests24h("status != 200")
 }
 
 // 获取 7 天请求数
-func (a *RpcApp) getDaylyRequests7Days(statusFilter string) ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7Days(statusFilter string) ([]DateRequest, error) {
 	meili, err := application.GetBean[*meilisearch.Client]("meiliSearch")
 	if err != nil {
 		return nil, err
 	}
 	// 使用美丽搜索过滤过去 7 天的数据，并且状态码为 200 的数据
+	// 以自然日为单位，即 2021-01-01 00:00:00 到 2021-01-01 23:59:59
+	// 不包括今天
+	// 先计算昨天的结束时间，然后计算前 6 天的开始时间和结束时间
 	nowUnix := time.Now().Unix()
-	var result []int64
+	yesterdayStartUnix := nowUnix - int64(nowUnix%86400) - 86400
+	yesterdayEndUnix := yesterdayStartUnix + 86400 - 1
+	var result []DateRequest
 	for i := 0; i < 7; i++ {
-		startDate := nowUnix - int64((i+1)*86400)
-		endDate := nowUnix - int64(i*86400)
+		startDate := yesterdayStartUnix - int64((i)*86400)
+		endDate := yesterdayEndUnix - int64((i)*86400)
 		resp, err := meili.Index("nginx").Search(a.ApiKey, &meilisearch.SearchRequest{
 			Filter: []string{fmt.Sprintf("msec >= %d", startDate), fmt.Sprintf("msec < %d", endDate), statusFilter},
 		})
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, resp.EstimatedTotalHits)
+		dateRequest := DateRequest{
+			StartTime:     time.Unix(startDate, 0).UTC().Format(time.RFC3339),
+			EndTime:       time.Unix(endDate, 0).UTC().Format(time.RFC3339),
+			RequestNumber: resp.EstimatedTotalHits,
+		}
+		result = append(result, dateRequest)
 	}
 	return reverse(result), nil
 }
 
-func reverse(in []int64) []int64 {
+func reverse(in []DateRequest) []DateRequest {
 	for i, j := 0, len(in)-1; i < j; i, j = i+1, j-1 {
 		in[i], in[j] = in[j], in[i]
 	}
@@ -269,15 +339,15 @@ func reverse(in []int64) []int64 {
 }
 
 // 获取 7 天请求数状态码为 200 的数据
-func (a *RpcApp) getDaylyRequests7DaysWithStatus200() ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7DaysWithStatus200() ([]DateRequest, error) {
 	return a.getDaylyRequests7Days("status = 200")
 }
 
 // 获取 7 天请求数所有状态
-func (a *RpcApp) getDaylyRequests7DaysWithStatusAll() ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7DaysWithStatusAll() ([]DateRequest, error) {
 	return a.getDaylyRequests7Days("")
 }
-func (a *RpcApp) getDaylyRequests7DaysWithStatusIsNot200() ([]int64, error) {
+func (a *RpcApp) getDaylyRequests7DaysWithStatusIsNot200() ([]DateRequest, error) {
 	return a.getDaylyRequests7Days("status != 200")
 }
 

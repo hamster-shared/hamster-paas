@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
@@ -57,7 +58,8 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 	subscriptionId, err := strconv.Atoi(idString)
 	if err != nil {
 		logger.Error(fmt.Sprintf("createSubscription failed: %s", err.Error()))
-		Fail("invalid params", c)
+		logger.Errorf("input arg: %s", idString)
+		Fail(fmt.Sprintf("invalid params: %s", err), c)
 		return
 	}
 	admin := c.PostForm("admin")
@@ -72,7 +74,7 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		UserId:              uint64(user.Id),
 		Admin:               admin,
 		TransactionTx:       transactionTx,
-		Status:              "Pending",
+		Status:              consts.PENDING,
 	}
 	if err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService); err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
