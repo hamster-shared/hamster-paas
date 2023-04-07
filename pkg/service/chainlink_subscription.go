@@ -133,3 +133,15 @@ func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.
 	}
 	return list, nil
 }
+
+func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLinkSubscriptionUpdateParam, userId uint64) error {
+	//获取id对应的记录
+	var subscription models.Subscription
+	s.db.Model(models.Subscription{}).Where("id = ?", param.Id).First(&subscription)
+	// 判断该consumer是否是符合要求
+	if subscription.TransactionTx == param.TransactionTx && subscription.ChainSubscriptionId == param.ChainSubscriptionId && subscription.UserId == userId && param.Chain == subscription.Chain && param.Network == subscription.Network {
+		s.db.Model(models.Consumer{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
+		return nil
+	}
+	return errors.New(fmt.Sprintf("subscription id :%s not valid, other col not confirm", param.Id))
+}

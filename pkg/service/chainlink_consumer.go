@@ -93,3 +93,15 @@ func (c *ChainLinkConsumerService) DeleteConsumer(subscriptionId, consumerId int
 	}
 	return nil
 }
+
+func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsumerUpdateParam, userId uint64) error {
+	//获取id对应的记录
+	var consumer models.Consumer
+	c.db.Model(models.Consumer{}).Where("id = ?", param.Id).First(&consumer)
+	// 判断该consumer是否是符合要求
+	if consumer.TransactionTx == param.TransactionTx && consumer.ConsumerAddress == param.ConsumerAddress && consumer.UserId == userId && param.SubscriptionId == consumer.SubscriptionId {
+		c.db.Model(models.Consumer{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
+		return nil
+	}
+	return errors.New(fmt.Sprintf("consumer id :%s not valid, other col not confirm", param.Id))
+}

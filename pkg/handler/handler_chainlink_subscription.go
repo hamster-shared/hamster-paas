@@ -146,5 +146,25 @@ func (h *HandlerServer) getValidSubscription(gin *gin.Context) {
 }
 
 func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
-
+	userAny, exists := gin.Get("user")
+	if !exists {
+		logger.Error(fmt.Sprintf("user not found"))
+		Fail("user information does not exist", gin)
+		return
+	}
+	user, _ := userAny.(aline.User)
+	var jsonParam vo.ChainLinkSubscriptionUpdateParam
+	err := gin.BindJSON(&jsonParam)
+	if err != nil {
+		logger.Error(fmt.Sprintf("change subscription status: param invalid: %s", err.Error()))
+		Fail("param invalid", gin)
+		return
+	}
+	err = h.chainLinkSubscriptionService.ChangeSubscriptionStatus(jsonParam, uint64(user.Id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("change subscription status faild: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(nil, gin)
 }
