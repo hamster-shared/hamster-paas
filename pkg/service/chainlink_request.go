@@ -3,12 +3,14 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/copier"
-	"gorm.io/gorm"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"hamster-paas/pkg/rpc/aline"
 	"time"
+
+	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 )
 
 type ChainLinkRequestService struct {
@@ -122,4 +124,9 @@ func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLink
 		return err
 	}
 	return nil
+}
+
+func (r *ChainLinkRequestService) Overview(user aline.User) (error, error) {
+
+	return nil, nil
 }

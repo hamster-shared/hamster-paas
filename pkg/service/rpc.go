@@ -21,6 +21,13 @@ func NewRpcService(db *gorm.DB) *RpcService {
 
 func (s *RpcService) GetChains() (chains []models.RpcChain, err error) {
 	err = s.db.Model(&models.RpcChain{}).Find(&chains).Error
+	for i := range chains {
+		chainType, err := models.ParseChainType(chains[i].Name)
+		if err != nil {
+			return nil, err
+		}
+		chains[i].Name = chainType.String()
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -50,6 +57,14 @@ func (s *RpcService) Overview(user aline.User) ([]*models.ApiResponseRpcApp, err
 		return nil, err
 	}
 	return a.GetApps()
+}
+
+func (s *RpcService) GetMyNetwork(user aline.User, p *models.Pagination) ([]*models.ApiResponseRpcApp, *models.Pagination, error) {
+	a, err := models.GetRpcAccount(user.Token)
+	if err != nil {
+		return nil, p, err
+	}
+	return a.GetAppsWithPagination(p)
 }
 
 func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChainDetail, error) {

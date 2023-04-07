@@ -39,6 +39,7 @@ func Init() {
 	chainLinkPoolService := service.NewPoolService()
 	application.SetBean[*service.PoolService]("chainLinkPoolService", chainLinkPoolService)
 	application.SetBean("rpcService", service.NewRpcService(db))
+	application.SetBean("middleWareService", service.NewMiddleWareService(db))
 	nginx_log_parse.InitMeiliSearch()
 	httpHandler := handler.NewHandlerServer()
 	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()

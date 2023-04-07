@@ -190,3 +190,18 @@ func (h *HandlerServer) saveChainLinkRequestExec(gin *gin.Context) {
 	}
 	Success("", gin)
 }
+
+func (h *HandlerServer) overview(gin *gin.Context) {
+	user, ok := gin.Get("user")
+	if !ok {
+		Fail("do not have token", gin)
+		return
+	}
+	appResp, err := h.rpcService.Overview(user.(aline.User))
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(appResp, gin)
+
+}

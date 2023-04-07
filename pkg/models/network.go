@@ -13,14 +13,15 @@ const (
 	TestnetRopsten
 	TestnetKovan
 	TestnetRinkeby
+	TestnetSepolia
 )
 
 func (n NetworkType) String() string {
-	return [...]string{"Mainnet", "TestnetGoerli", "TestnetRopsten", "TestnetKovan", "TestnetRinkeby"}[n]
+	return [...]string{"Mainnet", "TestnetGoerli", "TestnetRopsten", "TestnetKovan", "TestnetRinkeby", "TestnetSepolia"}[n]
 }
 
 func (n NetworkType) StringLower() string {
-	return [...]string{"mainnet", "testnet-goerli", "testnet-ropsten", "testnet-kovan", "testnet-rinkeby"}[n]
+	return [...]string{"mainnet", "testnet-goerli", "testnet-ropsten", "testnet-kovan", "testnet-rinkeby", "testnet-sepolia"}[n]
 }
 
 func ParseNetworkType(s string) (NetworkType, error) {
@@ -35,6 +36,8 @@ func ParseNetworkType(s string) (NetworkType, error) {
 		return TestnetKovan, nil
 	case "testnet-rinkeby":
 		return TestnetRinkeby, nil
+	case "testnet-sepolia":
+		return TestnetSepolia, nil
 	default:
 		return Mainnet, fmt.Errorf("invalid network type: %s", s)
 	}
