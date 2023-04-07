@@ -83,6 +83,7 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 func (h *HandlerServer) subscriptionList(gin *gin.Context) {
 	pageStr := gin.DefaultQuery("page", "1")
 	sizeStr := gin.DefaultQuery("size", "10")
+	chain := gin.Query("chain")
 	network := gin.Query("network")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
@@ -101,7 +102,7 @@ func (h *HandlerServer) subscriptionList(gin *gin.Context) {
 		return
 	}
 	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkSubscriptionService.SubscriptionList(network, page, size, int64(user.Id))
+	data, err := h.chainLinkSubscriptionService.SubscriptionList(chain, network, page, size, int64(user.Id))
 	if err != nil {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail(err.Error(), gin)

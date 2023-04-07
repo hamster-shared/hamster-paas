@@ -30,7 +30,8 @@ func setup() {
 	netMap[MAINNET] = "https://mainnet.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
 	//netMap[HAMSTER] = "https://rpc-moonbeam.hamster.newtouch.com"
 	//netMap[HAMSTER] = "wss://ws-moonbeam.hamster.newtouch.com"
-	netMap[HAMSTER] = "wss://eth-sepolia.g.alchemy.com/v2/BgE-iyk7FqwXwyn6pHEeByyZpI56NYgO"
+	//netMap[HAMSTER] = "wss://eth-sepolia.g.alchemy.com/v2/BgE-iyk7FqwXwyn6pHEeByyZpI56NYgO"
+	netMap[HAMSTER] = "wss://polygon-mumbai.g.alchemy.com/v2/BM4kwUJwMKmdh1zaDDByzNr19jgzdRiV"
 	netMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
 	netMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
 }

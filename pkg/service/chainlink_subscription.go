@@ -91,14 +91,14 @@ func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subs
 }
 
 // SubscriptionList  query subscription list
-func (s *ChainLinkSubscriptionService) SubscriptionList(network string, page, size int, userId int64) (*vo.ChainLinkSubscriptionPage, error) {
+func (s *ChainLinkSubscriptionService) SubscriptionList(chain, network string, page, size int, userId int64) (*vo.ChainLinkSubscriptionPage, error) {
 	var total int64
 	var chainLinkSubscriptionPage vo.ChainLinkSubscriptionPage
 	var chainLinkSubscriptionList []models.Subscription
 	var chainLinkSubscriptionVoList []vo.ChainLinkSubscriptionVo
 	tx := s.db.Model(models.Subscription{}).Where("user_id = ?", userId)
-	if network != "" {
-		tx = tx.Where("network = ?", network)
+	if network != "" && chain != "" {
+		tx = tx.Where("network = ? and chain = ?", network, chain)
 	}
 	result := tx.Order("created DESC").Offset((page - 1) * size).Limit(size).Find(&chainLinkSubscriptionList).Offset(-1).Limit(-1).Count(&total)
 	if result.Error != nil {

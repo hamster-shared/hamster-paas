@@ -37,7 +37,7 @@ func GetTransaction(network EthNetwork, tx string) error {
 
 func TestWatchRequestRes(t *testing.T) {
 	client := NewEthereumProxyFactory().GetClient(HAMSTER)
-	client.WatchRequestResult("0x6A795C2fe9815b84FFaD6B1F66c97A3421dA82cf")
+	client.WatchRequestResult("0xcb1d64Bf20faCc6093E2E39FAA7129AC8148F38a")
 }
 
 func TestGetReceipt(t *testing.T) {
