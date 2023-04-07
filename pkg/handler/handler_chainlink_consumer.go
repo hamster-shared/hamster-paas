@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
@@ -69,11 +70,7 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 	pagination.Size = sizeInt
 
 	projectIdString := c.Param("id")
-	_, err = strconv.Atoi(projectIdString)
-	if err != nil {
-		Fail("invalid params: projectId", c)
-		return
-	}
+
 	chain := c.Query("chain")
 	network := c.Query("network")
 	if chain == "" || network == "" {
@@ -81,29 +78,42 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 		return
 	}
 
-	// 查询hamster的可用合约列表
-	var consumerList []vo.ChainLinkConsumers
-	if pagination.Page > 1 {
-		SuccessWithPagination(consumerList, pagination, c)
+	// 通过project id 拿到对应的 consumer 信息
+	projectService, err := application.GetBean[*aline.ProjectService]("projectService")
+	if err != nil {
+		Fail("get project service error", c)
 		return
 	}
-	consumerList = append(consumerList, vo.ChainLinkConsumers{
-		Address:    "0x123456789",
-		Network:    "Test",
-		DeployTime: time.Now(),
-	})
-	consumerList = append(consumerList, vo.ChainLinkConsumers{
-		Address:    "0x123456789",
-		Network:    "Test",
-		DeployTime: time.Now(),
-	})
-	consumerList = append(consumerList, vo.ChainLinkConsumers{
-		Address:    "0x123456789",
-		Network:    "Test",
-		DeployTime: time.Now(),
-	})
-	SuccessWithPagination(consumerList, pagination, c)
-	return
+	data, err := projectService.GetValidContract(pageInt, sizeInt, projectIdString, network)
+	if err != nil {
+		logger.Error(fmt.Sprintf("get Hamster Consumer List failed: %s", err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
+	Success(data, c)
+	//// 查询hamster的可用合约列表
+	//var consumerList []vo.ChainLinkConsumers
+	//if pagination.Page > 1 {
+	//	SuccessWithPagination(consumerList, pagination, c)
+	//	return
+	//}
+	//consumerList = append(consumerList, vo.ChainLinkConsumers{
+	//	Address:    "0x123456789",
+	//	Network:    "Test",
+	//	DeployTime: time.Now(),
+	//})
+	//consumerList = append(consumerList, vo.ChainLinkConsumers{
+	//	Address:    "0x123456789",
+	//	Network:    "Test",
+	//	DeployTime: time.Now(),
+	//})
+	//consumerList = append(consumerList, vo.ChainLinkConsumers{
+	//	Address:    "0x123456789",
+	//	Network:    "Test",
+	//	DeployTime: time.Now(),
+	//})
+	//SuccessWithPagination(consumerList, pagination, c)
+	//return
 }
 
 func (h *HandlerServer) consumerList(gin *gin.Context) {

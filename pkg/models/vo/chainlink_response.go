@@ -1,6 +1,9 @@
 package vo
 
-import "time"
+import (
+	uuid "github.com/iris-contrib/go.uuid"
+	"time"
+)
 
 type ChainLinkRequestVo struct {
 	Id      int64     `json:"id"`
@@ -111,4 +114,22 @@ type ChainLinkValidSubscriptionVo struct {
 	TransactionTx string    `json:"transactionTx"`
 	Admin         string    `json:"admin"`
 	Status        string    `json:"status"`
+}
+
+type AlineValidContractPage struct {
+	Data     []AlineValidContractVo `json:"data"`
+	Total    int64                  `json:"total"`
+	Page     int                    `json:"page"`
+	PageSize int                    `json:"pageSize"`
+}
+
+type AlineValidContractVo struct {
+	Id         uint      `gorm:"primaryKey" json:"id"`
+	ContractId uint      `json:"contractId"`
+	ProjectId  uuid.UUID `json:"projectId"`
+	Version    string    `json:"version"`
+	DeployTime time.Time `gorm:"column:deploy_time;default:current_timestamp" json:"deployTime"`
+	Network    string    `json:"network"`
+	Address    string    `json:"address"`
+	Status     uint      `json:"status"` // 1: deploying, 2: success , 3: fail
 }

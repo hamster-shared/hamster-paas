@@ -22,4 +22,5 @@ type Project struct {
 	UpdateTime    time.Time      `json:"updateTime"`
 	DeleteTime    gorm.DeletedAt `json:"deleteTime"`
 	Params        string         `json:"params"`
+	LabelDisplay  string         `json:"labelDisplay"`
 }

@@ -56,8 +56,9 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 // * return overview.
 func (s *ChainLinkSubscriptionService) GetSubscriptionOverview(userId uint, network string) (*vo.ChainLinkSubscriptionOverview, error) {
 	var vo *vo.ChainLinkSubscriptionOverview
-	sql := "select COUNT(*) as total_subscription, SUM(consumers) as total_consumers from t_cl_subscription where user_id = ? AND network = ? AND status = ?"
-	if err := s.db.Raw(sql, userId, network, consts.SUCCESS).Scan(&vo).Error; err != nil {
+	sql := "select COUNT(*) as total_subscription, SUM(consumers) as total_consumers from t_cl_subscription where user_id = ? AND network LIKE ? AND status = ? "
+	like_ := "%" + network
+	if err := s.db.Raw(sql, userId, like_, consts.SUCCESS).Scan(&vo).Error; err != nil {
 		return nil, err
 	}
 	return vo, nil

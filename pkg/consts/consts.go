@@ -9,11 +9,3 @@ const (
 	FAILED  = "failed"
 )
 const EventSignature = "0x5a6d5c6a00dd6c9e2d1e6f7b8d4b4a4b4a4a4b4a4b4a4b4a4a4a4b4a4b4a4b4a"
-
-//// chain and network
-//var NETWORK map[string]string
-//
-//func init() {
-//	NETWORK["Sepolia"] = "Test"
-//
-//}
