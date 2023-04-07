@@ -15,6 +15,7 @@ type HandlerServer struct {
 	chainlinkDashboardService    service.ChainLinkDashboardService
 	chainlinkPoolService         service.PoolService
 	rpcService                   service.RpcService
+	middleWareService            service.MiddleWareService
 }
 
 func NewHandlerServer() *HandlerServer {
@@ -63,5 +64,12 @@ func NewHandlerServer() *HandlerServer {
 		panic(fmt.Sprintf("application get pool service failed: %s", err.Error()))
 	}
 	handlerServer.chainlinkPoolService = *poolService
+	middleWareService, err := application.GetBean[*service.MiddleWareService]("middleWareService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get middleware service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get middleware service failed: %s", err.Error()))
+	}
+	handlerServer.middleWareService = *middleWareService
+
 	return &handlerServer
 }

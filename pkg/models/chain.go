@@ -78,6 +78,11 @@ type RpcChainApp struct {
 	App *ApiResponseRpcApp
 }
 
+type MiddleWareRpc struct {
+	RpcChainBaseInfo
+	RpcChain
+}
+
 func GetChainLink(chain ChainType, network NetworkType) (string, string, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {

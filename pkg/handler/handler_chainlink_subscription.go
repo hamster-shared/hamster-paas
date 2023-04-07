@@ -58,7 +58,8 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 	subscriptionId, err := strconv.Atoi(idString)
 	if err != nil {
 		logger.Error(fmt.Sprintf("createSubscription failed: %s", err.Error()))
-		Fail("invalid params", c)
+		logger.Errorf("input arg: %s", idString)
+		Fail(fmt.Sprintf("invalid params: %s", err), c)
 		return
 	}
 	admin := c.PostForm("admin")

@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,6 +20,34 @@ func (h *HandlerServer) rpcOverview(c *gin.Context) {
 		return
 	}
 	Success(appResp, c)
+}
+
+func (h *HandlerServer) rpcGetMyNetwork(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	page := c.Query("page")
+	size := c.Query("size")
+	pageInt, err := strconv.Atoi(page)
+	if err != nil {
+		pageInt = 1
+	}
+	sizeInt, err := strconv.Atoi(size)
+	if err != nil {
+		sizeInt = 10
+	}
+	p := &models.Pagination{
+		Page: pageInt,
+		Size: sizeInt,
+	}
+	appResp, p, err := h.rpcService.GetMyNetwork(user.(aline.User), p)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	SuccessWithPagination(appResp, *p, c)
 }
 
 func (h *HandlerServer) rpcGetChains(c *gin.Context) {

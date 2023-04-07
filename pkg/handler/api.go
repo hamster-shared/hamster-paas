@@ -30,12 +30,17 @@ func (h *HttpServer) StartHttpServer() error {
 	rpcApi.GET("/chains", h.handlerServer.rpcGetChains)
 	rpcApi.GET("/networks/:chain", h.handlerServer.rpcGetNetworks)
 	rpcApi.GET("/overview", h.handlerServer.rpcOverview)
+	rpcApi.GET("/mynetwork", h.handlerServer.rpcGetMyNetwork)
 	rpcApi.GET("/chain/:chain", h.handlerServer.rpcChainDetail)
 	rpcApi.GET("/request-log/:appKey", h.handlerServer.rpcRequestLog)
+
+	middleWare := r.Group("/api/middleware")
+	middleWare.GET("/rpc", h.handlerServer.middlewareRpc)
 
 	chainLinkApi := r.Group("/api/chainlink")
 	chainLinkApi.Use(h.handlerServer.Authorize())
 	//chain link request
+	chainLinkApi.GET("/request/overview", h.handlerServer.overview)
 	chainLinkApi.GET("/requests", h.handlerServer.requestList)
 	chainLinkApi.POST("/request", h.handlerServer.saveChainLinkRequest)
 	chainLinkApi.POST("/request/exec", h.handlerServer.saveChainLinkRequestExec)

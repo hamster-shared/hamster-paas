@@ -85,6 +85,10 @@ func (a *RpcAccount) GetApps() ([]*ApiResponseRpcApp, error) {
 	return getApps(a.Address)
 }
 
+func (a *RpcAccount) GetAppsWithPagination(p *Pagination) ([]*ApiResponseRpcApp, *Pagination, error) {
+	return getAppsPagination(a.Address, p)
+}
+
 func (a *RpcAccount) GetApp(id int) (*RpcApp, error) {
 	return getApp(a.Address, id)
 }
