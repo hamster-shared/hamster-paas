@@ -9,14 +9,16 @@ type RequestTemplate struct {
 	Script      string    `json:"script"`
 	Author      string    `json:"author"`
 	Description string    `json:"description"`
+	ParamsCount int       `json:"paramsCount"`
 }
 
 type Request struct {
-	Id      int64     `json:"id"`
-	Name    string    `json:"name"`
-	Created time.Time `json:"created"`
-	Script  string    `json:"script"`
-	UserId  uint64    `gorm:"column:user_id" json:"userId"`
+	Id          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Created     time.Time `json:"created"`
+	Script      string    `json:"script"`
+	ParamsCount int       `json:"paramsCount"`
+	UserId      uint64    `gorm:"column:user_id" json:"userId"`
 }
 
 type RequestExecute struct {

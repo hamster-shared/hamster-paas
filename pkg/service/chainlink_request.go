@@ -49,6 +49,7 @@ func (r *ChainLinkRequestService) SaveChainLinkRequest(saveData vo.ChainLinkRequ
 		chainLinkRequest.Name = saveData.Name
 		chainLinkRequest.Script = saveData.Script
 		chainLinkRequest.Created = time.Now()
+		chainLinkRequest.ParamsCount = saveData.ParamsCount
 		err = r.db.Create(&chainLinkRequest).Error
 		if err != nil {
 			return err
@@ -82,13 +83,15 @@ func (r *ChainLinkRequestService) ChainLinkRequestTemplateList() ([]vo.RequestTe
 	return templateVoList, nil
 }
 
-func (r *ChainLinkRequestService) GetRequestTemplateScript(id int64) (string, error) {
+func (r *ChainLinkRequestService) GetRequestTemplateScript(id int64) (vo.RequestTemplateDetailVo, error) {
 	var template models.RequestTemplate
+	var detail vo.RequestTemplateDetailVo
 	err := r.db.Model(models.RequestTemplate{}).Where("id = ? ", id).First(&template).Error
 	if err != nil {
-		return "", err
+		return detail, err
 	}
-	return template.Script, nil
+	copier.Copy(&detail, &template)
+	return detail, nil
 }
 
 func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, size int, userId int64, requestName string) (*vo.ChainLinkExpensePage, error) {
@@ -112,7 +115,7 @@ func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, siz
 	return &chainLinkExpensePage, nil
 }
 
-func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLinkRequestExecParam, userId uint64) error {
+func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLinkRequestExecParam, userId uint64) (int64, error) {
 	//todo 链上校验
 	var requestExec models.RequestExecute
 	copier.Copy(&requestExec, &saveData)
@@ -121,8 +124,19 @@ func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLink
 	requestExec.Status = consts.PENDING
 	err := r.db.Create(&requestExec).Error
 	if err != nil {
+		return 0, err
+	}
+	return requestExec.Id, nil
+}
+
+func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id, userId int64, status string) error {
+	var data models.RequestExecute
+	err := r.db.Where("id = ? and user_id = ?", id, userId).First(&data).Error
+	if err != nil {
 		return err
 	}
+	data.Status = status
+	r.db.Save(&data)
 	return nil
 }
 
