@@ -19,7 +19,7 @@ func NewAlineProjectService(db *gorm.DB) *ProjectService {
 
 func (p *ProjectService) GetProjectByUserId(userId uint) []*vo.AlineProjectIDAndName {
 	var projectList []*vo.AlineProjectIDAndName
-	p.db.Model(models.Project{}).Where("user_id = ? AND label_display = ?", userId, "chainlink").Find(&projectList)
+	p.db.Model(models.Project{}).Where("user_id = ? AND label_display = ?", userId, "Chainlink").Find(&projectList)
 	return projectList
 }
 
