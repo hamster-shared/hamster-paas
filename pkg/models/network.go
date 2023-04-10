@@ -43,19 +43,19 @@ func ParseNetworkType(s string) (NetworkType, error) {
 	switch strings.ToLower(s) {
 	case "mainnet":
 		return Mainnet, nil
-	case "goerli testnet", "testnet/goerli":
+	case "goerli testnet", "testnet/goerli", "testnet-goerli":
 		return TestnetGoerli, nil
-	case "ropsten testnet", "testnet/ropsten":
+	case "ropsten testnet", "testnet/ropsten", "testnet-ropsten":
 		return TestnetRopsten, nil
-	case "kovan testnet", "testnet/kovan":
+	case "kovan testnet", "testnet/kovan", "testnet-kovan":
 		return TestnetKovan, nil
-	case "rinkeby testnet", "testnet/rinkeby":
+	case "rinkeby testnet", "testnet/rinkeby", "testnet-rinkeby":
 		return TestnetRinkeby, nil
-	case "sepolia testnet", "testnet/sepolia":
+	case "sepolia testnet", "testnet/sepolia", "testnet-sepolia":
 		return TestnetSepolia, nil
-	case "hamster testnet", "testnet/hamster":
+	case "hamster testnet", "testnet/hamster", "testnet-hamster":
 		return TestnetHamster, nil
-	case "mumbai testnet", "testnet/numbai":
+	case "mumbai testnet", "testnet/mumbai", "testnet-mumbai":
 		return TestnetMumbai, nil
 	default:
 		return Mainnet, fmt.Errorf("invalid network type: %s", s)
