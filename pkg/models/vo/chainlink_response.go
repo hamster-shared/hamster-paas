@@ -112,14 +112,15 @@ type ChainLinkExpenseVo struct {
 }
 
 type ChainLinkValidSubscriptionVo struct {
-	Id            uint      `json:"id"`
-	Name          string    `json:"name"`
-	Created       time.Time `json:"created"`
-	Chain         string    `json:"chain"`
-	Network       string    `json:"network"`
-	TransactionTx string    `json:"transactionTx"`
-	Admin         string    `json:"admin"`
-	Status        string    `json:"status"`
+	Id                  uint      `json:"id"`
+	ChainSubscriptionId uint      `json:"chainSubscriptionId"`
+	Name                string    `json:"name"`
+	Created             time.Time `json:"created"`
+	Chain               string    `json:"chain"`
+	Network             string    `json:"network"`
+	TransactionTx       string    `json:"transactionTx"`
+	Admin               string    `json:"admin"`
+	Status              string    `json:"status"`
 }
 
 type AlineValidContractPage struct {
