@@ -36,7 +36,7 @@ func (n NetworkType) StringAline() string {
 }
 
 func (n NetworkType) NetworkType() eth.EthNetwork {
-	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.Monbai_TESTNET}[n]
+	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.MUMBAI_TESTNET}[n]
 }
 
 func ParseNetworkType(s string) (NetworkType, error) {

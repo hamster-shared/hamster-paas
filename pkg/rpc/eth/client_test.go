@@ -36,13 +36,13 @@ func GetTransaction(network EthNetwork, tx string) error {
 }
 
 func TestWatchRequestRes(t *testing.T) {
-	client := NewEthereumProxyFactory().GetClient(HAMSTER)
-	client.WatchRequestResult("0xcb1d64Bf20faCc6093E2E39FAA7129AC8148F38a", "0x969400eb4762e926adf55aa3deebfbd6b32db30e8dc866fa3fe0ca7db47827d3")
+	client := NewEthereumProxyFactory().GetClient(MUMBAI_TESTNET)
+	client.WatchRequestResult("0xcb1d64Bf20faCc6093E2E39FAA7129AC8148F38a", "0x969400eb4762e926adf55aa3deebfbd6b32db30e8dc866fa3fe0ca7db47827d3", "")
 }
 
 func TestGetReceipt(t *testing.T) {
-	client := NewEthereumProxyFactory().GetClient(HAMSTER)
-	receipt, err := client.TransactionReceipt("0xd19ea5989526949e501c1a4dafe578868acf2f95f5a22380023520dd1d7fc490")
+	client := NewEthereumProxyFactory().GetClient(MUMBAI_TESTNET)
+	receipt, err := client.TransactionReceipt("0x71db36d509f640b8cf103f8e695cf1621f0d2b5dadb51efc5a3ec9d649088aba")
 	if err != nil {
 		panic(err)
 	}

@@ -3,10 +3,13 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/core/types"
+	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
+	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/utils/logger"
 	"strings"
 	"time"
@@ -101,7 +104,7 @@ func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, siz
 	var chainLinkExpensePage vo.ChainLinkExpensePage
 	var chainLinkExpenseList []models.RequestExecute
 	var chainLinkExpenseVoList []vo.ChainLinkExpenseVo
-	tx := r.db.Model(models.RequestExecute{}).Where("user_id = ? and subscription_id = ?", userId, subscriptionId)
+	tx := r.db.Model(models.RequestExecute{}).Where("user_id = ? and subscription_id = ? and status = ? ", userId, subscriptionId, consts.SUCCESS)
 	if requestName != "" {
 		tx = tx.Where("request_name like ? ", "%"+requestName+"%")
 	}
@@ -117,17 +120,27 @@ func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, siz
 	return &chainLinkExpensePage, nil
 }
 
-func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLinkRequestExecParam, userId uint64) (int64, error) {
-	//todo 链上校验
+func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLinkRequestExecParam, user aline.User) (int64, error) {
 	var requestExec models.RequestExecute
 	copier.Copy(&requestExec, &saveData)
 	requestExec.Created = time.Now()
-	requestExec.UserId = userId
+	requestExec.UserId = uint64(user.Id)
 	requestExec.Status = consts.PENDING
 	err := r.db.Create(&requestExec).Error
 	if err != nil {
 		return 0, err
 	}
+	client := eth.NewEthereumProxyFactory().GetClient(eth.EthNetwork(saveData.Network))
+	chainLinkPoolService, err := application.GetBean[*PoolService]("chainLinkPoolService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("get pool service failed:%s", err.Error()))
+		return requestExec.Id, nil
+	}
+	statusFun := func() {
+		watchExecStatus(requestExec, r.db, client)
+		watchRequest(saveData.ConsumerAddress, saveData.RequestId, user.UserEmail, client)
+	}
+	chainLinkPoolService.Submit(statusFun)
 	return requestExec.Id, nil
 }
 
@@ -218,4 +231,33 @@ func reverseString(in []string) []string {
 		in[i], in[j] = in[j], in[i]
 	}
 	return in
+}
+
+func watchRequest(contractAddress, requestId, email string, client eth.EthereumProxy) {
+	client.WatchRequestResult(contractAddress, requestId, email)
+}
+
+func watchExecStatus(data models.RequestExecute, db *gorm.DB, client eth.EthereumProxy) {
+	start := time.Now() // 记录开始时间
+	for {
+		receipt, err := client.TransactionReceipt(data.TransactionTx)
+		if err != nil {
+			data.Status = consts.FAILED
+			db.Save(&data)
+			break
+		}
+		if receipt.Status == types.ReceiptStatusFailed {
+			data.Status = consts.FAILED
+			db.Save(&data)
+			break
+		}
+		if receipt.Status == types.ReceiptStatusSuccessful {
+			data.Status = consts.SUCCESS
+			db.Save(&data)
+			break
+		}
+		if time.Since(start) > time.Minute { // 判断是否执行了1分钟
+			break // 跳出循环
+		}
+	}
 }
