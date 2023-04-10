@@ -55,7 +55,7 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 	subscriptionCreateParam := vo.ChainLinkSubscriptionCreateParam{}
 	err := c.BindJSON(&subscriptionCreateParam)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
+		logger.Error(fmt.Sprintf("Create subscription failed, bind json error: %s", err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
