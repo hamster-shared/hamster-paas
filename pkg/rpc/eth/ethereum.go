@@ -23,20 +23,20 @@ const GOERLI EthNetwork = "goerli"
 const HAMSTER EthNetwork = "hamster"
 const BSC_MAINNET EthNetwork = "bsc_mainnet"
 const BSC_TESTNET EthNetwork = "bsc_testnet"
-const Monbai_TESTNET EthNetwork = "monbai"
+const Monbai_TESTNET EthNetwork = "Mumbai Testnet"
 
-var netMap map[EthNetwork]string = make(map[EthNetwork]string)
+var NetMap map[EthNetwork]string = make(map[EthNetwork]string)
 
 func setup() {
-	netMap[GOERLI] = "https://goerli.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
-	netMap[MAINNET] = "https://mainnet.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
+	NetMap[GOERLI] = "https://goerli.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
+	NetMap[MAINNET] = "https://mainnet.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
 	//netMap[HAMSTER] = "https://rpc-moonbeam.hamster.newtouch.com"
 	//netMap[HAMSTER] = "wss://ws-moonbeam.hamster.newtouch.com"
 	//netMap[HAMSTER] = "wss://eth-sepolia.g.alchemy.com/v2/BgE-iyk7FqwXwyn6pHEeByyZpI56NYgO"
-	netMap[HAMSTER] = "wss://polygon-mumbai.g.alchemy.com/v2/BM4kwUJwMKmdh1zaDDByzNr19jgzdRiV"
-	netMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
-	netMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
-	netMap[Monbai_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
+	NetMap[HAMSTER] = "wss://polygon-mumbai.g.alchemy.com/v2/BM4kwUJwMKmdh1zaDDByzNr19jgzdRiV"
+	NetMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
+	NetMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
+	NetMap[Monbai_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
 }
 
 func init() {
@@ -66,7 +66,7 @@ func (e *EthereumProxyFactory) GetClient(network EthNetwork) EthereumProxy {
 		//do
 		return val
 	} else {
-		client, err := NewRPCEthereumProxy(netMap[network])
+		client, err := NewRPCEthereumProxy(NetMap[network])
 		if err != nil {
 			return nil
 		}

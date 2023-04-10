@@ -8,6 +8,7 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"hamster-paas/pkg/rpc/eth"
 )
 
 type ChainLinkSubscriptionService struct {
@@ -23,43 +24,42 @@ func NewChainLinkSubscriptionService(db *gorm.DB) *ChainLinkSubscriptionService 
 // CreateSubscription create subscription
 // * param subscription: new Subscription need to save in db.
 // * error when subscription already exit.
-func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription, poolService PoolService) (int64, error) {
-	//var s_ *models.Subscription
-	// 判断是否用已经成功的订阅存在
-	//err := s.db.Model(models.Subscription{}).Where(
-	//	"chain_subscription_id = ? AND chain = ? AND network = ? AND (status = ? OR status = ?)",
-	//	subscription.ChainSubscriptionId, subscription.Chain, subscription.Network, consts.PENDING, consts.SUCCESS).First(&s_).Error
-	// 判断订阅是否存在
-	//if err == gorm.ErrRecordNotFound {
-	//	err = s.db.Create(&subscription).Error
-	//	if err != nil {
-	//		return -1, err
-	//	}
-	//	return int64(subscription.Id), nil
-	//}
-	// 订阅已存在，返回错误
-	//return -1, errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists, status: %s", subscription.Chain, subscription.Network, subscription.ChainSubscriptionId, s_.Status))
+func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription, poolService PoolService, network eth.EthNetwork) (int64, error) {
 	err := s.db.Create(&subscription).Error
 	if err != nil {
 		return -1, err
 	}
 	//poolService.Submit(func() {
-	//	client, err := eth.NewRPCEthereumProxy("wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG")
+	//	client, _ := eth.NewRPCEthereumProxy(eth.NetMap[network])
 	//	times := 0
+	//	needFalid := false
 	//	for {
-	//		if times == 100 {
+	//		if times == 300 {
+	//			needFalid = true
 	//			break
 	//		}
-	//		re, err := client.TransactionReceipt("0xb909d3982ce8d80a11b8554e65739de2e4024f44e88f0440ae5165eb271c8f32")
+	//		re, _ := client.TransactionReceipt(subscription.TransactionTx)
 	//		if re.Status == 1 {
-	//
+	//			// 修改状态为成功
+	//			logger.Infof("Create Subscription : Tx Success, change subscription id: %d status to success", subscription.Id)
+	//			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.SUCCESS)
+	//			break
+	//		} else if re.Status == 0 {
+	//			// 修改状态为失败
+	//			logger.Infof("Create Subscription : Tx failed, change subscription id: %d status to failed", subscription.Id)
+	//			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
+	//			break
 	//		}
+	//		time.Sleep(time.Minute * 1)
+	//		times++
+	//	}
+	//	if needFalid {
+	//		// 更新状态为失败
+	//		logger.Infof("Create Subscription : Query timeout, change subscription id: %d status to failed", subscription.Id)
+	//		s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
 	//	}
 	//
 	//})
-	//client, err := eth.NewRPCEthereumProxy("wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG")
-	//re, err := client.TransactionReceipt("0xb909d3982ce8d80a11b8554e65739de2e4024f44e88f0440ae5165eb271c8f32")
-	//fmt.Println(re.Status)
 
 	return int64(subscription.Id), nil
 }

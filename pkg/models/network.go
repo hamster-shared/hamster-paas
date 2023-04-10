@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"hamster-paas/pkg/rpc/eth"
 	"strings"
 )
 
@@ -32,6 +33,10 @@ func (n NetworkType) StringWithSpace() string {
 
 func (n NetworkType) StringAline() string {
 	return [...]string{"Mainnet", "Testnet/Goerli", "Testnet/Ropsten", "Testnet/Kovan", "Testnet/Rinkeby", "Testnet/Sepolia", "Testnet/Hamster", "Mumbai Testnet"}[n]
+}
+
+func (n NetworkType) NetworkType() eth.EthNetwork {
+	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.Monbai_TESTNET}[n]
 }
 
 func ParseNetworkType(s string) (NetworkType, error) {

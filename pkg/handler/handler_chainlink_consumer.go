@@ -67,18 +67,18 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 	pagination.Page = pageInt
 	pagination.Size = sizeInt
 	projectIdString := c.Param("id")
-	paramJson := vo.ChainLinkHamsterListParam{}
-	err = c.BindJSON(&paramJson)
-	if err != nil {
+	chainParam := c.Query("chain")
+	networkParam := c.Query("network")
+	if chainParam == "" && networkParam == "" {
 		Fail("invalid params: chain an network", c)
 		return
 	}
-	_, err = models.ParseChainType(paramJson.Chain)
+	_, err = models.ParseChainType(chainParam)
 	if err != nil {
 		Fail("chain not format", c)
 		return
 	}
-	network, err := models.ParseNetworkType(paramJson.NetWork)
+	network, err := models.ParseNetworkType(networkParam)
 	if err != nil {
 		Fail("network not format", c)
 		return
