@@ -3,6 +3,7 @@ module hamster-paas
 go 1.20
 
 require (
+	github.com/davecgh/go-spew v1.1.1
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/gammazero/workerpool v1.1.3
 	github.com/gin-gonic/gin v1.9.0

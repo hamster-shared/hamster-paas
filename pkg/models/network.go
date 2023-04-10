@@ -19,7 +19,7 @@ const (
 )
 
 func (n NetworkType) String() string {
-	return [...]string{"Mainnet", "TestnetGoerli", "TestnetRopsten", "TestnetKovan", "TestnetRinkeby", "TestnetSepolia"}[n]
+	return [...]string{"Mainnet", "TestnetGoerli", "TestnetRopsten", "TestnetKovan", "TestnetRinkeby", "TestnetSepolia", "TestnetMumbai"}[n]
 }
 
 func (n NetworkType) StringLower() string {

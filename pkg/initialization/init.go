@@ -41,6 +41,7 @@ func Init() {
 	application.SetBean("rpcService", service.NewRpcService(db))
 	application.SetBean("middleWareService", service.NewMiddleWareService(db))
 	nginx_log_parse.InitMeiliSearch()
+	service.NewOracleListener(db).StartListen()
 	httpHandler := handler.NewHandlerServer()
 	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
 	if err != nil {

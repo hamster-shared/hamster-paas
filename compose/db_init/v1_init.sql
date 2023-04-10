@@ -299,3 +299,21 @@ CREATE TABLE IF NOT EXISTS t_cl_rpc_code_examples (
     python TEXT NOT NULL,
     go TEXT NOT NULL
 );
+DROP TABLE IF EXISTS t_cl_oracle_request_event;
+CREATE TABLE IF NOT EXISTS t_cl_oracle_request_event (
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    chain varchar(255) NOT NULL,
+    network varchar(255) NOT NULL,
+    transaction_hash varchar(255) NOT NULL,
+    requesting_contract varchar(255) NOT NULL,
+    request_initiator varchar(255) NOT NULL,
+    subscription_id int NOT NULL,
+    subscription_owner varchar(255) NOT NULL,
+    block_number int NOT NULL,
+    tx_index int NOT NULL,
+    block_hash varchar(255) NOT NULL,
+    _index int NOT NULL,
+    removed tinyint(1) NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
+);

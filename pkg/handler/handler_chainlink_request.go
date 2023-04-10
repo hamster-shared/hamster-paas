@@ -226,7 +226,7 @@ func (h *HandlerServer) overview(gin *gin.Context) {
 		Fail("do not have token", gin)
 		return
 	}
-	appResp, err := h.rpcService.Overview(user.(aline.User))
+	appResp, err := h.chainLinkRequestService.Overview(user.(aline.User))
 	if err != nil {
 		Fail(err.Error(), gin)
 		return
