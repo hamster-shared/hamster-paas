@@ -138,12 +138,9 @@ func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLink
 	}
 	statusFun := func() {
 		watchExecStatus(requestExec, r.db, client)
-	}
-	chainLinkPoolService.Submit(statusFun)
-	fn := func() {
 		watchRequest(saveData.ConsumerAddress, saveData.RequestId, user.UserEmail, client)
 	}
-	chainLinkPoolService.Submit(fn)
+	chainLinkPoolService.Submit(statusFun)
 	return requestExec.Id, nil
 }
 
