@@ -47,23 +47,41 @@ spec:
             - name: PORT
               value: "9898"
             - name: MEILI_SEARCH
-              value: "meilisearch-service:7700"
+              value: "hamster-paas-meilisearch-service:7700"
             - name: NGINX_LOG_PATH
               value: "/var/log/nginx/access.log"
             - name: ALINE_DB_USER
               value: "root"
             - name: ALINE_DB_PASSWORD
               valueFrom:
-                  configMapKeyRef:
-                    name: hamster-aline
-                    key: db_password
+                configMapKeyRef:
+                  name: hamster-aline
+                  key: db_password
             - name: ALINE_DB_HOST
               value: "mysql"
             - name: ALINE_DB_PORT
               value: "3306"
             - name: ALINE_DB_NAME
-              value: "pass"
-          resources: { }
+              value: "aline"
+            - name: MYSQL_DATABASE
+              value: "aline"
+            - name: MYSQL_USER
+              value: "aline"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-aline
+                  key: db_password
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-aline
+                  key: db_password
+            - name: MYSQL_HOST
+              value: "mysql"
+            - name: MYSQL_PORT
+              value: "3306"
+          resources: {}
           ports:
             - containerPort: 9898
           terminationMessagePath: /dev/termination-log
@@ -124,7 +142,7 @@ spec:
         - image: nginx
           imagePullPolicy: Always
           name: hamster-paas-nginx
-          resources: { }
+          resources: {}
           ports:
             - containerPort: 80
           terminationMessagePath: /dev/termination-log
@@ -170,11 +188,11 @@ data:
   nginx.conf: |-
     #user http;
     worker_processes 1;
-    
+
     error_log /var/log/nginx/error.log;
-    
+
     #pid        logs/nginx.pid;
-    
+
     events {
       worker_connections 1024;
     }
@@ -249,7 +267,7 @@ data:
         default upgrade;
         '' close;
       }
-    
+
       # Ethereum
       upstream eth_http_node {
         server 54.218.156.194:8545;
@@ -258,7 +276,7 @@ data:
       upstream eth_ws_node {
         server 54.218.156.194:8546;
       }
-    
+
       # Ethereum Goerli
         upstream eth_http_node_goerli {
         server 52.40.104.255:8547;
@@ -267,7 +285,7 @@ data:
       upstream eth_ws_node_goerli {
         server 52.40.104.255:8546;
       }
-    
+
       # Sui
       upstream sui_http_node {
         server 18.237.18.90:9000;
@@ -276,12 +294,12 @@ data:
       upstream sui_ws_node {
         server 18.237.18.90:9001;
       }
-    
+
       # Avalanche
       upstream avalanche_http_node {
         server 18.246.73.187:9650;
       }
-    
+
       # Optimism
       upstream optimism_http_node {
         server 34.221.140.46:9991;
@@ -290,17 +308,17 @@ data:
       upstream optimism_ws_node {
         server 34.221.140.46:9992;
       }
-    
+
       # Near
       upstream near_http_node {
         server 52.26.103.150:3030;
       }
-    
+
       # Aptos
       upstream aptos_http_node {
         server 52.26.103.150:9101;
       }
-    
+
       # BSC
       upstream bsc_http_node {
         server 52.26.103.150:8545;
@@ -309,12 +327,12 @@ data:
       upstream bsc_ws_node {
         server 52.26.103.150:8546;
       }
-    
+
       # Starknet
       upstream starknet_http_node {
         server 54.69.42.237:9545;
       }
-    
+
       # Polygon
       upstream polygon_http_node {
         server 52.40.104.255:8545;
@@ -524,7 +542,7 @@ spec:
         - image: getmeili/meilisearch:v1.0
           imagePullPolicy: Always
           name: hamster-paas-meilisearch
-          resources: { }
+          resources: {}
           ports:
             - containerPort: 7700
           terminationMessagePath: /dev/termination-log
