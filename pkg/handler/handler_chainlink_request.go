@@ -2,11 +2,13 @@ package handler
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 func (h *HandlerServer) requestList(gin *gin.Context) {
@@ -226,7 +228,14 @@ func (h *HandlerServer) overview(gin *gin.Context) {
 		Fail("do not have token", gin)
 		return
 	}
-	appResp, err := h.chainLinkRequestService.Overview(user.(aline.User))
+	// 获取路径参数
+	network := gin.Param("network")
+	networkType, err := models.ParseNetworkType(network)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	appResp, err := h.chainLinkRequestService.Overview(user.(aline.User), networkType)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return

@@ -8,6 +8,7 @@ import (
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -141,32 +142,80 @@ func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id, userId int64, s
 	return nil
 }
 
-func (r *ChainLinkRequestService) Overview(user aline.User) ([]models.OracleRequestEventAndName, error) {
+func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.NetworkType) (*ApiResponseOverview, error) {
 	sqlQuery := `SELECT *
 FROM t_cl_subscription
 JOIN t_cl_oracle_request_event
-ON t_cl_subscription.transaction_tx = t_cl_oracle_request_event.transaction_hash
+ON t_cl_subscription.chain_subscription_id = t_cl_oracle_request_event.subscription_id
 WHERE t_cl_subscription.chain_subscription_id IN (
     SELECT chain_subscription_id FROM t_cl_subscription WHERE user_id = ?
 )
 AND t_cl_subscription.chain = ?
 AND t_cl_subscription.network = ?
 `
-	logger.Info("sqlQuery: ", sqlQuery)
-
 	var result []models.OracleRequestEventAndName
-	err := r.db.Raw(sqlQuery, user.Id, "ethereum", "testnet-mumbai").Scan(&result).Error
+	err := r.db.Raw(sqlQuery, user.Id, "ethereum", networkType.StringWithSpace()).Scan(&result).Error
 	if err != nil {
 		logger.Errorf("chain link oracle request overview error: %s", err)
 		return nil, err
 	}
 
-	// 根据时间过滤，只保留最近 7 天的请求事件
-	// var filteredRequestEvents []models.OracleRequestEvent
-	// for _, requestEvent := range requestEvents {
-	// 	if time.Now().Sub(requestEvent.CreatedAt) < 7*24*time.Hour {
-	// 		filteredRequestEvents = append(filteredRequestEvents, requestEvent)
-	// 	}
-	// }
-	return result, nil
+	var apiResponseOverview ApiResponseOverview
+	apiResponseOverview.Network = networkType.StringWithSpace()
+	// 首先过滤出种类
+	for _, v := range result {
+		if !contains(apiResponseOverview.LegendData, v.Name) {
+			apiResponseOverview.LegendData = append(apiResponseOverview.LegendData, v.Name)
+		}
+	}
+	for i := 0; i < 7; i++ {
+		apiResponseOverview.XaxisData = append(apiResponseOverview.XaxisData, time.Now().AddDate(0, 0, -i).Format("2006-01-02"))
+	}
+	apiResponseOverview.XaxisData = reverseString(apiResponseOverview.XaxisData)
+
+	// 根据时间过滤，只保留最近 7 天的请求事件，每天一个，最后成一个数组，最终只要出现的次数而已
+	for _, v := range apiResponseOverview.LegendData {
+		var serie Serie
+		serie.Name = v
+		for _, x := range apiResponseOverview.XaxisData {
+			var count int
+			for _, r := range result {
+				if r.Name == v && strings.Contains(r.CreatedAt.Format("2006-01-02"), x) {
+					count++
+				}
+			}
+			serie.Data = append(serie.Data, count)
+		}
+		apiResponseOverview.SeriesData = append(apiResponseOverview.SeriesData, serie)
+	}
+	return &apiResponseOverview, nil
+}
+
+type ApiResponseOverview struct {
+	Network    string   `json:"network"`
+	LegendData []string `json:"legendData"` // 种类
+	XaxisData  []string `json:"xaxisData"`  // 时间
+	SeriesData []Serie  `json:"seriesData"` // 数据
+}
+
+type Serie struct {
+	Name string `json:"name"`
+	Data []int  `json:"data"`
+}
+
+// 查看某个键是否在列表里
+func contains(list []string, key string) bool {
+	for _, v := range list {
+		if v == key {
+			return true
+		}
+	}
+	return false
+}
+
+func reverseString(in []string) []string {
+	for i, j := 0, len(in)-1; i < j; i, j = i+1, j-1 {
+		in[i], in[j] = in[j], in[i]
+	}
+	return in
 }

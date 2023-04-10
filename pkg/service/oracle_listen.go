@@ -21,7 +21,16 @@ var URL = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFX
 var ORACLE = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
 
 func (l *OracleListener) listen() error {
-	// 连接到 Ethereum 节点
+	// 创建一个自定义的 HTTP 客户端，禁用 SSL/TLS 证书验证
+	// customHttpClient := &http.Client{
+	// 	Transport: &http.Transport{
+	// 		TLSClientConfig: &tls.Config{
+	// 			InsecureSkipVerify: true,
+	// 		},
+	// 	},
+	// }
+
+	// 使用自定义的 HTTP 客户端连接到 Ethereum 节点
 	client, err := ethclient.Dial(URL)
 	if err != nil {
 		logger.Errorf("连接到 Ethereum 节点出错: %s", err)

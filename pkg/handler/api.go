@@ -40,7 +40,7 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi := r.Group("/api/chainlink")
 	chainLinkApi.Use(h.handlerServer.Authorize())
 	//chain link request
-	chainLinkApi.GET("/request/overview", h.handlerServer.overview)
+	chainLinkApi.GET("/request/overview/:network", h.handlerServer.overview)
 	chainLinkApi.GET("/requests", h.handlerServer.requestList)
 	chainLinkApi.POST("/request", h.handlerServer.saveChainLinkRequest)
 	chainLinkApi.POST("/request/exec", h.handlerServer.saveChainLinkRequestExec)
