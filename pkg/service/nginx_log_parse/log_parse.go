@@ -16,11 +16,19 @@ type LogParser struct {
 }
 
 func InitMeiliSearch() {
-	p, err := NewLogParser()
-	if err != nil {
-		panic(err)
+	for i := 0; i < 10; i++ {
+		p, err := NewLogParser()
+		if err != nil {
+			logger.Errorf("init meili search error: %s, meili search host: %s, nginx log path: %s", err, os.Getenv("MEILI_SEARCH"), os.Getenv("NGINX_LOG_PATH"))
+			time.Sleep(5 * time.Second)
+			if i == 9 {
+				panic(err)
+			}
+		} else {
+			application.SetBean("meiliSearch", p.client)
+			break
+		}
 	}
-	application.SetBean("meiliSearch", p.client)
 }
 
 func NewLogParser() (*LogParser, error) {
