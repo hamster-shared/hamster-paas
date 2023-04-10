@@ -9,6 +9,8 @@ import (
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/eth"
+	"hamster-paas/pkg/utils/logger"
+	"time"
 )
 
 type ChainLinkSubscriptionService struct {
@@ -29,37 +31,45 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 	if err != nil {
 		return -1, err
 	}
-	//poolService.Submit(func() {
-	//	client, _ := eth.NewRPCEthereumProxy(eth.NetMap[network])
-	//	times := 0
-	//	needFalid := false
-	//	for {
-	//		if times == 300 {
-	//			needFalid = true
-	//			break
-	//		}
-	//		re, _ := client.TransactionReceipt(subscription.TransactionTx)
-	//		if re.Status == 1 {
-	//			// 修改状态为成功
-	//			logger.Infof("Create Subscription : Tx Success, change subscription id: %d status to success", subscription.Id)
-	//			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.SUCCESS)
-	//			break
-	//		} else if re.Status == 0 {
-	//			// 修改状态为失败
-	//			logger.Infof("Create Subscription : Tx failed, change subscription id: %d status to failed", subscription.Id)
-	//			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
-	//			break
-	//		}
-	//		time.Sleep(time.Minute * 1)
-	//		times++
-	//	}
-	//	if needFalid {
-	//		// 更新状态为失败
-	//		logger.Infof("Create Subscription : Query timeout, change subscription id: %d status to failed", subscription.Id)
-	//		s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
-	//	}
-	//
-	//})
+	poolService.Submit(func() {
+		client, _ := eth.NewRPCEthereumProxy(eth.NetMap[network])
+		times := 0
+		needFalid := false
+		for {
+			if times == 90 {
+				needFalid = true
+				break
+			}
+			time.Sleep(time.Second * 20)
+			times++
+			// 拿到数据库中状态,判断是否要主动结束轮询
+			var s_ models.Subscription
+			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).First(&s_)
+			if s_.Status == consts.SUCCESS {
+				break
+			}
+			re, err := client.TransactionReceipt(subscription.TransactionTx)
+			if err != nil {
+				continue
+			}
+			if re.Status == 1 {
+				// 修改状态为成功
+				logger.Infof("Create Subscription : Tx Success, change subscription id: %d status to success", subscription.Id)
+				s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.SUCCESS)
+				break
+			} else if re.Status == 0 {
+				// 修改状态为失败
+				logger.Infof("Create Subscription : Tx failed, change subscription id: %d status to failed", subscription.Id)
+				s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
+				break
+			}
+		}
+		if needFalid {
+			// 更新状态为失败
+			logger.Infof("Create Subscription : Query timeout, change subscription id: %d status to failed", subscription.Id)
+			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
+		}
+	})
 
 	return int64(subscription.Id), nil
 }

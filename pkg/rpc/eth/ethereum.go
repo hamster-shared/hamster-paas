@@ -36,6 +36,7 @@ func setup() {
 	NetMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
 	NetMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
 	NetMap[MUMBAI_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
+	NetMap[SEPOLIA_TESTNET] = "https://sepolia.infura.io/v3/4dedc8f77c3b43ba80078c3a561939f3"
 }
 
 func init() {
