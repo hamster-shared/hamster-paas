@@ -6,10 +6,11 @@ import (
 )
 
 type ChainLinkRequestVo struct {
-	Id      int64     `json:"id"`
-	Name    string    `json:"name"`
-	Created time.Time `json:"created"`
-	Script  string    `json:"script"`
+	Id          int64     `json:"id"`
+	Name        string    `json:"name"`
+	Created     time.Time `json:"created"`
+	Script      string    `json:"script"`
+	ParamsCount int       `json:"paramsCount"`
 }
 
 type ChainLinkRequestPage struct {
@@ -24,6 +25,11 @@ type RequestTemplateVo struct {
 	Name        string `json:"name"`
 	Author      string `json:"author"`
 	Description string `json:"description"`
+}
+
+type RequestTemplateDetailVo struct {
+	Script      string `json:"script"`
+	ParamsCount int    `json:"paramsCount"`
 }
 
 type ChainLinkSubscriptionOverview struct {

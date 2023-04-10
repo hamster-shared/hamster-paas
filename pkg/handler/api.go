@@ -44,6 +44,7 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/requests", h.handlerServer.requestList)
 	chainLinkApi.POST("/request", h.handlerServer.saveChainLinkRequest)
 	chainLinkApi.POST("/request/exec", h.handlerServer.saveChainLinkRequestExec)
+	chainLinkApi.PUT("/request/exec/:id", h.handlerServer.updateChainLinkRequestById)
 	chainLinkApi.PUT("/request/:id", h.handlerServer.updateChainLinkRequest)
 	chainLinkApi.GET("/request/templates", h.handlerServer.chainLinkRequestTemplateList)
 	chainLinkApi.GET("/request/templates/:id", h.handlerServer.getRequestTemplateScript)

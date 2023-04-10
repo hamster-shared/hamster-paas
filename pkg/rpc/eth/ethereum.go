@@ -12,6 +12,7 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/utils/logger"
 	"math/big"
+	"strconv"
 	"strings"
 )
 
@@ -42,7 +43,7 @@ func init() {
 
 type EthereumProxy interface {
 	TransactionByHash(hash string) (tx *types.Transaction, isPending bool, err error)
-	WatchRequestResult(contractAddress string) error
+	WatchRequestResult(contractAddress, requestId string) error
 	TransactionReceipt(hash string) (*types.Receipt, error)
 }
 
@@ -102,9 +103,31 @@ type OCRResponseEvent struct {
 	Err       []byte
 }
 
-func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
+func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId string) error {
 	// 要监听的合约地址
 	oracleContractAddress := common.HexToAddress(contractAddress)
+	//consumerContract, err := contract2.NewFunctionConsumer(oracleContractAddress, rpc.client)
+	//if err != nil {
+	//	fmt.Println("get contract failed:", err.Error())
+	//	return err
+	//}
+	//var requestIdBytes [32]byte
+	//copy((*[32]byte)(unsafe.Pointer(&requestIdBytes[0]))[:], requestId)
+	//var array [][32]byte
+	//array = append(array, requestIdBytes)
+	//eventChan := make(chan *contract2.FunctionConsumerOCRResponse)
+	//opts := &bind.WatchOpts{Context: context.Background()}
+	//sub, err := consumerContract.WatchOCRResponse(opts, eventChan, array)
+	//for {
+	//	select {
+	//	case event := <-eventChan:
+	//		fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	//		fmt.Printf("sender: %s, value: %s\n", event.Result, event.RequestId)
+	//		fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+	//	case err := <-sub.Err():
+	//		fmt.Println(err.Error())
+	//	}
+	//}
 	contractAbi, err := abi.JSON(strings.NewReader(consts.ConsumerAbi))
 	// 监听请求结果
 	query := ethereum.FilterQuery{
@@ -162,6 +185,8 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress string) error {
 			fmt.Println("****************************************")
 			fmt.Printf("RequestId: %x\n", eventData.RequestId)
 			fmt.Printf("Result: %s\n", hexToString(eventData.Result))
+			data, _ := strconv.Atoi(string(eventData.Result))
+			fmt.Println(data)
 			fmt.Printf("Err: %s\n", string(eventData.Err))
 			fmt.Println("****************************************")
 			// 比对 Request ID

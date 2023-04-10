@@ -54,9 +54,10 @@ func (h *HandlerServer) saveChainLinkRequest(gin *gin.Context) {
 	}
 	user, _ := userAny.(aline.User)
 	data := vo.ChainLinkRequest{
-		Name:   createData.Name,
-		Script: createData.Script,
-		UserId: uint64(user.Id),
+		Name:        createData.Name,
+		Script:      createData.Script,
+		UserId:      uint64(user.Id),
+		ParamsCount: createData.ParamsCount,
 	}
 	err = h.chainLinkRequestService.SaveChainLinkRequest(data)
 	if err != nil {
@@ -182,9 +183,37 @@ func (h *HandlerServer) saveChainLinkRequestExec(gin *gin.Context) {
 		return
 	}
 	user, _ := userAny.(aline.User)
-	err = h.chainLinkRequestService.SaveChainLinkRequestExec(createData, uint64(user.Id))
+	data, err := h.chainLinkRequestService.SaveChainLinkRequestExec(createData, uint64(user.Id))
 	if err != nil {
 		logger.Error(fmt.Sprintf("save request exec failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(data, gin)
+}
+
+func (h *HandlerServer) updateChainLinkRequestById(gin *gin.Context) {
+	idStr := gin.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("subscription id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	status := gin.Query("status")
+	if status != "" {
+		Fail("status is empty", gin)
+		return
+	}
+	userAny, exists := gin.Get("user")
+	if !exists {
+		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
+		Fail("user information does not exist", gin)
+		return
+	}
+	user, _ := userAny.(aline.User)
+	err = h.chainLinkRequestService.UpdateChainLinkRequestById(int64(id), int64(user.Id), status)
+	if err != nil {
 		Fail(err.Error(), gin)
 		return
 	}

@@ -3,13 +3,15 @@ package vo
 import "time"
 
 type ChainLinkRequest struct {
-	Name   string `json:"name"`
-	Script string `json:"script"`
-	UserId uint64 `json:"userId"`
+	Name        string `json:"name"`
+	Script      string `json:"script"`
+	UserId      uint64 `json:"userId"`
+	ParamsCount int    `json:"paramsCount"`
 }
 type ChainLinkRequestParam struct {
-	Name   string `json:"name"`
-	Script string `json:"script"`
+	Name        string `json:"name"`
+	Script      string `json:"script"`
+	ParamsCount int    `json:"paramsCount"`
 }
 
 type ChainLinkConsumers struct {

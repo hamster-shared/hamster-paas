@@ -876,3 +876,68 @@ VALUES (
            'Morgan Kuphal',
            'Retrieve the price of an asset from multiple API sources. Assets could be practially anything, incuding equities, crypto, or commodities. This example pulles from multiple different data providers (APIs) and derrives the median to return on chain via Chainlink Functions.'
        );
+
+
+alter table t_cl_request_template
+    add column  params_count int comment 'param count';
+
+
+update t_cl_request_template
+set params_count = 5
+where id = 1;
+
+update t_cl_request_template
+set params_count = 5
+where id = 2;
+
+update t_cl_request_template
+set params_count = 2
+where id = 3;
+
+update t_cl_request_template
+set params_count = 5
+where id = 4;
+
+update t_cl_request_template
+set params_count = 2
+where id = 5;
+
+update t_cl_request_template
+set params_count = 1
+where id = 6;
+
+update t_cl_request_template
+set params_count = 2
+where id = 7;
+
+update t_cl_request_template
+set params_count = 1
+where id = 8;
+
+update t_cl_request_template
+set params_count = 3
+where id = 9;
+
+update t_cl_request_template
+set params_count = 1
+where id = 10;
+
+update t_cl_request_template
+set params_count = 1
+where id = 11;
+
+
+update t_cl_request_template
+set params_count = 3
+where id = 12;
+
+update t_cl_request_template
+set params_count = 2
+where id = 13;
+
+update t_cl_request_template
+set params_count = 5
+where id = 14;
+
+alter table t_cl_request
+    add column  params_count int comment 'param count';
