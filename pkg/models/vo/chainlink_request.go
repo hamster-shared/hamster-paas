@@ -49,7 +49,7 @@ type ChainLinkFoundParam struct {
 
 type ChainLinkConsumerCreateParam struct {
 	SubscriptionId  int64  `json:"subscriptionId"`
-	ConsumerAddress string `json:"consumer_address"`
+	ConsumerAddress string `json:"consumerAddress"`
 	TransactionTx   string `json:"transactionTx"`
 }
 
