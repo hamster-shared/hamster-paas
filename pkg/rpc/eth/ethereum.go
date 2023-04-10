@@ -23,6 +23,7 @@ const GOERLI EthNetwork = "goerli"
 const HAMSTER EthNetwork = "hamster"
 const BSC_MAINNET EthNetwork = "bsc_mainnet"
 const BSC_TESTNET EthNetwork = "bsc_testnet"
+const Monbai_TESTNET EthNetwork = "monbai"
 
 var netMap map[EthNetwork]string = make(map[EthNetwork]string)
 
@@ -35,6 +36,7 @@ func setup() {
 	netMap[HAMSTER] = "wss://polygon-mumbai.g.alchemy.com/v2/BM4kwUJwMKmdh1zaDDByzNr19jgzdRiV"
 	netMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
 	netMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
+	netMap[Monbai_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
 }
 
 func init() {

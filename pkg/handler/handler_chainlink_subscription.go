@@ -83,8 +83,9 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		Fail(err.Error(), c)
 		return
 	}
-	s.Chain = chain.StringLower()
+	s.Chain = chain.String()
 	s.Network = network.StringWithSpace()
+
 	primaryId, err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
@@ -174,6 +175,22 @@ func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
 		Fail("param invalid", gin)
 		return
 	}
+	chain, err := models.ParseChainType(jsonParam.Chain)
+	if err != nil {
+		logger.Error(fmt.Sprintf("change subscription status, chain not format: %s", err.Error()))
+		Fail("param invalid", gin)
+		return
+	}
+	network, err := models.ParseNetworkType(jsonParam.Network)
+	if err != nil {
+		logger.Error(fmt.Sprintf("change subscription status, network not format: %s", err.Error()))
+		Fail("param invalid", gin)
+		return
+	}
+	jsonParam.Chain = chain.String()
+	jsonParam.Network = network.StringWithSpace()
+	fmt.Println(jsonParam.Chain)
+	fmt.Println(jsonParam.Network)
 	err = h.chainLinkSubscriptionService.ChangeSubscriptionStatus(jsonParam, uint64(user.Id))
 	if err != nil {
 		logger.Error(fmt.Sprintf("change subscription status faild: %s", err.Error()))

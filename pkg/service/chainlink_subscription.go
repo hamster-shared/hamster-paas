@@ -43,6 +43,23 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 	if err != nil {
 		return -1, err
 	}
+	//poolService.Submit(func() {
+	//	client, err := eth.NewRPCEthereumProxy("wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG")
+	//	times := 0
+	//	for {
+	//		if times == 100 {
+	//			break
+	//		}
+	//		re, err := client.TransactionReceipt("0xb909d3982ce8d80a11b8554e65739de2e4024f44e88f0440ae5165eb271c8f32")
+	//		if re.Status == 1 {
+	//
+	//		}
+	//	}
+	//
+	//})
+	//client, err := eth.NewRPCEthereumProxy("wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG")
+	//re, err := client.TransactionReceipt("0xb909d3982ce8d80a11b8554e65739de2e4024f44e88f0440ae5165eb271c8f32")
+	//fmt.Println(re.Status)
 
 	return int64(subscription.Id), nil
 }
