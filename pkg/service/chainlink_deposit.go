@@ -41,7 +41,7 @@ func (d *ChainLinkDepositService) DepositList(subscriptionId, page, size int, us
 }
 
 // AddDeposit TODO 需要异步检查
-func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddress string, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService, poolService PoolService) (int64, error) {
+func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService, poolService PoolService) (int64, error) {
 	// 检查该id是否存在且success
 	_, err := subscriptionService.GetSubscriptionById(int(subscriptionId))
 	if err != nil {
@@ -50,7 +50,6 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, consumerAddre
 	var deposit models.Deposit
 	deposit.SubscriptionId = subscriptionId
 	deposit.Created = time.Now()
-	deposit.ConsumerAddress = consumerAddress
 	deposit.Amount = incr
 	deposit.TransactionTx = transactionTx
 	deposit.UserId = uint64(userId)
@@ -64,7 +63,7 @@ func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.Ch
 	var deposit models.Deposit
 	d.db.Model(models.Deposit{}).Where("id = ?", param.Id).First(&deposit)
 	// 判断该deposit是否是符合要求
-	if deposit.TransactionTx == param.TransactionTx && deposit.ConsumerAddress == param.ConsumerAddress && deposit.UserId == userId && param.SubscriptionId == deposit.SubscriptionId {
+	if deposit.TransactionTx == param.TransactionTx && deposit.UserId == userId && param.SubscriptionId == deposit.SubscriptionId {
 		d.db.Model(models.Deposit{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
 		return nil
 	}

@@ -86,12 +86,11 @@ type ChainLinkDepositPage struct {
 }
 
 type ChainLinkDepositVo struct {
-	Id              int64     `json:"id"`
-	Created         time.Time `json:"created"`
-	ConsumerAddress string    `gorm:"column:consumer_address" json:"consumerAddress"`
-	Amount          float64   `json:"amount"`
-	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
-	Status          string    `json:"status,omitempty"`
+	Id            int64     `json:"id"`
+	Created       time.Time `json:"created"`
+	Amount        float64   `json:"amount"`
+	TransactionTx string    `gorm:"column:transaction_tx" json:"transactionTx"`
+	Status        string    `json:"status,omitempty"`
 }
 
 type ChainLinkExpensePage struct {

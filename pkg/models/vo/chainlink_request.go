@@ -42,9 +42,8 @@ type ChainLinkSubscriptionCreateParam struct {
 }
 
 type ChainLinkFoundParam struct {
-	ConsumerAddress string `json:"consumer_address"`
-	Incr            string `json:"incr"`
-	TransactionTx   string `json:"transaction_tx"`
+	Incr          string `json:"incr"`
+	TransactionTx string `json:"transaction_tx"`
 }
 
 type ChainLinkConsumerCreateParam struct {
@@ -54,11 +53,10 @@ type ChainLinkConsumerCreateParam struct {
 }
 
 type ChainLinkFoundUpdateParam struct {
-	Id              int64  `json:"id"`
-	SubscriptionId  int64  `json:"subscriptionId"`
-	ConsumerAddress string `json:"consumerAddress"`
-	TransactionTx   string `json:"transactionTx"`
-	NewStatus       string `json:"newStatus"`
+	Id             int64  `json:"id"`
+	SubscriptionId int64  `json:"subscriptionId"`
+	TransactionTx  string `json:"transactionTx"`
+	NewStatus      string `json:"newStatus"`
 }
 
 type ChainLinkConsumerUpdateParam struct {
