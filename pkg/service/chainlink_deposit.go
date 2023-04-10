@@ -54,7 +54,10 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 	deposit.TransactionTx = transactionTx
 	deposit.UserId = uint64(userId)
 	deposit.Status = consts.PENDING
-	d.db.Model(models.Deposit{}).Create(&deposit)
+	err = d.db.Model(models.Deposit{}).Create(&deposit).Error
+	if err != nil {
+		return -1, err
+	}
 	return deposit.Id, nil
 }
 
@@ -64,7 +67,10 @@ func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.Ch
 	d.db.Model(models.Deposit{}).Where("id = ?", param.Id).First(&deposit)
 	// 判断该deposit是否是符合要求
 	if deposit.TransactionTx == param.TransactionTx && deposit.UserId == userId && param.SubscriptionId == deposit.SubscriptionId {
-		d.db.Model(models.Deposit{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
+		err := d.db.Model(models.Deposit{}).Where("id = ?", param.Id).Update("status", param.NewStatus).Error
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 	return errors.New(fmt.Sprintf("consumer id :%s not valid, other col not confirm", param.Id))
