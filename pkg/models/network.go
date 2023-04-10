@@ -23,6 +23,10 @@ func (n NetworkType) String() string {
 }
 
 func (n NetworkType) StringLower() string {
+	return [...]string{"mainnet", "goerli testnet", "ropsten testnet", "kovan testnet", "rinkeby testnet", "sepolia testnet", "mumbai testnet"}[n]
+}
+
+func (n NetworkType) StringWithSpace() string {
 	return [...]string{"Mainnet", "Goerli Testnet", "Ropsten Testnet", "Kovan Testnet", "Rinkeby Testnet", "Sepolia Testnet", "Mumbai Testnet"}[n]
 }
 

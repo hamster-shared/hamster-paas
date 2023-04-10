@@ -84,7 +84,7 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		return
 	}
 	s.Chain = chain.StringLower()
-	s.Network = network.StringLower()
+	s.Network = network.StringWithSpace()
 	primaryId, err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
