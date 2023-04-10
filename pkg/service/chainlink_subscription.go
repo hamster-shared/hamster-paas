@@ -8,8 +8,6 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/utils/logger"
-	"time"
 )
 
 type ChainLinkSubscriptionService struct {
@@ -25,29 +23,28 @@ func NewChainLinkSubscriptionService(db *gorm.DB) *ChainLinkSubscriptionService 
 // CreateSubscription create subscription
 // * param subscription: new Subscription need to save in db.
 // * error when subscription already exit.
-func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription, poolService PoolService) error {
-	var s_ *models.Subscription
+func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription, poolService PoolService) (int64, error) {
+	//var s_ *models.Subscription
 	// 判断是否用已经成功的订阅存在
-	err := s.db.Model(models.Subscription{}).Where(
-		"chain_subscription_id = ? AND chain = ? AND network = ? AND (status = ? OR status = ?)",
-		subscription.ChainSubscriptionId, subscription.Chain, subscription.Network, consts.PENDING, consts.SUCCESS).First(&s_).Error
+	//err := s.db.Model(models.Subscription{}).Where(
+	//	"chain_subscription_id = ? AND chain = ? AND network = ? AND (status = ? OR status = ?)",
+	//	subscription.ChainSubscriptionId, subscription.Chain, subscription.Network, consts.PENDING, consts.SUCCESS).First(&s_).Error
 	// 判断订阅是否存在
-	if err == gorm.ErrRecordNotFound {
-		err = s.db.Create(&subscription).Error
-		if err != nil {
-			return err
-		}
-		// 异步检查订阅交易事务是否成功
-		poolService.Submit(func() {
-			time.Sleep(time.Second * 20)
-			s.db.Model(models.Subscription{}).Where("chain_subscription_id = ? AND chain = ? AND network = ?", subscription.ChainSubscriptionId, subscription.Chain, subscription.Network).
-				Update("status", consts.SUCCESS)
-			logger.Info("create subscription: %d Tx valid, change status to success", subscription.ChainSubscriptionId)
-		})
-		return nil
-	}
+	//if err == gorm.ErrRecordNotFound {
+	//	err = s.db.Create(&subscription).Error
+	//	if err != nil {
+	//		return -1, err
+	//	}
+	//	return int64(subscription.Id), nil
+	//}
 	// 订阅已存在，返回错误
-	return errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists, status: %s", subscription.Chain, subscription.Network, subscription.ChainSubscriptionId, s_.Status))
+	//return -1, errors.New(fmt.Sprintf("chain: %s network: %s ,subscription :%d already exists, status: %s", subscription.Chain, subscription.Network, subscription.ChainSubscriptionId, s_.Status))
+	err := s.db.Create(&subscription).Error
+	if err != nil {
+		return -1, err
+	}
+
+	return int64(subscription.Id), nil
 }
 
 // GetSubscriptionOverview get subscription overview(subscription nums, consumer nums, balances)
@@ -137,10 +134,17 @@ func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.
 func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLinkSubscriptionUpdateParam, userId uint64) error {
 	//获取id对应的记录
 	var subscription models.Subscription
-	s.db.Model(models.Subscription{}).Where("id = ?", param.Id).First(&subscription)
+	err := s.db.Model(models.Subscription{}).Where("id = ?", param.Id).First(&subscription).Error
+	if err != nil {
+		return err
+	}
 	// 判断该consumer是否是符合要求
-	if subscription.TransactionTx == param.TransactionTx && subscription.ChainSubscriptionId == param.ChainSubscriptionId && subscription.UserId == userId && param.Chain == subscription.Chain && param.Network == subscription.Network {
-		s.db.Model(models.Consumer{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
+	if subscription.TransactionTx == param.TransactionTx && subscription.UserId == userId && param.Chain == subscription.Chain && param.Network == subscription.Network {
+		fmt.Println(param.ChainSubscriptionId)
+		err = s.db.Model(models.Subscription{}).Where("id = ?", param.Id).Updates(map[string]interface{}{"chain_Subscription_id": param.ChainSubscriptionId, "status": param.NewStatus}).Error
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 	return errors.New(fmt.Sprintf("subscription id :%s not valid, other col not confirm", param.Id))

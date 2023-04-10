@@ -8,8 +8,6 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/utils/logger"
-	"time"
 )
 
 type ChainLinkConsumerService struct {
@@ -25,30 +23,21 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 // CreateConsumer
 // @param consumer中的subscription id指的是subscription表主键id
 // TODO: 需要监听链更改状态
-func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService, poolService PoolService) error {
+func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService, poolService PoolService) (int64, error) {
 	// 确认subscription存在
 	_, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
 	if err != nil {
-		return err
+		return -1, err
 	}
 	var isExited int64
 	// 判断该consumer是否存在
 	c.db.Model(models.Consumer{}).Where("subscription_id = ? AND consumer_address = ? AND (status = ? OR status = ?)", consumer.SubscriptionId, consumer.ConsumerAddress, consts.SUCCESS, consts.PENDING).Count(&isExited)
 	if isExited > 0 {
-		return errors.New(fmt.Sprintf("consumer address :%s already exists in subscription id: %d", consumer.ConsumerAddress, consumer.SubscriptionId))
+		return -1, errors.New(fmt.Sprintf("consumer address :%s already exists in subscription id: %d", consumer.ConsumerAddress, consumer.SubscriptionId))
 	}
 	// 不存在就创建
 	c.db.Create(&consumer)
-	// TODO 异步监听，更改状态
-	poolService.Submit(func() {
-		time.Sleep(time.Second * 20)
-		c.db.Model(models.Consumer{}).Where("id", consumer.Id).Update("status", consts.SUCCESS)
-		var consumerNums int64
-		c.db.Model(models.Subscription{}).Select("consumers").Where("id = ?", consumer.SubscriptionId).First(&consumerNums)
-		c.db.Model(models.Subscription{}).Where("id = ?", consumer.SubscriptionId).Update("consumers", consumerNums+1)
-		logger.Infof("create consumer: %d ,Tx valid, change subscription: %d consumers to %d", consumer.Id, consumer.SubscriptionId, consumerNums+1)
-	})
-	return nil
+	return consumer.Id, nil
 }
 
 // ConsumerList get consumer list

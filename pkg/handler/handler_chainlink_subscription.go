@@ -71,13 +71,27 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		TransactionTx:       subscriptionCreateParam.TransactionTx,
 		Status:              consts.PENDING,
 	}
-	if err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService); err != nil {
+	chain, err := models.ParseChainType(s.Chain)
+	if err != nil {
+		logger.Error(fmt.Sprintf("chain format error: %s", err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
+	network, err := models.ParseNetworkType(s.Network)
+	if err != nil {
+		logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
+	s.Chain = chain.StringLower()
+	s.Network = network.StringLower()
+	primaryId, err := h.chainLinkSubscriptionService.CreateSubscription(s, h.chainlinkPoolService)
+	if err != nil {
 		logger.Error(fmt.Sprintf("Create subscription failed: %s", err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
-	// TODO: 异步查状态，如果tx正确，修改type = Success
-	Success(nil, c)
+	Success(primaryId, c)
 }
 
 func (h *HandlerServer) subscriptionList(gin *gin.Context) {

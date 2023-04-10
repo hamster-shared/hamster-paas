@@ -34,6 +34,10 @@ func (p *ProjectService) GetValidContract(page, size int, projectId string, netw
 		return &alineValidContractPage, result.Error
 	}
 	copier.Copy(&alineValidContractVoList, &alineValidContractList)
+	for i, v := range alineValidContractVoList {
+		n, _ := models.ParseNetworkType(v.Network)
+		alineValidContractVoList[i].Network = n.StringLower()
+	}
 	alineValidContractPage.Data = alineValidContractVoList
 	alineValidContractPage.Total = total
 	alineValidContractPage.Page = page

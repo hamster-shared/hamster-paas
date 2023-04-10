@@ -32,23 +32,23 @@ func (c ChainType) StringLower() string {
 
 func ParseChainType(s string) (ChainType, error) {
 	switch strings.ToLower(s) {
-	case "ethereum":
+	case "ethereum", "Ethereum":
 		return Ethereum, nil
-	case "bsc":
+	case "bsc", "Bsc":
 		return Bsc, nil
-	case "polygon":
+	case "polygon", "Polygon":
 		return Polygon, nil
-	case "avalanche":
+	case "avalanche", "Avalanche":
 		return Avalanche, nil
-	case "optimism":
+	case "optimism", "Optimism":
 		return Optimism, nil
-	case "starknet":
+	case "starknet", "Starknet":
 		return StarkNet, nil
-	case "near":
+	case "near", "Near":
 		return Near, nil
-	case "aptos":
+	case "aptos", "Aptos":
 		return Aptos, nil
-	case "sui":
+	case "sui", "Sui":
 		return Sui, nil
 	default:
 		return Ethereum, fmt.Errorf("invalid chain type: %s", s)

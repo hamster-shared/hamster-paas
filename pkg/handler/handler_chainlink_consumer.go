@@ -32,7 +32,6 @@ func (h *HandlerServer) createConsumer(c *gin.Context) {
 		Fail(err.Error(), c)
 		return
 	}
-
 	consumer := models.Consumer{
 		SubscriptionId:  consumerCreateParam.SubscriptionId,
 		Created:         time.Now(),
@@ -42,16 +41,15 @@ func (h *HandlerServer) createConsumer(c *gin.Context) {
 		Status:          consts.PENDING,
 	}
 	// 创建合约
-	err = h.chainLinkConsumerService.CreateConsumer(consumer, h.chainLinkSubscriptionService, h.chainlinkPoolService)
+	primaryId, err := h.chainLinkConsumerService.CreateConsumer(consumer, h.chainLinkSubscriptionService, h.chainlinkPoolService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("add consumer in subscriptionL: %d failed: %s", consumerCreateParam.SubscriptionId, err.Error()))
 		Fail(err.Error(), c)
 		return
 	}
-	Success(nil, c)
+	Success(primaryId, c)
 }
 
-// TODO: 暂时直接返回假数据
 func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 	page := c.Query("page")
 	size := c.Query("size")
@@ -68,13 +66,21 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 	var pagination models.Pagination
 	pagination.Page = pageInt
 	pagination.Size = sizeInt
-
 	projectIdString := c.Param("id")
-
-	chain := c.Query("chain")
-	network := c.Query("network")
-	if chain == "" || network == "" {
-		Fail("invalid params: chain, network", c)
+	paramJson := vo.ChainLinkHamsterListParam{}
+	err = c.BindJSON(&paramJson)
+	if err != nil {
+		Fail("invalid params: chain an network", c)
+		return
+	}
+	_, err = models.ParseChainType(paramJson.Chain)
+	if err != nil {
+		Fail("chain not format", c)
+		return
+	}
+	network, err := models.ParseNetworkType(paramJson.NetWork)
+	if err != nil {
+		Fail("network not format", c)
 		return
 	}
 
@@ -84,7 +90,7 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 		Fail("get project service error", c)
 		return
 	}
-	data, err := projectService.GetValidContract(pageInt, sizeInt, projectIdString, network)
+	data, err := projectService.GetValidContract(pageInt, sizeInt, projectIdString, network.StringAline())
 	if err != nil {
 		logger.Error(fmt.Sprintf("get Hamster Consumer List failed: %s", err.Error()))
 		Fail(err.Error(), c)

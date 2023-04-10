@@ -65,15 +65,18 @@ type ChainLinkConsumerUpdateParam struct {
 	ConsumerAddress string `json:"consumerAddress"`
 	TransactionTx   string `json:"transactionTx"`
 	NewStatus       string `json:"newStatus"`
-	UserId          uint64 `json:"userId"`
 }
 
 type ChainLinkSubscriptionUpdateParam struct {
 	Id                  uint   `json:"id"`
-	ChainSubscriptionId uint   `gorm:"column:chain_subscription_id" json:"subscriptionId"`
+	ChainSubscriptionId uint   `json:"chainSubscriptionId"`
 	Chain               string `json:"chain"`
 	Network             string `json:"network"`
-	UserId              uint64 `json:"userId"`
 	TransactionTx       string `json:"transactionTx"`
 	NewStatus           string `json:"newStatus"`
+}
+
+type ChainLinkHamsterListParam struct {
+	Chain   string `json:"chain"`
+	NetWork string `json:"network"`
 }
