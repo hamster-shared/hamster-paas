@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"hamster-paas/pkg/consts"
+	"hamster-paas/pkg/utils"
 	"hamster-paas/pkg/utils/logger"
 	"math/big"
 	"strconv"
@@ -19,24 +20,23 @@ import (
 type EthNetwork string
 
 const MAINNET EthNetwork = "mainnet"
-const GOERLI EthNetwork = "goerli"
+const GOERLI EthNetwork = "Goerli Testnet"
 const HAMSTER EthNetwork = "hamster"
 const BSC_MAINNET EthNetwork = "bsc_mainnet"
 const BSC_TESTNET EthNetwork = "bsc_testnet"
-const Monbai_TESTNET EthNetwork = "Mumbai Testnet"
+const SEPOLIA_TESTNET EthNetwork = "Sepolia Testnet"
+const MUMBAI_TESTNET EthNetwork = "Mumbai Testnet"
+const RINKBEY_TESTNET EthNetwork = "Rinkeby Testnet"
 
 var NetMap map[EthNetwork]string = make(map[EthNetwork]string)
 
 func setup() {
 	NetMap[GOERLI] = "https://goerli.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
 	NetMap[MAINNET] = "https://mainnet.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
-	//netMap[HAMSTER] = "https://rpc-moonbeam.hamster.newtouch.com"
-	//netMap[HAMSTER] = "wss://ws-moonbeam.hamster.newtouch.com"
-	//netMap[HAMSTER] = "wss://eth-sepolia.g.alchemy.com/v2/BgE-iyk7FqwXwyn6pHEeByyZpI56NYgO"
 	NetMap[HAMSTER] = "wss://polygon-mumbai.g.alchemy.com/v2/BM4kwUJwMKmdh1zaDDByzNr19jgzdRiV"
 	NetMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
 	NetMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
-	NetMap[Monbai_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
+	NetMap[MUMBAI_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
 }
 
 func init() {
@@ -45,7 +45,7 @@ func init() {
 
 type EthereumProxy interface {
 	TransactionByHash(hash string) (tx *types.Transaction, isPending bool, err error)
-	WatchRequestResult(contractAddress, requestId string) error
+	WatchRequestResult(contractAddress, requestId, email string) error
 	TransactionReceipt(hash string) (*types.Receipt, error)
 }
 
@@ -105,7 +105,7 @@ type OCRResponseEvent struct {
 	Err       []byte
 }
 
-func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId string) error {
+func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, email string) error {
 	// 要监听的合约地址
 	oracleContractAddress := common.HexToAddress(contractAddress)
 	//consumerContract, err := contract2.NewFunctionConsumer(oracleContractAddress, rpc.client)
@@ -137,9 +137,6 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId strin
 		Topics: [][]common.Hash{
 			{
 				contractAbi.Events["OCRResponse"].ID,
-				//crypto.Keccak256Hash([]byte("OCRResponse(bytes32,bytes,bytes)")),
-				// 用于监听请求结果的事件签名
-				//common.HexToHash(consts.EventSignature),
 			},
 		},
 	}
@@ -147,9 +144,7 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId strin
 	sub, err := rpc.client.SubscribeFilterLogs(context.Background(), query, logs)
 	if err != nil {
 		//logger.Error("Error subscribing to logs:", err)
-		fmt.Println("--------------------------")
-		fmt.Println(err.Error())
-		fmt.Println("--------------------------")
+		fmt.Printf("query logs failed: %s\n", err.Error())
 		return err
 	}
 
@@ -160,42 +155,26 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId strin
 			fmt.Println("Error in subscription:", err)
 			return errors.New(fmt.Sprintf("Error in subscription:%s", err.Error()))
 		case log := <-logs:
-			fmt.Println("++++++++++++++++++++++++++++++++++++++")
-			fmt.Println(log.Address)
-			fmt.Println(log.Data)
-			fmt.Println(log.Topics)
-			fmt.Println(log.BlockHash)
-			fmt.Println(log.Index)
-			fmt.Println(log.BlockNumber)
-			fmt.Println(log.TxIndex)
-			fmt.Println(log.TxHash)
-			if err != nil {
-				fmt.Println("---------------------------------------")
-				fmt.Println("Failed to parse ABI:", err.Error())
-				fmt.Println("---------------------------------------")
-			}
-
 			// 解析事件数据
 			var eventData OCRResponseEvent
 			err = contractAbi.UnpackIntoInterface(&eventData, "OCRResponse", log.Data)
 			if err != nil {
-				fmt.Println("---------------------------------------")
 				fmt.Println("Failed to unpack event data: ", err.Error())
-				fmt.Println("---------------------------------------")
+				return err
 			}
-			fmt.Println("++++++++++++++++++++++++++++++++++++++")
-			fmt.Println("****************************************")
-			fmt.Printf("RequestId: %x\n", eventData.RequestId)
-			fmt.Printf("Result: %s\n", hexToString(eventData.Result))
-			data, _ := strconv.Atoi(string(eventData.Result))
-			fmt.Println(data)
-			fmt.Printf("Err: %s\n", string(eventData.Err))
-			fmt.Println("****************************************")
-			// 比对 Request ID
-			requestID := log.Topics[1].Big()
-			expectedRequestID := big.NewInt(123)
-			if requestID.Cmp(expectedRequestID) == 0 {
-				fmt.Println("data")
+			if len(log.Topics) == 2 {
+				fmt.Printf("RequestId: %x\n", log.Topics[1])
+				if requestId == log.Topics[1].String() {
+					var result string
+					numData, err := strconv.ParseInt(hexToString(eventData.Result), 16, 64)
+					if err != nil {
+						result = string(eventData.Result)
+					} else {
+						result = strconv.Itoa(int(numData))
+					}
+					utils.SendEmail(email, requestId, result, string(eventData.Err))
+					break
+				}
 			}
 		}
 	}

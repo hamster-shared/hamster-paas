@@ -185,7 +185,7 @@ func (h *HandlerServer) saveChainLinkRequestExec(gin *gin.Context) {
 		return
 	}
 	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkRequestService.SaveChainLinkRequestExec(createData, uint64(user.Id))
+	data, err := h.chainLinkRequestService.SaveChainLinkRequestExec(createData, user)
 	if err != nil {
 		logger.Error(fmt.Sprintf("save request exec failed: %s", err.Error()))
 		Fail(err.Error(), gin)

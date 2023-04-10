@@ -21,6 +21,7 @@ type ChainLinkConsumers struct {
 }
 
 type ChainLinkRequestExecParam struct {
+	Network         string  `json:"network"`
 	SubscriptionId  int64   `json:"subscriptionId"`
 	ConsumerAddress string  `json:"consumerAddress"`
 	Secretsloction  int8    `json:"secretsloction"`
