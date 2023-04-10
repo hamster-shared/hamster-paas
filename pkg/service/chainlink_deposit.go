@@ -65,6 +65,10 @@ func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.Ch
 	//获取id对应的记录
 	var deposit models.Deposit
 	d.db.Model(models.Deposit{}).Where("id = ?", param.Id).First(&deposit)
+	// 如果deposit已经是成功状态，不做操作
+	if deposit.Status == consts.SUCCESS {
+		return nil
+	}
 	// 判断该deposit是否是符合要求
 	if deposit.TransactionTx == param.TransactionTx && deposit.UserId == userId && param.SubscriptionId == deposit.SubscriptionId {
 		err := d.db.Model(models.Deposit{}).Where("id = ?", param.Id).Update("status", param.NewStatus).Error
