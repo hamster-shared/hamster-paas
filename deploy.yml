@@ -47,7 +47,7 @@ spec:
             - name: PORT
               value: "9898"
             - name: MEILI_SEARCH
-              value: "hamster-paas-meilisearch-service:7700"
+              value: "http://hamster-paas-meilisearch-service:7700"
             - name: NGINX_LOG_PATH
               value: "/var/log/nginx/access.log"
             - name: ALINE_DB_USER
