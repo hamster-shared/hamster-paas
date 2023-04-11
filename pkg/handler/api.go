@@ -63,6 +63,7 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/consumer/:id/hamster-consumer", h.handlerServer.getHamsterConsumerList)
 	chainLinkApi.GET("/consumer/projects", h.handlerServer.getProjectList)
 	chainLinkApi.GET("/subscription/:id/consumers", h.handlerServer.consumerList)
+	chainLinkApi.GET("/subscription/:id/consumer-address", h.handlerServer.consumerAddressList)
 	chainLinkApi.DELETE("/subscription/:id/consumer/:consumerId", h.handlerServer.deleteConsumer)
 	chainLinkApi.GET("/subscription/:id/expenses", h.handlerServer.chainLinkExpenseList)
 	chainLinkApi.GET("/subscription/:id/deposits", h.handlerServer.depositList)

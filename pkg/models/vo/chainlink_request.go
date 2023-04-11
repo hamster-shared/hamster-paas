@@ -33,6 +33,11 @@ type ChainLinkRequestExecParam struct {
 	Amount          float64 `json:"amount"`
 }
 
+type ChainLinkExecParam struct {
+	Network   string `json:"network"`
+	RequestId string `json:"requestId"`
+}
+
 type ChainLinkSubscriptionCreateParam struct {
 	Chain          string `json:"chain"`
 	Network        string `json:"network"`

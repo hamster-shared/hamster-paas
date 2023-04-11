@@ -105,6 +105,15 @@ func (c *ChainLinkConsumerService) ConsumerList(subscriptionId, page, size int, 
 	return &chainLinkConsumerPage, nil
 }
 
+func (c *ChainLinkConsumerService) ConsumerAddressList(subscriptionId, userId int64) ([]string, error) {
+	var data []string
+	res := c.db.Model(models.Consumer{}).Distinct("consumer_address").Select("consumer_address").Where("subscription_id=? and user_id=?", subscriptionId, userId).Find(&data)
+	if res.Error != nil {
+		return data, res.Error
+	}
+	return data, nil
+}
+
 // DeleteConsumer delete consumer by id
 func (c *ChainLinkConsumerService) DeleteConsumer(subscriptionId, consumerId int64) error {
 	err := c.db.Transaction(func(tx *gorm.DB) error {
