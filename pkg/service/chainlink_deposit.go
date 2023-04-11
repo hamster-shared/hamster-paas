@@ -110,7 +110,7 @@ func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.Ch
 	var deposit models.Deposit
 	d.db.Model(models.Deposit{}).Where("id = ?", param.Id).First(&deposit)
 	// 如果deposit已经是成功状态，不做操作
-	if deposit.Status == consts.SUCCESS {
+	if deposit.Status == param.NewStatus {
 		return nil
 	}
 	// 判断该deposit是否是符合要求

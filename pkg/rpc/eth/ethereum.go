@@ -198,7 +198,13 @@ func (rpc *RPCEthereumProxy) TransactionReceipt(hash string) (*types.Receipt, er
 
 //// 获取chain的client
 //func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
-//	client := ClientMap[ethNetwork]
-//	ethereum.
+//	var client *ethclient.Client
+//	for {
+//		client, err := ethclient.Dial(NetMap[ethNetwork])
+//		if err == nil {
+//
+//		}
+//
+//	}
 //
 //}

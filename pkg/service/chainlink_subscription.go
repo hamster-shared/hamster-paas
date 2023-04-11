@@ -164,12 +164,11 @@ func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLi
 		return err
 	}
 	// 如果已经是成功状态就不做操作
-	if subscription.Status == consts.SUCCESS {
+	if subscription.Status == param.NewStatus {
 		return nil
 	}
 	// 判断该consumer是否是符合要求
 	if subscription.TransactionTx == param.TransactionTx && subscription.UserId == userId && param.Chain == subscription.Chain && param.Network == subscription.Network {
-		fmt.Println(param.ChainSubscriptionId)
 		err = s.db.Model(models.Subscription{}).Where("id = ?", param.Id).Updates(map[string]interface{}{"chain_Subscription_id": param.ChainSubscriptionId, "status": param.NewStatus}).Error
 		if err != nil {
 			return err

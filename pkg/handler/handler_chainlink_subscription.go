@@ -178,19 +178,24 @@ func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
 	chain, err := models.ParseChainType(jsonParam.Chain)
 	if err != nil {
 		logger.Error(fmt.Sprintf("change subscription status, chain not format: %s", err.Error()))
-		Fail("param invalid", gin)
+		Fail(fmt.Sprintf("change subscription status, chain not format: %s", err.Error()), gin)
 		return
 	}
 	network, err := models.ParseNetworkType(jsonParam.Network)
 	if err != nil {
 		logger.Error(fmt.Sprintf("change subscription status, network not format: %s", err.Error()))
-		Fail("param invalid", gin)
+		Fail(fmt.Sprintf("change subscription status, network not format: %s", err.Error()), gin)
+		return
+	}
+	status, err := consts.ParseStatus(jsonParam.NewStatus)
+	if err != nil {
+		logger.Error(fmt.Sprintf("change subscription status, status not format: %s", err.Error()))
+		Fail(fmt.Sprintf("change subscription status, status not format: %s", err.Error()), gin)
 		return
 	}
 	jsonParam.Chain = chain.String()
 	jsonParam.Network = network.StringWithSpace()
-	fmt.Println(jsonParam.Chain)
-	fmt.Println(jsonParam.Network)
+	jsonParam.NewStatus = status
 	err = h.chainLinkSubscriptionService.ChangeSubscriptionStatus(jsonParam, uint64(user.Id))
 	if err != nil {
 		logger.Error(fmt.Sprintf("change subscription status faild: %s", err.Error()))

@@ -134,7 +134,7 @@ func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsum
 	var consumer models.Consumer
 	c.db.Model(models.Consumer{}).Where("id = ?", param.Id).First(&consumer)
 	// 如果已经是成功状态，不做操作
-	if consumer.Status == consts.SUCCESS {
+	if consumer.Status == param.NewStatus {
 		return nil
 	}
 	// 判断该consumer是否是符合要求

@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
@@ -58,7 +59,14 @@ func (h *HandlerServer) changeFoundStatus(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	err := h.chainLinkDepositService.UpdateDepositStatus(uint64(user.Id), paramJson)
+	status, err := consts.ParseStatus(paramJson.NewStatus)
+	if err != nil {
+		logger.Error(fmt.Sprintf("change Found Status failed: status invalid %s", err.Error()))
+		Fail(fmt.Sprintf("change Found Status failed: status invalid %s", err.Error()), gin)
+		return
+	}
+	paramJson.NewStatus = status
+	err = h.chainLinkDepositService.UpdateDepositStatus(uint64(user.Id), paramJson)
 	if err != nil {
 		logger.Error(fmt.Sprintf("change Found Status failed: %s", err.Error()))
 		Fail(err.Error(), gin)
