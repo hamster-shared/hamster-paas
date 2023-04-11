@@ -3,6 +3,7 @@ package eth
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 type networkTest struct {
@@ -47,4 +48,35 @@ func TestGetReceipt(t *testing.T) {
 		panic(err)
 	}
 	fmt.Println(receipt.Status)
+}
+
+// 直接拿的时间比重新链接client的时间要短
+func TestGetChainCLient(t *testing.T) {
+	begin := time.Now()
+	client := GetChainClient(MUMBAI_TESTNET)
+	if client == nil {
+		fmt.Println("No")
+	} else {
+		fmt.Println("Yes")
+	}
+	end := time.Now()
+	begin2 := time.Now()
+	client2 := GetChainClient(MUMBAI_TESTNET)
+	if client2 == nil {
+		fmt.Println("No")
+	} else {
+		fmt.Println("Yes")
+	}
+	end2 := time.Now()
+	fmt.Println("1 : ", end.Second()-begin.Second())
+	fmt.Println("2 : ", end2.Second()-begin2.Second())
+}
+
+func TestGetTxStatus(t *testing.T) {
+	client := GetChainClient(MUMBAI_TESTNET)
+	status, err := GetTxStatus("0xb909d3982ce8d80a11b8554e65739de2e4024f44e88f0440ae5165eb271c8f32", MUMBAI_TESTNET, client)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(status)
 }

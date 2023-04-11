@@ -8,6 +8,9 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"hamster-paas/pkg/rpc/eth"
+	"hamster-paas/pkg/utils/logger"
+	"time"
 )
 
 type ChainLinkConsumerService struct {
@@ -25,8 +28,13 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 // TODO: 需要监听链更改状态
 func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService, poolService PoolService) (int64, error) {
 	// 确认subscription存在
-	_, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
+	subscription, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
 	if err != nil {
+		return -1, err
+	}
+	_, err = models.ParseNetworkType(subscription.Network)
+	if err != nil {
+		logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
 		return -1, err
 	}
 	var isExited int64
@@ -37,51 +45,9 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	}
 	// 不存在就创建
 	c.db.Create(&consumer)
-	// 异步监听更改状态
-
-	//network, err := models.ParseNetworkType(subscription.Network)
-	//if err != nil {
-	//	logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
-	//	return -1, err
-	//}
+	//// 异步判断TX status
 	//poolService.Submit(func() {
-	//	client, _ := eth.NewRPCEthereumProxy(eth.NetMap[network.NetworkType()])
-	//	times := 0
-	//	needFalid := false
-	//	for {
-	//		if times == 90 {
-	//			needFalid = true
-	//			break
-	//		}
-	//		time.Sleep(time.Second * 20)
-	//		times++
-	//		// 拿到数据库中状态,判断是否要主动结束轮询
-	//		var c_ models.Consumer
-	//		c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).First(&c_)
-	//		if c_.Status == consts.SUCCESS {
-	//			break
-	//		}
-	//		re, err := client.TransactionReceipt(consumer.TransactionTx)
-	//		if err != nil {
-	//			continue
-	//		}
-	//		if re.Status == 1 {
-	//			// 修改状态为成功
-	//			logger.Infof("Create Consumer : Tx Success, change Consumer id: %d status to success", consumer.Id)
-	//			c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.SUCCESS)
-	//			break
-	//		} else if re.Status == 0 {
-	//			// 修改状态为失败
-	//			logger.Infof("Create Consumer : Tx failed, change Consumer id: %d status to failed", consumer.Id)
-	//			c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
-	//			break
-	//		}
-	//	}
-	//	if needFalid {
-	//		// 更新状态为失败
-	//		logger.Infof("Create Consumer : Query timeout, change Consumer id: %d status to failed", consumer.Id)
-	//		c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
-	//	}
+	//	checkAndChangeConsumerStatus(network, consumer, c.db, subscriptionService)
 	//})
 	return consumer.Id, nil
 }
@@ -129,7 +95,7 @@ func (c *ChainLinkConsumerService) DeleteConsumer(subscriptionId, consumerId int
 	return nil
 }
 
-func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsumerUpdateParam, userId uint64) error {
+func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsumerUpdateParam, userId uint64, subscriptionService ChainLinkSubscriptionService) error {
 	//获取id对应的记录
 	var consumer models.Consumer
 	c.db.Model(models.Consumer{}).Where("id = ?", param.Id).First(&consumer)
@@ -137,10 +103,78 @@ func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsum
 	if consumer.Status == param.NewStatus {
 		return nil
 	}
-	// 判断该consumer是否是符合要求
+	// 判断该consumer是否是符合要求,符合要求，修改status，增加subscription的consumer数量
 	if consumer.TransactionTx == param.TransactionTx && consumer.ConsumerAddress == param.ConsumerAddress && consumer.UserId == userId && param.SubscriptionId == consumer.SubscriptionId {
 		c.db.Model(models.Consumer{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
+		// 获取指定id的subscription
+		subscription, err := subscriptionService.GetSubscriptionById(int(param.SubscriptionId))
+		if err != nil {
+			return fmt.Errorf("subscription id not exit")
+		}
+		// 更新subscription的consumer数量
+		err = subscriptionService.UpdateConsumerNums(uint(param.SubscriptionId), int64(subscription.Consumers+1))
+		if err != nil {
+			return fmt.Errorf("update consumer nums failed: %s", err.Error())
+		}
 		return nil
 	}
 	return errors.New(fmt.Sprintf("consumer id :%s not valid, other col not confirm", param.Id))
+}
+
+// 用于检查tx的状态，并且修改deposit的status
+func checkAndChangeConsumerStatus(network models.NetworkType, consumer models.Consumer, db *gorm.DB, subscriptionService ChainLinkSubscriptionService) {
+	client := eth.GetChainClient(network.NetworkType())
+	if client == nil {
+		return
+	}
+	times := 0
+	needFalid := false
+	for {
+		if times == 90 {
+			needFalid = true
+			break
+		}
+		time.Sleep(time.Second * 20)
+		times++
+		// 拿到数据库中状态,判断是否要主动结束轮询
+		var c_ models.Consumer
+		db.Model(models.Consumer{}).Where("id = ?", consumer.Id).First(&c_)
+		// status == Success， 主动结束轮询
+		if c_.Status == consts.SUCCESS {
+			break
+		}
+		// 获取tx状态
+		txStatus, err := eth.GetTxStatus(consumer.TransactionTx, network.NetworkType(), client)
+		if err != nil {
+			continue
+		}
+		if txStatus == 1 {
+			// 修改状态为成功
+			logger.Infof("Create Consumer : Tx Success, change consumer id: %d status to success", consumer.Id)
+			db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.SUCCESS)
+			// 获取指定id的subscription
+			subscription, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
+			if err != nil {
+				logger.Infof("check and change consumer status error, subscription id: %d not exit", consumer.SubscriptionId)
+				break
+			}
+			// 更新subscription的consumer数量
+			err = subscriptionService.UpdateConsumerNums(uint(consumer.SubscriptionId), int64(subscription.Consumers+1))
+			if err != nil {
+				logger.Infof("check and change consumer status error, update subscription id: %d consumers error", consumer.SubscriptionId)
+				break
+			}
+			break
+		} else if txStatus == 0 {
+			// 修改状态为失败
+			logger.Infof("Create Consumer : Tx failed, change consumer id: %d status to failed", consumer.Id)
+			db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
+			break
+		}
+	}
+	if needFalid {
+		// 更新状态为失败
+		logger.Infof("Create consumer : Query timeout, change consumer id: %d status to failed", consumer.Id)
+		db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
+	}
 }

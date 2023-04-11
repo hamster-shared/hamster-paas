@@ -14,6 +14,7 @@ import (
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type EthNetwork string
@@ -196,15 +197,42 @@ func (rpc *RPCEthereumProxy) TransactionReceipt(hash string) (*types.Receipt, er
 	return rpc.client.TransactionReceipt(context.Background(), hashTx)
 }
 
-//// 获取chain的client
-//func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
-//	var client *ethclient.Client
-//	for {
-//		client, err := ethclient.Dial(NetMap[ethNetwork])
-//		if err == nil {
-//
-//		}
-//
-//	}
-//
-//}
+// 获取chain的client
+func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
+	var client *ethclient.Client
+	var err error
+	var ok bool
+	if client, ok = ClientMap[ethNetwork]; ok {
+		if client != nil {
+			_, err = client.NetworkID(context.Background())
+			if err == nil {
+				return client
+			}
+		}
+	}
+	times := 0
+	for {
+		if times == 10 {
+			break
+		}
+		client, err = ethclient.Dial(NetMap[ethNetwork])
+		// 连接成功，插入到ClientMap中
+		if err == nil {
+			ClientMap[ethNetwork] = client
+			logger.Infof("chain client：%s 重新连接或连接失效，重新链接成功", ethNetwork)
+			return client
+		}
+		time.Sleep(time.Second * 5)
+		times++
+	}
+	return nil
+}
+
+// 获取交易状态
+func GetTxStatus(hash string, ethNetwork EthNetwork, client *ethclient.Client) (uint64, error) {
+	r, err := client.TransactionReceipt(context.Background(), common.Hash(common.FromHex(hash)))
+	if err != nil {
+		return 0, fmt.Errorf("get tx receipt faild")
+	}
+	return r.Status, nil
+}
