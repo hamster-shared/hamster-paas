@@ -29,7 +29,7 @@ func (h *HttpServer) StartHttpServer() error {
 	rpcApi.Use(h.handlerServer.Authorize())
 	rpcApi.GET("/chains", h.handlerServer.rpcGetChains)
 	rpcApi.GET("/networks/:chain", h.handlerServer.rpcGetNetworks)
-	rpcApi.GET("/overview/:chain/:network", h.handlerServer.rpcOverview)
+	rpcApi.GET("/overview/:network", h.handlerServer.rpcOverview)
 	rpcApi.GET("/mynetwork", h.handlerServer.rpcGetMyNetwork)
 	rpcApi.GET("/chain/:chain", h.handlerServer.rpcChainDetail)
 	rpcApi.GET("/request-log/:appKey", h.handlerServer.rpcRequestLog)
