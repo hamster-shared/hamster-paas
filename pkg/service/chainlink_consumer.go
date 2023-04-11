@@ -8,9 +8,6 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/rpc/eth"
-	"hamster-paas/pkg/utils/logger"
-	"time"
 )
 
 type ChainLinkConsumerService struct {
@@ -28,7 +25,7 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 // TODO: 需要监听链更改状态
 func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService, poolService PoolService) (int64, error) {
 	// 确认subscription存在
-	subscription, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
+	_, err := subscriptionService.GetSubscriptionById(int(consumer.SubscriptionId))
 	if err != nil {
 		return -1, err
 	}
@@ -42,50 +39,50 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	c.db.Create(&consumer)
 	// 异步监听更改状态
 
-	network, err := models.ParseNetworkType(subscription.Network)
-	if err != nil {
-		logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
-		return -1, err
-	}
-	poolService.Submit(func() {
-		client, _ := eth.NewRPCEthereumProxy(eth.NetMap[network.NetworkType()])
-		times := 0
-		needFalid := false
-		for {
-			if times == 90 {
-				needFalid = true
-				break
-			}
-			time.Sleep(time.Second * 20)
-			times++
-			// 拿到数据库中状态,判断是否要主动结束轮询
-			var c_ models.Consumer
-			c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).First(&c_)
-			if c_.Status == consts.SUCCESS {
-				break
-			}
-			re, err := client.TransactionReceipt(consumer.TransactionTx)
-			if err != nil {
-				continue
-			}
-			if re.Status == 1 {
-				// 修改状态为成功
-				logger.Infof("Create Consumer : Tx Success, change Consumer id: %d status to success", consumer.Id)
-				c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.SUCCESS)
-				break
-			} else if re.Status == 0 {
-				// 修改状态为失败
-				logger.Infof("Create Consumer : Tx failed, change Consumer id: %d status to failed", consumer.Id)
-				c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
-				break
-			}
-		}
-		if needFalid {
-			// 更新状态为失败
-			logger.Infof("Create Consumer : Query timeout, change Consumer id: %d status to failed", consumer.Id)
-			c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
-		}
-	})
+	//network, err := models.ParseNetworkType(subscription.Network)
+	//if err != nil {
+	//	logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
+	//	return -1, err
+	//}
+	//poolService.Submit(func() {
+	//	client, _ := eth.NewRPCEthereumProxy(eth.NetMap[network.NetworkType()])
+	//	times := 0
+	//	needFalid := false
+	//	for {
+	//		if times == 90 {
+	//			needFalid = true
+	//			break
+	//		}
+	//		time.Sleep(time.Second * 20)
+	//		times++
+	//		// 拿到数据库中状态,判断是否要主动结束轮询
+	//		var c_ models.Consumer
+	//		c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).First(&c_)
+	//		if c_.Status == consts.SUCCESS {
+	//			break
+	//		}
+	//		re, err := client.TransactionReceipt(consumer.TransactionTx)
+	//		if err != nil {
+	//			continue
+	//		}
+	//		if re.Status == 1 {
+	//			// 修改状态为成功
+	//			logger.Infof("Create Consumer : Tx Success, change Consumer id: %d status to success", consumer.Id)
+	//			c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.SUCCESS)
+	//			break
+	//		} else if re.Status == 0 {
+	//			// 修改状态为失败
+	//			logger.Infof("Create Consumer : Tx failed, change Consumer id: %d status to failed", consumer.Id)
+	//			c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
+	//			break
+	//		}
+	//	}
+	//	if needFalid {
+	//		// 更新状态为失败
+	//		logger.Infof("Create Consumer : Query timeout, change Consumer id: %d status to failed", consumer.Id)
+	//		c.db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
+	//	}
+	//})
 	return consumer.Id, nil
 }
 

@@ -44,7 +44,7 @@ type ChainLinkSubscriptionCreateParam struct {
 
 type ChainLinkFoundParam struct {
 	Incr          string `json:"incr"`
-	TransactionTx string `json:"transaction_tx"`
+	TransactionTx string `json:"transactionTx"`
 }
 
 type ChainLinkConsumerCreateParam struct {

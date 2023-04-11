@@ -28,6 +28,7 @@ const MUMBAI_TESTNET EthNetwork = "Mumbai Testnet"
 const RINKBEY_TESTNET EthNetwork = "Rinkeby Testnet"
 
 var NetMap map[EthNetwork]string = make(map[EthNetwork]string)
+var ClientMap map[EthNetwork]*ethclient.Client = make(map[EthNetwork]*ethclient.Client)
 
 func setup() {
 	NetMap[GOERLI] = "https://goerli.infura.io/v3/ce58d7af0a4a47ec9f3d18a3545f6d18"
@@ -36,7 +37,7 @@ func setup() {
 	NetMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
 	NetMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
 	NetMap[MUMBAI_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
-	NetMap[SEPOLIA_TESTNET] = "https://sepolia.infura.io/v3/4dedc8f77c3b43ba80078c3a561939f3"
+	NetMap[SEPOLIA_TESTNET] = "wss://sepolia.infura.io/ws/v3/4dedc8f77c3b43ba80078c3a561939f3"
 }
 
 func init() {
@@ -194,3 +195,10 @@ func (rpc *RPCEthereumProxy) TransactionReceipt(hash string) (*types.Receipt, er
 	hashTx := common.Hash(common.FromHex(hash))
 	return rpc.client.TransactionReceipt(context.Background(), hashTx)
 }
+
+//// 获取chain的client
+//func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
+//	client := ClientMap[ethNetwork]
+//	ethereum.
+//
+//}
