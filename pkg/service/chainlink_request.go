@@ -256,8 +256,8 @@ func watchExecStatus(data models.RequestExecute, db *gorm.DB, client eth.Ethereu
 			db.Save(&data)
 			break
 		}
-		if time.Since(start) > time.Minute { // 判断是否执行了1分钟
-			break // 跳出循环
+		if time.Since(start) > time.Minute*3 {
+			break
 		}
 	}
 }
