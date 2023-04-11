@@ -11,6 +11,7 @@ require (
 	github.com/jinzhu/copier v0.3.5
 	github.com/joho/godotenv v1.5.1
 	github.com/meilisearch/meilisearch-go v0.23.1
+	github.com/sirupsen/logrus v1.9.0
 	go.uber.org/zap v1.24.0
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/gorm v1.24.6

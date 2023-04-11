@@ -135,6 +135,30 @@ func (h *HandlerServer) consumerList(gin *gin.Context) {
 	Success(data, gin)
 }
 
+func (h *HandlerServer) consumerAddressList(gin *gin.Context) {
+	idStr := gin.Param("id")
+	subscriptionId, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("subscription id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	userAny, exists := gin.Get("user")
+	if !exists {
+		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
+		Fail("user information does not exist", gin)
+		return
+	}
+	user, _ := userAny.(aline.User)
+	data, err := h.chainLinkConsumerService.ConsumerAddressList(int64(subscriptionId), int64(user.Id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("query consumer list failed: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(data, gin)
+}
+
 func (h *HandlerServer) deleteConsumer(gin *gin.Context) {
 	idStr := gin.Param("id")
 	subscriptionId, err := strconv.Atoi(idStr)

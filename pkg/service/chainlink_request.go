@@ -145,14 +145,25 @@ func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLink
 	return requestExec.Id, nil
 }
 
-func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id, userId int64, status string) error {
+func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id int64, saveData vo.ChainLinkExecParam, user aline.User) error {
 	var data models.RequestExecute
-	err := r.db.Where("id = ? and user_id = ?", id, userId).First(&data).Error
+	err := r.db.Where("id=? and user_id=?", id, user.Id).First(&data).Error
 	if err != nil {
 		return err
 	}
-	data.Status = status
+	data.Status = consts.SUCCESS
+	data.RequestId = saveData.RequestId
 	r.db.Save(&data)
+	client := eth.NewEthereumProxyFactory().GetClient(eth.EthNetwork(saveData.Network))
+	chainLinkPoolService, err := application.GetBean[*PoolService]("chainLinkPoolService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("get pool service failed:%s", err.Error()))
+		return nil
+	}
+	statusFun := func() {
+		watchRequest(data.ConsumerAddress, saveData.RequestId, user.UserEmail, client)
+	}
+	chainLinkPoolService.Submit(statusFun)
 	return nil
 }
 
