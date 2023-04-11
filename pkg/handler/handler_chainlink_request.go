@@ -202,9 +202,11 @@ func (h *HandlerServer) updateChainLinkRequestById(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	status := gin.Query("status")
-	if status != "" {
-		Fail("status is empty", gin)
+	updateData := vo.ChainLinkExecParam{}
+	err = gin.BindJSON(&updateData)
+	if err != nil {
+		logger.Error(fmt.Sprintf("body data question: %s", err.Error()))
+		Fail(err.Error(), gin)
 		return
 	}
 	userAny, exists := gin.Get("user")
@@ -214,7 +216,7 @@ func (h *HandlerServer) updateChainLinkRequestById(gin *gin.Context) {
 		return
 	}
 	user, _ := userAny.(aline.User)
-	err = h.chainLinkRequestService.UpdateChainLinkRequestById(int64(id), int64(user.Id), status)
+	err = h.chainLinkRequestService.UpdateChainLinkRequestById(int64(id), updateData, user)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return
