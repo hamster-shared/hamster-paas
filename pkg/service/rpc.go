@@ -51,12 +51,12 @@ func (s *RpcService) GetNetworks(chain string) ([]string, error) {
 	return networks, nil
 }
 
-func (s *RpcService) Overview(user aline.User) ([]*models.ApiResponseRpcApp, error) {
+func (s *RpcService) Overview(user aline.User, network string) (*models.ApiResponseOverview, error) {
 	a, err := models.GetRpcAccount(user.Token)
 	if err != nil {
 		return nil, err
 	}
-	return a.GetApps()
+	return a.GetOverview(network)
 }
 
 func (s *RpcService) GetMyNetwork(user aline.User, p *models.Pagination) ([]*models.ApiResponseRpcApp, *models.Pagination, error) {

@@ -170,6 +170,51 @@ func getAppByChainNetwork(account string, chain ChainType, network NetworkType) 
 	return &appResp, nil
 }
 
+func filterAppsMainnet(account string) ([]*ApiResponseRpcApp, error) {
+	return filterApps(account, "mainnet")
+}
+
+func filterAppsTestnet(account string) ([]*ApiResponseRpcApp, error) {
+	// 这里会返回所有的 testnet
+	return filterApps(account, "testnet")
+}
+
+func filterApps(account string, network string) ([]*ApiResponseRpcApp, error) {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return nil, err
+	}
+	var apps []*RpcApp
+	if network == "mainnet" {
+		err = db.Model(&RpcApp{}).Where("account = ? AND network = 'Mainnet'", account).Order("id asc").Find(&apps).Error
+	} else {
+		err = db.Model(&RpcApp{}).Where("account = ? AND network != 'Mainnet'", account).Order("id asc").Find(&apps).Error
+	}
+	if err != nil {
+		return nil, err
+	}
+	var apiResponseApps []*ApiResponseRpcApp
+	for i := range apps {
+		apps[i].Account = ""
+		var appResp ApiResponseRpcApp
+		appResp.RpcApp = apps[i]
+		appResp.TotalRequests24h, err = apps[i].getTotalRequests24hWithStatusAll()
+		if err != nil {
+			logger.Errorf("getTotalRequestsTodayWithStatusAll err: %s", err)
+		}
+		appResp.DaylyRequests7Days, err = apps[i].getDaylyRequests7DaysWithStatusAll()
+		if err != nil {
+			logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
+		}
+		appResp.TotalRequestsAll, err = apps[i].getTotalRequestsAll()
+		if err != nil {
+			logger.Errorf("getTotalRequestsAll err: %s", err)
+		}
+		apiResponseApps = append(apiResponseApps, &appResp)
+	}
+	return apiResponseApps, nil
+}
+
 func getApps(account string) ([]*ApiResponseRpcApp, error) {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {

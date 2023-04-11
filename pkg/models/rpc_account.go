@@ -3,6 +3,8 @@ package models
 import (
 	"fmt"
 	"hamster-paas/pkg/application"
+	"strings"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -85,6 +87,58 @@ func (a *RpcAccount) GetApps() ([]*ApiResponseRpcApp, error) {
 	return getApps(a.Address)
 }
 
+func (a *RpcAccount) GetOverview(network string) (*ApiResponseOverview, error) {
+	var apps []*ApiResponseRpcApp
+	var err error
+	if strings.ToLower(network) == "mainnet" {
+		apps, err = filterAppsMainnet(a.Address)
+	} else if strings.ToLower(network) == "testnet" {
+		apps, err = filterAppsTestnet(a.Address)
+	} else {
+		return nil, fmt.Errorf("invalid network type: %s, only 'mainnet' or 'testnet'", network)
+	}
+	if err != nil {
+		return nil, err
+	}
+	var apiResponseOverview ApiResponseOverview
+	apiResponseOverview.Network = network
+	// 首先把非当前网络的过滤掉
+	for _, v := range apps {
+		// 过滤出种类
+		if !contains(apiResponseOverview.LegendData, v.Name) {
+			apiResponseOverview.LegendData = append(apiResponseOverview.LegendData, v.Name)
+		}
+	}
+	for i := 0; i < 7; i++ {
+		// 获取 utc+0 的时间
+		nowUnix := time.Now().Unix()
+		yesterdayStartUnix := nowUnix - int64(nowUnix%86400) - 86400 - int64(i*86400)
+		apiResponseOverview.XaxisData = append(apiResponseOverview.XaxisData, time.Unix(yesterdayStartUnix, 0).UTC().Format(time.RFC3339))
+	}
+	apiResponseOverview.XaxisData = reverseString(apiResponseOverview.XaxisData)
+
+	// 根据时间过滤，只保留最近 7 天的请求事件，每天一个，最后成一个数组，最终只要出现的次数而已
+	for _, v := range apiResponseOverview.LegendData {
+		var serie Serie
+		serie.Name = v
+		for _, date := range apiResponseOverview.XaxisData {
+			var count int
+			for _, app := range apps {
+				if app.Name == v {
+					for _, d := range app.DaylyRequests7Days {
+						if strings.Contains(d.StartTime, date) {
+							count += int(d.RequestNumber)
+						}
+					}
+				}
+			}
+			serie.Data = append(serie.Data, count)
+		}
+		apiResponseOverview.SeriesData = append(apiResponseOverview.SeriesData, serie)
+	}
+	return &apiResponseOverview, nil
+}
+
 func (a *RpcAccount) GetAppsWithPagination(p *Pagination) ([]*ApiResponseRpcApp, *Pagination, error) {
 	return getAppsPagination(a.Address, p)
 }
@@ -109,4 +163,21 @@ func (a *RpcAccount) GetAppRequestLogs(appKey string, p Pagination) ([]*RpcAppRe
 		ApiKey: appKey,
 	}
 	return rpcApp.getAppRequestLogs(appKey, p)
+}
+
+// 查看某个键是否在列表里
+func contains(list []string, key string) bool {
+	for _, v := range list {
+		if v == key {
+			return true
+		}
+	}
+	return false
+}
+
+func reverseString(in []string) []string {
+	for i, j := 0, len(in)-1; i < j; i, j = i+1, j-1 {
+		in[i], in[j] = in[j], in[i]
+	}
+	return in
 }

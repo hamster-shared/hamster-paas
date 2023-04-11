@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/core/types"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
@@ -13,6 +12,8 @@ import (
 	"hamster-paas/pkg/utils/logger"
 	"strings"
 	"time"
+
+	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
@@ -155,7 +156,7 @@ func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id, userId int64, s
 	return nil
 }
 
-func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.NetworkType) (*ApiResponseOverview, error) {
+func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.NetworkType) (*models.ApiResponseOverview, error) {
 	sqlQuery := `SELECT *
 FROM t_cl_subscription
 JOIN t_cl_oracle_request_event
@@ -173,7 +174,7 @@ AND t_cl_subscription.network = ?
 		return nil, err
 	}
 
-	var apiResponseOverview ApiResponseOverview
+	var apiResponseOverview models.ApiResponseOverview
 	apiResponseOverview.Network = networkType.StringWithSpace()
 	// 首先过滤出种类
 	for _, v := range result {
@@ -188,7 +189,7 @@ AND t_cl_subscription.network = ?
 
 	// 根据时间过滤，只保留最近 7 天的请求事件，每天一个，最后成一个数组，最终只要出现的次数而已
 	for _, v := range apiResponseOverview.LegendData {
-		var serie Serie
+		var serie models.Serie
 		serie.Name = v
 		for _, x := range apiResponseOverview.XaxisData {
 			var count int
@@ -202,18 +203,6 @@ AND t_cl_subscription.network = ?
 		apiResponseOverview.SeriesData = append(apiResponseOverview.SeriesData, serie)
 	}
 	return &apiResponseOverview, nil
-}
-
-type ApiResponseOverview struct {
-	Network    string   `json:"network"`
-	LegendData []string `json:"legendData"` // 种类
-	XaxisData  []string `json:"xaxisData"`  // 时间
-	SeriesData []Serie  `json:"seriesData"` // 数据
-}
-
-type Serie struct {
-	Name string `json:"name"`
-	Data []int  `json:"data"`
 }
 
 // 查看某个键是否在列表里

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
 	"strconv"
@@ -14,7 +15,12 @@ func (h *HandlerServer) rpcOverview(c *gin.Context) {
 		Fail("do not have token", c)
 		return
 	}
-	appResp, err := h.rpcService.Overview(user.(aline.User))
+	network := c.Param("network")
+	if network == "" {
+		Fail(fmt.Sprintf("invalid params, network: %s", network), c)
+		return
+	}
+	appResp, err := h.rpcService.Overview(user.(aline.User), network)
 	if err != nil {
 		Fail(err.Error(), c)
 		return

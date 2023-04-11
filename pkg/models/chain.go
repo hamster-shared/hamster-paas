@@ -89,7 +89,7 @@ func GetChainLink(chain ChainType, network NetworkType) (string, string, error) 
 		return "", "", err
 	}
 	var c RpcChain
-	err = db.Model(&RpcChain{}).Where("name = ? and network = ?", chain.StringLower(), network.StringLower()).First(&c).Error
+	err = db.Model(&RpcChain{}).Where("name = ? and network = ?", chain.StringLower(), network.StringLowerWithDash()).First(&c).Error
 	if err != nil {
 		return "", "", err
 	}
