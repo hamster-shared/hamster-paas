@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS t_cl_request_execute (
     secretsloction tinyint NOT NULL,
     secret_url varchar(100) NOT NULL,
     args varchar(255) NOT NULL,
-    transaction_tx char(42) NULL,
+    transaction_tx char(80) NULL,
     status char(20),
     user_id BIGINT NOT NULL,
     created datetime NOT NULL,

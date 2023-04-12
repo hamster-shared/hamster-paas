@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/models"
+	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/utils/logger"
 	"time"
 
@@ -23,6 +24,10 @@ import (
 var URL = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
 
 var ORACLE = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
+var MumbaiBillingRegistryAddress = "0xEe9Bf52E5Ea228404bB54BCFbbDa8c21131b9039"
+var MumbaiFunctionOracleAddress = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
+var SepoliaBillingRegistryAddress = "0x3c79f56407DCB9dc9b852D139a317246f43750Cc"
+var SepoliaFunctionOracleAddress = "0x649a2C205BE7A3d5e99206CEEFF30c794f0E31EC"
 
 var ORACLE_BILLING_REGISTRY_PROXY = "0xee9bf52e5ea228404bb54bcfbbda8c21131b9039"
 
@@ -104,6 +109,8 @@ func NewOracleListener(db *gorm.DB) *OracleListener {
 
 func (l *OracleListener) StartListen() {
 	c := make(chan struct{})
+	mumbaiChan := make(chan struct{})
+	sepoliaChan := make(chan struct{})
 	go func() {
 		for {
 			logger.Info("准备监听 Ethereum 获取 oracle request event")
@@ -117,6 +124,36 @@ func (l *OracleListener) StartListen() {
 			}
 			<-c
 			logger.Info("准备重试连接 Ethereum")
+		}
+	}()
+	go func() {
+		for {
+			logger.Info("准备监听 Ethereum 获取 oracle request event")
+			err := l.MumbaiListen()
+			if err != nil {
+				logger.Errorf("监听 eth 出错: %s", err)
+				time.Sleep(5 * time.Second)
+				go func() {
+					mumbaiChan <- struct{}{}
+				}()
+			}
+			<-mumbaiChan
+			logger.Info("准备重试连接 Mumbai")
+		}
+	}()
+	go func() {
+		for {
+			logger.Info("准备监听 sepolia 网络的event")
+			err := l.SepoliaListen()
+			if err != nil {
+				logger.Errorf("监听 sepolia 出错: %s", err)
+				time.Sleep(5 * time.Second)
+				go func() {
+					sepoliaChan <- struct{}{}
+				}()
+			}
+			<-sepoliaChan
+			logger.Info("准备重试连接 sepolia")
 		}
 	}()
 }
@@ -166,4 +203,32 @@ func GetMumbaiSubscriptionBalance(subscriptionId uint64) (uint64, error) {
 		return 0, err
 	}
 	return oracleListener.GetFund(subscriptionId)
+}
+
+func (l *OracleListener) MumbaiListen() error {
+	client, err := ethclient.Dial(eth.NetMap[eth.MUMBAI_TESTNET])
+	if err != nil {
+		logger.Errorf("connect Mumbai node failed: %s", err)
+		return err
+	}
+	logger.Info("connected Mumbai node")
+	billingRegistryService := NewBillingContractEventService(MumbaiBillingRegistryAddress, client, l.db)
+	billingRegistryService.BillingRegistryListen()
+	functionOracleService := NewFunctionOracleEventService(MumbaiFunctionOracleAddress, client, l.db)
+	functionOracleService.FunctionOracleListen()
+	return nil
+}
+
+func (l *OracleListener) SepoliaListen() error {
+	client, err := ethclient.Dial(eth.NetMap[eth.SEPOLIA_TESTNET])
+	if err != nil {
+		logger.Errorf("connect Sepolia node failed: %s", err)
+		return err
+	}
+	logger.Info("connected Sepolia node")
+	billingRegistryService := NewBillingContractEventService(SepoliaBillingRegistryAddress, client, l.db)
+	billingRegistryService.BillingRegistryListen()
+	functionOracleService := NewFunctionOracleEventService(SepoliaFunctionOracleAddress, client, l.db)
+	functionOracleService.FunctionOracleListen()
+	return nil
 }

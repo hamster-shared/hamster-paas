@@ -9,6 +9,7 @@ type Deposit struct {
 	Amount         float64   `json:"amount"`
 	TransactionTx  string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status         string    `json:"status,omitempty"`
+	Address        string    `json:"address"`
 	UserId         uint64    `gorm:"column:user_id" json:"userId"`
 }
 

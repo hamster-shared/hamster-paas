@@ -90,6 +90,7 @@ type ChainLinkDepositVo struct {
 	Created       time.Time `json:"created"`
 	Amount        float64   `json:"amount"`
 	TransactionTx string    `gorm:"column:transaction_tx" json:"transactionTx"`
+	Address       string    `json:"address"`
 	Status        string    `json:"status,omitempty"`
 }
 
@@ -107,6 +108,7 @@ type ChainLinkExpenseVo struct {
 	Status          string    `json:"status"`
 	RequestName     string    `json:"requestName"`
 	Amount          float64   `json:"amount"`
+	RequestId       string    `json:"requestId"`
 	Created         time.Time `json:"created"`
 }
 
