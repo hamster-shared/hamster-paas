@@ -3,14 +3,15 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/jinzhu/copier"
-	"gorm.io/gorm"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/utils/logger"
 	"time"
+
+	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 )
 
 type ChainLinkSubscriptionService struct {
@@ -31,7 +32,7 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 	if err != nil {
 		return -1, err
 	}
-	// 异步Tx判断，更改Status
+	// 异步 Tx 判断，更改 Status
 	//poolService.Submit(func() {
 	//	checkAndChangeSubscriptionStatus(network, subscription, s.db)
 	//})
@@ -123,7 +124,7 @@ func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.
 }
 
 func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLinkSubscriptionUpdateParam, userId uint64) error {
-	//获取id对应的记录
+	//获取 id 对应的记录
 	var subscription models.Subscription
 	err := s.db.Model(models.Subscription{}).Where("id = ?", param.Id).First(&subscription).Error
 	if err != nil {
@@ -133,7 +134,7 @@ func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLi
 	if subscription.Status == param.NewStatus {
 		return nil
 	}
-	// 判断该consumer是否是符合要求
+	// 判断该 consumer 是否是符合要求
 	if subscription.TransactionTx == param.TransactionTx && subscription.UserId == userId && param.Chain == subscription.Chain && param.Network == subscription.Network {
 		err = s.db.Model(models.Subscription{}).Where("id = ?", param.Id).Updates(map[string]interface{}{"chain_Subscription_id": param.ChainSubscriptionId, "status": param.NewStatus}).Error
 		if err != nil {
@@ -146,7 +147,7 @@ func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLi
 
 func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceAll(userId int64) (*[]SubscriptionBalance, error) {
 	var subscriptions []models.Subscription
-	err := s.db.Model(models.Subscription{}).Where("user_id = ?", userId).Find(&subscriptions).Error
+	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND status = ?", userId, consts.SUCCESS).Find(&subscriptions).Error
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +189,7 @@ func otherChainOrNetworkNotSupportedYet(subscription models.Subscription) Subscr
 
 func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceById(userId int64, subscriptionId uint64) (*SubscriptionBalance, error) {
 	var subscription models.Subscription
-	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND id = ?", userId, subscriptionId).First(&subscription).Error
+	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND id = ? AND status = ?", userId, subscriptionId, consts.SUCCESS).First(&subscription).Error
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +221,7 @@ type SubscriptionBalance struct {
 	Message             string `json:"message"`
 }
 
-// 用于检查tx的状态，并且修改subscription的status
+// 用于检查 tx 的状态，并且修改 subscription 的 status
 func checkAndChangeSubscriptionStatus(network models.NetworkType, subscription models.Subscription, db *gorm.DB) {
 	client := eth.GetChainClient(network.NetworkType())
 	if client == nil {
@@ -235,14 +236,14 @@ func checkAndChangeSubscriptionStatus(network models.NetworkType, subscription m
 		}
 		time.Sleep(time.Second * 20)
 		times++
-		// 拿到数据库中状态,判断是否要主动结束轮询
+		// 拿到数据库中状态，判断是否要主动结束轮询
 		var s_ models.Subscription
 		db.Model(models.Subscription{}).Where("id = ?", subscription.Id).First(&s_)
-		// status == Success， 主动结束轮询
+		// status == Success，主动结束轮询
 		if s_.Status == consts.SUCCESS {
 			break
 		}
-		// 获取tx状态
+		// 获取 tx 状态
 		txStatus, err := eth.GetTxStatus(subscription.TransactionTx, network.NetworkType(), client)
 		if err != nil {
 			continue
