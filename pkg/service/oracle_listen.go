@@ -2,13 +2,17 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/utils/logger"
 	"time"
 
 	"hamster-paas/pkg/service/oracle"
+	"hamster-paas/pkg/service/oracle/proxy"
 
 	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -20,6 +24,8 @@ var URL = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFX
 
 var ORACLE = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
 
+var ORACLE_BILLING_REGISTRY_PROXY = "0xee9bf52e5ea228404bb54bcfbbda8c21131b9039"
+
 func (l *OracleListener) listen() error {
 	// 连接到 Ethereum 节点
 	client, err := ethclient.Dial(URL)
@@ -28,6 +34,7 @@ func (l *OracleListener) listen() error {
 		return err
 	}
 	logger.Info("已连接到 Ethereum 节点")
+	l.client = client
 
 	// 智能合约地址
 	contractAddress := common.HexToAddress(ORACLE)
@@ -85,7 +92,8 @@ func getOracleRequestTopic() common.Hash {
 }
 
 type OracleListener struct {
-	db *gorm.DB
+	client *ethclient.Client
+	db     *gorm.DB
 }
 
 func NewOracleListener(db *gorm.DB) *OracleListener {
@@ -134,4 +142,28 @@ func (l *OracleListener) saveOracleRequestEvent(r *oracle.OracleOracleRequest) {
 	} else {
 		logger.Infof("保存 oracle request event success: transaction hash: %s", event.TransactionHash)
 	}
+}
+
+func (l *OracleListener) GetFund(subscriptionId uint64) (uint64, error) {
+	if l.client == nil {
+		return 0, fmt.Errorf("eth client is nil")
+	}
+	contractAddress := common.HexToAddress(ORACLE_BILLING_REGISTRY_PROXY)
+	caller, err := oracle_proxy.NewOracleProxyCaller(contractAddress, l.client)
+	if err != nil {
+		return 0, err
+	}
+	result, err := caller.GetSubscription(&bind.CallOpts{}, subscriptionId)
+	if err != nil {
+		return 0, err
+	}
+	return result.Balance.Uint64(), nil
+}
+
+func GetMumbaiSubscriptionBalance(subscriptionId uint64) (uint64, error) {
+	oracleListener, err := application.GetBean[*OracleListener]("oracleListener")
+	if err != nil {
+		return 0, err
+	}
+	return oracleListener.GetFund(subscriptionId)
 }

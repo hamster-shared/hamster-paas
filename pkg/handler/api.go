@@ -57,6 +57,8 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/subscriptions", h.handlerServer.subscriptionList)
 	chainLinkApi.POST("/subscription/:id/fund", h.handlerServer.addFound)
 	chainLinkApi.PUT("/subscription/fund-status", h.handlerServer.changeFoundStatus)
+	chainLinkApi.GET("/subscription/balance", h.handlerServer.getSubscriptionBalanceAll)
+	chainLinkApi.GET("/subscription/:id/balance", h.handlerServer.getSubscriptionBalanceById)
 	//// chain link consumer
 	chainLinkApi.POST("/consumer", h.handlerServer.createConsumer)
 	chainLinkApi.PUT("/consumer/consumer-status", h.handlerServer.changeConsumerStatus)

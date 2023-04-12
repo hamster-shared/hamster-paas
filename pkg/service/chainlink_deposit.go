@@ -88,7 +88,7 @@ func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.Ch
 		}
 		return nil
 	}
-	return errors.New(fmt.Sprintf("consumer id :%s not valid, other col not confirm", param.Id))
+	return errors.New(fmt.Sprintf("consumer id :%d not valid, other col not confirm", param.Id))
 }
 
 // 用于检查tx的状态，并且修改deposit的status
