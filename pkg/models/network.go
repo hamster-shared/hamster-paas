@@ -29,7 +29,7 @@ func (n NetworkType) StringLower() string {
 }
 
 func (n NetworkType) StringLowerWithDash() string {
-	return [...]string{"mainnet", "testnet-goerli", "testnet-ropsten", "testnet-kovan", "testnet-rinkeby", "testnet-sepolia", "testnet-hamster", "testnet-mumbai"}[n]
+	return [...]string{"mainnet", "testnet-goerli", "testnet-ropsten", "testnet-kovan", "testnet-rinkeby", "testnet-sepolia", "testnet-hamster", "testnet-hamster", "testnet-mumbai"}[n]
 }
 
 func (n NetworkType) StringWithSpace() string {
