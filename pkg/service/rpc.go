@@ -5,6 +5,7 @@ import (
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -122,23 +123,30 @@ func (s *RpcService) AppRequestLog(user aline.User, appKey, page, size string) (
 	return a.GetAppRequestLogs(appKey, p)
 }
 
-func (s *RpcService) IsActive(user aline.User) bool {
+func (s *RpcService) IsActive(user aline.User, serviceType string) bool {
+	t := strings.ToLower(serviceType)
+	if t != string(models.ServiceTypeRpc) && t != string(models.ServiceTypeOracle) {
+		return false
+	}
 	var us models.UserService
-	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, models.ServiceTypeRpc).First(&us).Error
+	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, strings.ToLower(serviceType)).First(&us).Error
 	if err != nil {
-		logger.Errorf("IsActive error: %s", err)
 		return false
 	}
 	return us.IsActive
 }
 
-func (s *RpcService) ActiveRpcService(user aline.User) string {
+func (s *RpcService) ActiveService(user aline.User, serviceType string) string {
+	t := strings.ToLower(serviceType)
+	if t != string(models.ServiceTypeRpc) && t != string(models.ServiceTypeOracle) {
+		return "service type error, only support rpc and oracle"
+	}
 	var us models.UserService
-	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, models.ServiceTypeRpc).First(&us).Error
+	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, t).First(&us).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			us.UserId = int64(user.Id)
-			us.ServiceType = models.ServiceTypeRpc
+			us.ServiceType = models.ServiceType(t)
 			us.IsActive = true
 			err = s.db.Model(&models.UserService{}).Create(&us).Error
 			if err != nil {

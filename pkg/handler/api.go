@@ -33,11 +33,12 @@ func (h *HttpServer) StartHttpServer() error {
 	rpcApi.GET("/mynetwork", h.handlerServer.rpcGetMyNetwork)
 	rpcApi.GET("/chain/:chain", h.handlerServer.rpcChainDetail)
 	rpcApi.GET("/request-log/:appKey", h.handlerServer.rpcRequestLog)
-	rpcApi.GET("/is-active", h.handlerServer.rpcIsActive)
-	rpcApi.POST("/active", h.handlerServer.activeRpcService)
 
 	middleWare := r.Group("/api/middleware")
+	middleWare.Use(h.handlerServer.Authorize())
 	middleWare.GET("/rpc", h.handlerServer.middlewareRpc)
+	middleWare.GET("/is-active/:serviceName", h.handlerServer.serviceIsActive)
+	middleWare.POST("/active/:serviceName", h.handlerServer.activeService)
 
 	chainLinkApi := r.Group("/api/chainlink")
 	chainLinkApi.Use(h.handlerServer.Authorize())
