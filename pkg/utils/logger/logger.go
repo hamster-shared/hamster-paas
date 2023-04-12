@@ -9,7 +9,7 @@ var sugarLogger *zap.SugaredLogger
 
 func InitLogger() {
 	config := zap.Config{
-		Encoding:         "json",
+		Encoding:         "console",
 		Level:            zap.NewAtomicLevelAt(zapcore.DebugLevel),
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stderr"},
@@ -20,9 +20,9 @@ func InitLogger() {
 			NameKey:        "logger",
 			CallerKey:      "caller",
 			FunctionKey:    zapcore.OmitKey,
-			StacktraceKey:  "stacktrace",
+			StacktraceKey:  zapcore.OmitKey,
 			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    zapcore.LowercaseLevelEncoder,
+			EncodeLevel:    zapcore.LowercaseColorLevelEncoder,
 			EncodeTime:     zapcore.ISO8601TimeEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
 			EncodeCaller:   zapcore.ShortCallerEncoder,
@@ -35,7 +35,7 @@ func InitLogger() {
 	}
 
 	defer logger.Sync()
-	sugarLogger = logger.Sugar()
+	sugarLogger = logger.WithOptions(zap.AddCallerSkip(1)).Sugar()
 }
 
 func Sugar() *zap.SugaredLogger {
