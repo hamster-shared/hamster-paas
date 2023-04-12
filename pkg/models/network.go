@@ -17,14 +17,15 @@ const (
 	TestnetSepolia
 	TestnetHamster
 	TestnetMumbai
+	TestnetMoonbeam
 )
 
 func (n NetworkType) String() string {
-	return [...]string{"Mainnet", "TestnetGoerli", "TestnetRopsten", "TestnetKovan", "TestnetRinkeby", "TestnetSepolia", "TestnetHamster", "TestnetMumbai"}[n]
+	return [...]string{"Mainnet", "TestnetGoerli", "TestnetRopsten", "TestnetKovan", "TestnetRinkeby", "TestnetSepolia", "TestnetHamster", "TestnetMumbai", "TestnetMoonbeam"}[n]
 }
 
 func (n NetworkType) StringLower() string {
-	return [...]string{"mainnet", "goerli testnet", "ropsten testnet", "kovan testnet", "rinkeby testnet", "sepolia testnet", "hamster testnet", "mumbai testnet"}[n]
+	return [...]string{"mainnet", "goerli testnet", "ropsten testnet", "kovan testnet", "rinkeby testnet", "sepolia testnet", "hamster testnet", "mumbai testnet", "moonbeam testnet"}[n]
 }
 
 func (n NetworkType) StringLowerWithDash() string {
@@ -32,15 +33,15 @@ func (n NetworkType) StringLowerWithDash() string {
 }
 
 func (n NetworkType) StringWithSpace() string {
-	return [...]string{"Mainnet", "Goerli Testnet", "Ropsten Testnet", "Kovan Testnet", "Rinkeby Testnet", "Sepolia Testnet", "Hamster Testnet", "Mumbai Testnet"}[n]
+	return [...]string{"Mainnet", "Goerli Testnet", "Ropsten Testnet", "Kovan Testnet", "Rinkeby Testnet", "Sepolia Testnet", "Hamster Testnet", "Mumbai Testnet", "Moonbeam Testnet"}[n]
 }
 
 func (n NetworkType) StringAline() string {
-	return [...]string{"Mainnet", "Testnet/Goerli", "Testnet/Ropsten", "Testnet/Kovan", "Testnet/Rinkeby", "Testnet/Sepolia", "Testnet/Hamster", "Mumbai Testnet"}[n]
+	return [...]string{"Mainnet", "Testnet/Goerli", "Testnet/Ropsten", "Testnet/Kovan", "Testnet/Rinkeby", "Testnet/Sepolia", "Testnet/Hamster", "Testnet/Mumbai", "Testnet/Moonbeam"}[n]
 }
 
 func (n NetworkType) NetworkType() eth.EthNetwork {
-	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.SEPOLIA_TESTNET, eth.HAMSTER, eth.MUMBAI_TESTNET}[n]
+	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.SEPOLIA_TESTNET, eth.HAMSTER, eth.MUMBAI_TESTNET, eth.MOONBEAM_TESTNET}[n]
 }
 
 func ParseNetworkType(s string) (NetworkType, error) {
@@ -61,6 +62,8 @@ func ParseNetworkType(s string) (NetworkType, error) {
 		return TestnetHamster, nil
 	case "mumbai testnet", "testnet/mumbai", "testnet-mumbai":
 		return TestnetMumbai, nil
+	case "moonbeam testnet", "testnet/moonbeam", "testnet-moonbeam":
+		return TestnetMoonbeam, nil
 	default:
 		return Mainnet, fmt.Errorf("invalid network type: %s", s)
 	}
