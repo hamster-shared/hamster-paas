@@ -65,6 +65,7 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 		logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
 		return -1, err
 	}
+	// 异步检查Tx，修改Status
 	//poolService.Submit(func() {
 	//	checkStatus(network, deposit, d.db)
 	//})

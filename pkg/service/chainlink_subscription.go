@@ -9,6 +9,8 @@ import (
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/eth"
+	"hamster-paas/pkg/utils/logger"
+	"time"
 )
 
 type ChainLinkSubscriptionService struct {
@@ -24,51 +26,15 @@ func NewChainLinkSubscriptionService(db *gorm.DB) *ChainLinkSubscriptionService 
 // CreateSubscription create subscription
 // * param subscription: new Subscription need to save in db.
 // * error when subscription already exit.
-func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription, poolService PoolService, network eth.EthNetwork) (int64, error) {
+func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Subscription, poolService PoolService, network models.NetworkType) (int64, error) {
 	err := s.db.Create(&subscription).Error
 	if err != nil {
 		return -1, err
 	}
+	// 异步Tx判断，更改Status
 	//poolService.Submit(func() {
-	//	client, _ := eth.NewRPCEthereumProxy(eth.NetMap[network])
-	//	times := 0
-	//	needFalid := false
-	//	for {
-	//		if times == 90 {
-	//			needFalid = true
-	//			break
-	//		}
-	//		time.Sleep(time.Second * 20)
-	//		times++
-	//		// 拿到数据库中状态,判断是否要主动结束轮询
-	//		var s_ models.Subscription
-	//		s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).First(&s_)
-	//		if s_.Status == consts.SUCCESS {
-	//			break
-	//		}
-	//		re, err := client.TransactionReceipt(subscription.TransactionTx)
-	//		if err != nil {
-	//			continue
-	//		}
-	//		if re.Status == 1 {
-	//			// 修改状态为成功
-	//			logger.Infof("Create Subscription : Tx Success, change subscription id: %d status to success", subscription.Id)
-	//			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.SUCCESS)
-	//			break
-	//		} else if re.Status == 0 {
-	//			// 修改状态为失败
-	//			logger.Infof("Create Subscription : Tx failed, change subscription id: %d status to failed", subscription.Id)
-	//			s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
-	//			break
-	//		}
-	//	}
-	//	if needFalid {
-	//		// 更新状态为失败
-	//		logger.Infof("Create Subscription : Query timeout, change subscription id: %d status to failed", subscription.Id)
-	//		s.db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
-	//	}
+	//	checkAndChangeSubscriptionStatus(network, subscription, s.db)
 	//})
-
 	return int64(subscription.Id), nil
 }
 
@@ -176,4 +142,50 @@ func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLi
 		return nil
 	}
 	return errors.New(fmt.Sprintf("subscription id :%s not valid, other col not confirm", param.Id))
+}
+
+// 用于检查tx的状态，并且修改subscription的status
+func checkAndChangeSubscriptionStatus(network models.NetworkType, subscription models.Subscription, db *gorm.DB) {
+	client := eth.GetChainClient(network.NetworkType())
+	if client == nil {
+		return
+	}
+	times := 0
+	needFalid := false
+	for {
+		if times == 90 {
+			needFalid = true
+			break
+		}
+		time.Sleep(time.Second * 20)
+		times++
+		// 拿到数据库中状态,判断是否要主动结束轮询
+		var s_ models.Subscription
+		db.Model(models.Subscription{}).Where("id = ?", subscription.Id).First(&s_)
+		// status == Success， 主动结束轮询
+		if s_.Status == consts.SUCCESS {
+			break
+		}
+		// 获取tx状态
+		txStatus, err := eth.GetTxStatus(subscription.TransactionTx, network.NetworkType(), client)
+		if err != nil {
+			continue
+		}
+		if txStatus == 1 {
+			// 修改状态为成功
+			logger.Infof("Create Subscription : Tx Success, change Subscription id: %d status to success", subscription.Id)
+			db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.SUCCESS)
+			break
+		} else if txStatus == 0 {
+			// 修改状态为失败
+			logger.Infof("Create Subscription : Tx failed, change Subscription id: %d status to failed", subscription.Id)
+			db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
+			break
+		}
+	}
+	if needFalid {
+		// 更新状态为失败
+		logger.Infof("Create Subscription : Query timeout, change Subscription id: %d status to failed", subscription.Id)
+		db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
+	}
 }

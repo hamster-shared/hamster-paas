@@ -51,7 +51,7 @@ func TestGetReceipt(t *testing.T) {
 }
 
 // 直接拿的时间比重新链接client的时间要短
-func TestGetChainCLient(t *testing.T) {
+func TestGetChainClient(t *testing.T) {
 	begin := time.Now()
 	client := GetChainClient(MUMBAI_TESTNET)
 	if client == nil {
@@ -73,8 +73,11 @@ func TestGetChainCLient(t *testing.T) {
 }
 
 func TestGetTxStatus(t *testing.T) {
-	client := GetChainClient(MUMBAI_TESTNET)
-	status, err := GetTxStatus("0xb909d3982ce8d80a11b8554e65739de2e4024f44e88f0440ae5165eb271c8f32", MUMBAI_TESTNET, client)
+	client := GetChainClient(SEPOLIA_TESTNET)
+	if client == nil {
+		panic("client not valid")
+	}
+	status, err := GetTxStatus("0xd02009d5f2a521ee2ce9bec2de8c79b00ee59e426e6e17c4012c455e91ea118b", MOONBEAM_TESTNET, client)
 	if err != nil {
 		panic(err)
 	}

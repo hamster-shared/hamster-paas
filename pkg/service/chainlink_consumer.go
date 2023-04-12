@@ -45,7 +45,7 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	}
 	// 不存在就创建
 	c.db.Create(&consumer)
-	//// 异步判断TX status
+	// 异步判断TX status
 	//poolService.Submit(func() {
 	//	checkAndChangeConsumerStatus(network, consumer, c.db, subscriptionService)
 	//})
