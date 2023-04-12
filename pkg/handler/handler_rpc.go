@@ -125,3 +125,23 @@ func (h *HandlerServer) rpcRequestLog(c *gin.Context) {
 	}
 	SuccessWithPagination(requestLog, *p, c)
 }
+
+func (h *HandlerServer) rpcIsActive(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	ok = h.rpcService.IsActive(user.(aline.User))
+	Success(ok, c)
+}
+
+func (h *HandlerServer) activeRpcService(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	msg := h.rpcService.ActiveRpcService(user.(aline.User))
+	Success(msg, c)
+}

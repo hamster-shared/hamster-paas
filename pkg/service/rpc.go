@@ -121,3 +121,32 @@ func (s *RpcService) AppRequestLog(user aline.User, appKey, page, size string) (
 	}
 	return a.GetAppRequestLogs(appKey, p)
 }
+
+func (s *RpcService) IsActive(user aline.User) bool {
+	var us models.UserService
+	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, models.ServiceTypeRpc).First(&us).Error
+	if err != nil {
+		logger.Errorf("IsActive error: %s", err)
+		return false
+	}
+	return us.IsActive
+}
+
+func (s *RpcService) ActiveRpcService(user aline.User) string {
+	var us models.UserService
+	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, models.ServiceTypeRpc).First(&us).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			us.UserId = int64(user.Id)
+			us.ServiceType = models.ServiceTypeRpc
+			us.IsActive = true
+			err = s.db.Model(&models.UserService{}).Create(&us).Error
+			if err != nil {
+				return err.Error()
+			}
+			return "ok"
+		}
+		return err.Error()
+	}
+	return "service already active"
+}
