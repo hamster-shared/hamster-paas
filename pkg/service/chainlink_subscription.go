@@ -141,7 +141,83 @@ func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLi
 		}
 		return nil
 	}
-	return errors.New(fmt.Sprintf("subscription id :%s not valid, other col not confirm", param.Id))
+	return errors.New(fmt.Sprintf("subscription id :%d not valid, other col not confirm", param.Id))
+}
+
+func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceAll(userId int64) (*[]SubscriptionBalance, error) {
+	var subscriptions []models.Subscription
+	err := s.db.Model(models.Subscription{}).Where("user_id = ?", userId).Find(&subscriptions).Error
+	if err != nil {
+		return nil, err
+	}
+	var subscriptionBalances []SubscriptionBalance
+	for _, subscription := range subscriptions {
+		chainType, _ := models.ParseChainType(subscription.Chain)
+		networkType, _ := models.ParseNetworkType(subscription.Network)
+		if chainType != models.Ethereum || networkType != models.TestnetMumbai {
+			subscriptionBalances = append(subscriptionBalances, otherChainOrNetworkNotSupportedYet(subscription))
+			continue
+		}
+
+		balance, err := GetMumbaiSubscriptionBalance(uint64(subscription.ChainSubscriptionId))
+		if err != nil {
+			return nil, err
+		}
+		subscriptionBalance := SubscriptionBalance{
+			Chain:               subscription.Chain,
+			Network:             subscription.Network,
+			SubscriptionId:      subscription.Id,
+			ChainSubscriptionId: uint64(subscription.ChainSubscriptionId),
+			Balance:             balance,
+		}
+		subscriptionBalances = append(subscriptionBalances, subscriptionBalance)
+	}
+	return &subscriptionBalances, nil
+}
+
+func otherChainOrNetworkNotSupportedYet(subscription models.Subscription) SubscriptionBalance {
+	return SubscriptionBalance{
+		Chain:               subscription.Chain,
+		Network:             subscription.Network,
+		SubscriptionId:      subscription.Id,
+		ChainSubscriptionId: uint64(subscription.ChainSubscriptionId),
+		Balance:             0,
+		Message:             "The current chain or network does not support it",
+	}
+}
+
+func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceById(userId int64, subscriptionId uint64) (*SubscriptionBalance, error) {
+	var subscription models.Subscription
+	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND id = ?", userId, subscriptionId).First(&subscription).Error
+	if err != nil {
+		return nil, err
+	}
+	chainType, _ := models.ParseChainType(subscription.Chain)
+	networkType, _ := models.ParseNetworkType(subscription.Network)
+	if chainType != models.Ethereum || networkType != models.TestnetMumbai {
+		result := otherChainOrNetworkNotSupportedYet(subscription)
+		return &result, nil
+	}
+	balance, err := GetMumbaiSubscriptionBalance(uint64(subscription.ChainSubscriptionId))
+	if err != nil {
+		return nil, err
+	}
+	return &SubscriptionBalance{
+		Chain:               subscription.Chain,
+		Network:             subscription.Network,
+		SubscriptionId:      subscription.Id,
+		ChainSubscriptionId: subscriptionId,
+		Balance:             balance,
+	}, nil
+}
+
+type SubscriptionBalance struct {
+	Chain               string `json:"chain"`
+	Network             string `json:"network"`
+	SubscriptionId      uint   `json:"subscriptionId"`
+	ChainSubscriptionId uint64 `json:"chainSubscriptionId"`
+	Balance             uint64 `json:"balance"`
+	Message             string `json:"message"`
 }
 
 // 用于检查tx的状态，并且修改subscription的status

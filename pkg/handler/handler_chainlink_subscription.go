@@ -204,3 +204,44 @@ func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
 	}
 	Success(nil, gin)
 }
+
+// getSubscriptionBalanceAll
+func (h *HandlerServer) getSubscriptionBalanceAll(c *gin.Context) {
+	userAny, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	user := userAny.(aline.User)
+	balance, err := h.chainLinkSubscriptionService.GetUserSubscriptionBalanceAll(int64(user.Id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("getSubscriptionBalanceAll failed: %s", err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
+	Success(balance, c)
+}
+
+// getSubscriptionBalanceById
+func (h *HandlerServer) getSubscriptionBalanceById(c *gin.Context) {
+	userAny, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	user := userAny.(aline.User)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("getSubscriptionBalanceById failed: %s", err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
+	balance, err := h.chainLinkSubscriptionService.GetUserSubscriptionBalanceById(int64(user.Id), uint64(id))
+	if err != nil {
+		logger.Error(fmt.Sprintf("getSubscriptionBalanceById failed: %s", err.Error()))
+		Fail(err.Error(), c)
+		return
+	}
+	Success(balance, c)
+}

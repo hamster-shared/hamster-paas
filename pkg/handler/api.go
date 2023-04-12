@@ -29,7 +29,7 @@ func (h *HttpServer) StartHttpServer() error {
 	rpcApi.Use(h.handlerServer.Authorize())
 	rpcApi.GET("/chains", h.handlerServer.rpcGetChains)
 	rpcApi.GET("/networks/:chain", h.handlerServer.rpcGetNetworks)
-	rpcApi.GET("/overview/:chain/:network", h.handlerServer.rpcOverview)
+	rpcApi.GET("/overview/:network", h.handlerServer.rpcOverview)
 	rpcApi.GET("/mynetwork", h.handlerServer.rpcGetMyNetwork)
 	rpcApi.GET("/chain/:chain", h.handlerServer.rpcChainDetail)
 	rpcApi.GET("/request-log/:appKey", h.handlerServer.rpcRequestLog)
@@ -57,6 +57,8 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/subscriptions", h.handlerServer.subscriptionList)
 	chainLinkApi.POST("/subscription/:id/fund", h.handlerServer.addFound)
 	chainLinkApi.PUT("/subscription/fund-status", h.handlerServer.changeFoundStatus)
+	chainLinkApi.GET("/subscription/balance", h.handlerServer.getSubscriptionBalanceAll)
+	chainLinkApi.GET("/subscription/:id/balance", h.handlerServer.getSubscriptionBalanceById)
 	//// chain link consumer
 	chainLinkApi.POST("/consumer", h.handlerServer.createConsumer)
 	chainLinkApi.PUT("/consumer/consumer-status", h.handlerServer.changeConsumerStatus)
