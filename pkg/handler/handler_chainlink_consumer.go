@@ -205,7 +205,7 @@ func (h *HandlerServer) changeConsumerStatus(gin *gin.Context) {
 		return
 	}
 	jsonParam.NewStatus = status
-	err = h.chainLinkConsumerService.ChangeConsumerStatus(jsonParam, uint64(user.Id))
+	err = h.chainLinkConsumerService.ChangeConsumerStatus(jsonParam, uint64(user.Id), h.chainLinkSubscriptionService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("change consumer status faild: %s", err.Error()))
 		Fail(err.Error(), gin)
