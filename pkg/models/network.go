@@ -44,20 +44,16 @@ func (n NetworkType) NetworkType() eth.EthNetwork {
 	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.SEPOLIA_TESTNET, eth.HAMSTER, eth.MUMBAI_TESTNET, eth.MOONBEAM_TESTNET}[n]
 }
 
-func (n NetworkType) NetworkId() string {
-	return [...]string{"1", "5", "3", "42", "4", "", "", "", ""}[n]
-}
-
-func GetNetworkId(network string) string {
+func GetNetworkIdAndUrl(network string) (string, string) {
 	switch strings.ToLower(network) {
 	case "sepolia testnet":
-		return "aa36a7"
+		return "aa36a7", "https://eth-sepolia.g.alchemy.com/v2/demo"
 	case "mumbai testnet":
-		return "13881"
+		return "13881", "https://rpc-mumbai.maticvigil.com"
 	case "moonbeam testnet":
-		return "501"
+		return "501", "https://rpc-moonbeam.hamster.newtouch.com"
 	default:
-		return "-1"
+		return "-1", "https://rpc-moonbeam.hamster.newtouch.com"
 	}
 }
 

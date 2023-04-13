@@ -121,6 +121,7 @@ type ChainLinkValidSubscriptionVo struct {
 	TransactionTx       string    `json:"transactionTx"`
 	Admin               string    `json:"admin"`
 	NetworkId           string    `json:"networkId"`
+	NetworkUrl          string    `json:"networkUrl"`
 	Status              string    `json:"status"`
 }
 

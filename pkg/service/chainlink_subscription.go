@@ -132,7 +132,7 @@ func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.
 		s_vo.Admin = v.Admin
 		s_vo.Status = v.Status
 		s_vo.ChainAndNetwork = v.Chain + " " + v.Network
-		s_vo.NetworkId = models.GetNetworkId(v.Network)
+		s_vo.NetworkId, s_vo.NetworkUrl = models.GetNetworkIdAndUrl(v.Network)
 		vo_list = append(vo_list, s_vo)
 	}
 	return vo_list, nil
