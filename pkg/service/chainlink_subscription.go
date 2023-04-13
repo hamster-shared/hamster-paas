@@ -115,12 +115,27 @@ func (s *ChainLinkSubscriptionService) SubscriptionDetail(id int64) (vo.ChainLin
 }
 
 func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.ChainLinkValidSubscriptionVo, error) {
-	var list []vo.ChainLinkValidSubscriptionVo
+	var list []models.Subscription
 	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND status = ?", userId, consts.SUCCESS).Find(&list).Error
 	if err != nil {
 		return nil, err
 	}
-	return list, nil
+	var vo_list []vo.ChainLinkValidSubscriptionVo
+	for _, v := range list {
+		var s_vo vo.ChainLinkValidSubscriptionVo
+		s_vo.Id = v.Id
+		s_vo.ChainSubscriptionId = v.ChainSubscriptionId
+		s_vo.Admin = v.Admin
+		s_vo.Name = v.Name
+		s_vo.Created = v.Created
+		s_vo.TransactionTx = v.TransactionTx
+		s_vo.Admin = v.Admin
+		s_vo.Status = v.Status
+		s_vo.ChainAndNetwork = v.Chain + " " + v.Network
+		s_vo.NetworkId = models.GetNetworkId(v.Network)
+		vo_list = append(vo_list, s_vo)
+	}
+	return vo_list, nil
 }
 
 func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLinkSubscriptionUpdateParam, userId uint64) error {

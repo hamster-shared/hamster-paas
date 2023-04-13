@@ -117,10 +117,10 @@ type ChainLinkValidSubscriptionVo struct {
 	ChainSubscriptionId uint      `json:"chainSubscriptionId"`
 	Name                string    `json:"name"`
 	Created             time.Time `json:"created"`
-	Chain               string    `json:"chain"`
-	Network             string    `json:"network"`
+	ChainAndNetwork     string    `json:"chainAndNetwork"`
 	TransactionTx       string    `json:"transactionTx"`
 	Admin               string    `json:"admin"`
+	NetworkId           string    `json:"networkId"`
 	Status              string    `json:"status"`
 }
 

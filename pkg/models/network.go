@@ -44,6 +44,23 @@ func (n NetworkType) NetworkType() eth.EthNetwork {
 	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.SEPOLIA_TESTNET, eth.HAMSTER, eth.MUMBAI_TESTNET, eth.MOONBEAM_TESTNET}[n]
 }
 
+func (n NetworkType) NetworkId() string {
+	return [...]string{"1", "5", "3", "42", "4", "", "", "", ""}[n]
+}
+
+func GetNetworkId(network string) string {
+	switch strings.ToLower(network) {
+	case "sepolia testnet":
+		return "aa36a7"
+	case "mumbai testnet":
+		return "13881"
+	case "moonbeam testnet":
+		return "501"
+	default:
+		return "-1"
+	}
+}
+
 func ParseNetworkType(s string) (NetworkType, error) {
 	switch strings.ToLower(s) {
 	case "mainnet":

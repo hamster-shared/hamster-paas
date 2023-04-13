@@ -67,9 +67,9 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 		return -1, err
 	}
 	// 异步检查Tx，修改Status
-	poolService.Submit(func() {
-		//checkStatus(network, deposit, d.db)
-	})
+	//poolService.Submit(func() {
+	//	//checkStatus(network, deposit, d.db)
+	//})
 	return deposit.Id, nil
 }
 
