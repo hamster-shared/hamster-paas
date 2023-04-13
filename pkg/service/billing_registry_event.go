@@ -36,11 +36,11 @@ func NewBillingContractEventService(billingContractAddress string, client *ethcl
 }
 
 func (b *BillingContractEventService) BillingRegistryListen() {
-	chainLinkPoolService, _ := application.GetBean[*PoolService]("chainLinkPoolService")
-	chainLinkPoolService.Submit(func() {
+	longLinkPoolService, _ := application.GetBean[*LongLinkPoolService]("longLinkPoolService")
+	longLinkPoolService.Submit(func() {
 		b.billingEndListen()
 	})
-	chainLinkPoolService.Submit(func() {
+	longLinkPoolService.Submit(func() {
 		b.subscriptionFundedListen()
 	})
 }
@@ -75,21 +75,25 @@ func (b *BillingContractEventService) billingEndListen() {
 			logger.Info("start watch billing end event:")
 			data, err := contractFilter.ParseBillingEnd(vLog)
 			if err == nil {
-				ethStr := hex.EncodeToString(data.RequestId[:])
-				var subscriptionData models.Subscription
-				err = b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
-				if err == nil {
-					var execData models.RequestExecute
-					err = b.db.Model(models.RequestExecute{}).Where("request_id=?", fmt.Sprintf("0x%s", ethStr)).First(&execData).Error
-					if err == nil {
-						amount, _ := weiToEth(data.TotalCost).Float64()
-						execData.Amount = amount
-						b.db.Save(&execData)
-					}
-				}
+				b.handleBillingEndData(data)
 			} else {
 				logger.Errorf("parse billing end data failed: %s", err)
 			}
+		}
+	}
+}
+
+func (b *BillingContractEventService) handleBillingEndData(data *contract.BillingRegistryBillingEnd) {
+	ethStr := hex.EncodeToString(data.RequestId[:])
+	var subscriptionData models.Subscription
+	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
+	if err == nil {
+		var execData models.RequestExecute
+		err = b.db.Model(models.RequestExecute{}).Where("request_id=?", fmt.Sprintf("0x%s", ethStr)).First(&execData).Error
+		if err == nil {
+			amount, _ := weiToEth(data.TotalCost).Float64()
+			execData.Amount = amount
+			b.db.Save(&execData)
 		}
 	}
 }
@@ -124,32 +128,36 @@ func (b *BillingContractEventService) subscriptionFundedListen() {
 			logger.Info("watch Subscription Funded event")
 			data, err := contractFilter.ParseSubscriptionFunded(vLog)
 			if err == nil {
-				tx, isPending, err := b.client.TransactionByHash(context.Background(), vLog.TxHash)
+				tx, isPending, _ := b.client.TransactionByHash(context.Background(), vLog.TxHash)
 				if !isPending {
-					var subscriptionData models.Subscription
-					err = b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
-					if err == nil {
-						signer := types.NewEIP155Signer(tx.ChainId())
-						fromAddress, err := signer.Sender(tx)
-						if err == nil {
-							var depositData models.Deposit
-							depositData.SubscriptionId = int64(subscriptionData.Id)
-							depositData.Status = consts.SUCCESS
-							depositData.TransactionTx = vLog.TxHash.Hex()
-							depositData.UserId = subscriptionData.UserId
-							depositData.Created = time.Now()
-							amount, _ := weiToEth(data.NewBalance).Float64()
-							depositData.Amount = amount
-							depositData.Address = fromAddress.Hex()
-							b.db.Create(&depositData)
-						} else {
-							logger.Errorf("get from address failed: %s", err)
-						}
-					}
+					b.handleSubscriptionFundedData(data, tx, vLog)
 				}
 			} else {
 				logger.Errorf("parse SubscriptionFunded data failed: %s", err)
 			}
+		}
+	}
+}
+
+func (b *BillingContractEventService) handleSubscriptionFundedData(data *contract.BillingRegistrySubscriptionFunded, tx *types.Transaction, vLog types.Log) {
+	var subscriptionData models.Subscription
+	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
+	if err == nil {
+		signer := types.NewEIP155Signer(tx.ChainId())
+		fromAddress, err := signer.Sender(tx)
+		if err == nil {
+			var depositData models.Deposit
+			depositData.SubscriptionId = int64(subscriptionData.Id)
+			depositData.Status = consts.SUCCESS
+			depositData.TransactionTx = vLog.TxHash.Hex()
+			depositData.UserId = subscriptionData.UserId
+			depositData.Created = time.Now()
+			amount, _ := weiToEth(data.NewBalance).Float64()
+			depositData.Amount = amount
+			depositData.Address = fromAddress.Hex()
+			b.db.Create(&depositData)
+		} else {
+			logger.Errorf("get from address failed: %s", err)
 		}
 	}
 }

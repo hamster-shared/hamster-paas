@@ -40,6 +40,8 @@ func Init() {
 	application.SetBean("chainLinkDashboardService", service.NewChainLinkDashboardService(db))
 	chainLinkPoolService := service.NewPoolService()
 	application.SetBean[*service.PoolService]("chainLinkPoolService", chainLinkPoolService)
+	longLinkPoolService := service.NewLongLinkPoolService()
+	application.SetBean[*service.LongLinkPoolService]("longLinkPoolService", longLinkPoolService)
 	application.SetBean("rpcService", service.NewRpcService(db))
 	application.SetBean("middleWareService", service.NewMiddleWareService(db))
 	nginx_log_parse.InitMeiliSearch()

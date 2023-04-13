@@ -35,8 +35,8 @@ func NewFunctionOracleEventService(functionOracleContractAddress string, client 
 }
 
 func (f *FunctionOracleEventService) FunctionOracleListen() {
-	chainLinkPoolService, _ := application.GetBean[*PoolService]("chainLinkPoolService")
-	chainLinkPoolService.Submit(func() {
+	longLinkPoolService, _ := application.GetBean[*LongLinkPoolService]("longLinkPoolService")
+	longLinkPoolService.Submit(func() {
 		f.oracleRequestListen()
 	})
 }
@@ -71,34 +71,38 @@ func (f *FunctionOracleEventService) oracleRequestListen() {
 			logger.Info("start watch Oracle Request event")
 			data, err := contractFilter.ParseOracleRequest(vLog)
 			if err == nil {
-				ethStr := hex.EncodeToString(data.RequestId[:])
-				var subscriptionData models.Subscription
-				err = f.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
-				if err == nil {
-					var execData models.RequestExecute
-					err = f.db.Model(models.RequestExecute{}).Where("transaction_tx=?", vLog.TxHash.Hex()).First(&execData).Error
-					if err == nil {
-						execData.RequestId = fmt.Sprintf("0x%s", ethStr)
-						f.db.Save(&execData)
-					} else {
-						log.Println(ethStr)
-						execData.RequestId = fmt.Sprintf("0x%s", ethStr)
-						execData.SubscriptionId = int64(subscriptionData.Id)
-						execData.UserId = subscriptionData.UserId
-						execData.Created = time.Now()
-						execData.TransactionTx = vLog.TxHash.Hex()
-						execData.Status = consts.SUCCESS
-						execData.ConsumerAddress = data.RequestingContract.Hex()
-						execData.RequestName = ""
-						execData.Args = ""
-						execData.Secretsloction = 0
-						execData.SecretUrl = ""
-						f.db.Create(&execData)
-					}
-				}
+				f.handleWatchData(data, vLog)
 			} else {
 				logger.Errorf("parse OracleRequest data failed: %s", err)
 			}
+		}
+	}
+}
+
+func (f *FunctionOracleEventService) handleWatchData(data *contract.ContractOracleRequest, vLog types.Log) {
+	ethStr := hex.EncodeToString(data.RequestId[:])
+	var subscriptionData models.Subscription
+	err := f.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
+	if err == nil {
+		var execData models.RequestExecute
+		err = f.db.Model(models.RequestExecute{}).Where("transaction_tx=?", vLog.TxHash.Hex()).First(&execData).Error
+		if err == nil {
+			execData.RequestId = fmt.Sprintf("0x%s", ethStr)
+			f.db.Save(&execData)
+		} else {
+			log.Println(ethStr)
+			execData.RequestId = fmt.Sprintf("0x%s", ethStr)
+			execData.SubscriptionId = int64(subscriptionData.Id)
+			execData.UserId = subscriptionData.UserId
+			execData.Created = time.Now()
+			execData.TransactionTx = vLog.TxHash.Hex()
+			execData.Status = consts.SUCCESS
+			execData.ConsumerAddress = data.RequestingContract.Hex()
+			execData.RequestName = ""
+			execData.Args = ""
+			execData.Secretsloction = 0
+			execData.SecretUrl = ""
+			f.db.Create(&execData)
 		}
 	}
 }
