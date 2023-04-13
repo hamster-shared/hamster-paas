@@ -99,7 +99,6 @@ func (f *FunctionOracleEventService) oracleRequestListen() {
 			} else {
 				logger.Errorf("parse OracleRequest data failed: %s", err)
 			}
-		default:
 		}
 	}
 }

@@ -90,7 +90,6 @@ func (b *BillingContractEventService) billingEndListen() {
 			} else {
 				logger.Errorf("parse billing end data failed: %s", err)
 			}
-		default:
 		}
 	}
 }
@@ -151,7 +150,6 @@ func (b *BillingContractEventService) subscriptionFundedListen() {
 			} else {
 				logger.Errorf("parse SubscriptionFunded data failed: %s", err)
 			}
-		default:
 		}
 	}
 }
