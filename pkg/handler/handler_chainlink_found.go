@@ -37,7 +37,7 @@ func (h *HandlerServer) addFound(c *gin.Context) {
 		Fail("invalid incr", c)
 		return
 	}
-	primaryId, err := h.chainLinkDepositService.AddDeposit(int64(subscriptionId), Incr, foundParam.TransactionTx, int64(user.Id), h.chainLinkSubscriptionService, h.chainlinkPoolService)
+	primaryId, err := h.chainLinkDepositService.AddDeposit(int64(subscriptionId), Incr, foundParam.TransactionTx, int64(user.Id), h.chainLinkSubscriptionService, h.chainlinkPoolService, foundParam.Address)
 	if err != nil {
 		logger.Error(fmt.Sprintf("addFound failed: %s", err.Error()))
 		Fail(err.Error(), c)

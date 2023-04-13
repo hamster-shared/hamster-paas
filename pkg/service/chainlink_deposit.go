@@ -43,7 +43,7 @@ func (d *ChainLinkDepositService) DepositList(subscriptionId, page, size int, us
 }
 
 // AddDeposit TODO 需要异步检查
-func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService, poolService PoolService) (int64, error) {
+func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService, poolService PoolService, address string) (int64, error) {
 	// 检查该id是否存在且success
 	subscription, err := subscriptionService.GetSubscriptionById(int(subscriptionId))
 	if err != nil {
@@ -56,6 +56,7 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 	deposit.TransactionTx = transactionTx
 	deposit.UserId = uint64(userId)
 	deposit.Status = consts.PENDING
+	deposit.Address = address
 	err = d.db.Model(models.Deposit{}).Create(&deposit).Error
 	if err != nil {
 		return -1, err
@@ -66,9 +67,9 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 		return -1, err
 	}
 	// 异步检查Tx，修改Status
-	//poolService.Submit(func() {
-	//	checkStatus(network, deposit, d.db)
-	//})
+	poolService.Submit(func() {
+		//checkStatus(network, deposit, d.db)
+	})
 	return deposit.Id, nil
 }
 

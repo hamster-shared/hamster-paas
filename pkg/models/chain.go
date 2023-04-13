@@ -20,14 +20,15 @@ const (
 	Near
 	Aptos
 	Sui
+	Hamster
 )
 
 func (c ChainType) String() string {
-	return [...]string{"Ethereum", "Bsc", "Polygon", "Avalanche", "Optimism", "StarkNet", "Near", "Aptos", "Sui"}[c-1]
+	return [...]string{"Ethereum", "Bsc", "Polygon", "Avalanche", "Optimism", "StarkNet", "Near", "Aptos", "Sui", "Hamster"}[c-1]
 }
 
 func (c ChainType) StringLower() string {
-	return [...]string{"ethereum", "bsc", "polygon", "avalanche", "optimism", "starknet", "near", "aptos", "sui"}[c-1]
+	return [...]string{"ethereum", "bsc", "polygon", "avalanche", "optimism", "starknet", "near", "aptos", "sui", "hamster"}[c-1]
 }
 
 func ParseChainType(s string) (ChainType, error) {
@@ -50,6 +51,8 @@ func ParseChainType(s string) (ChainType, error) {
 		return Aptos, nil
 	case "sui", "Sui":
 		return Sui, nil
+	case "hamster", "Hamster":
+		return Hamster, nil
 	default:
 		return Ethereum, fmt.Errorf("invalid chain type: %s", s)
 	}

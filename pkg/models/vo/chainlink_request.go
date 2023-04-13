@@ -47,7 +47,9 @@ type ChainLinkSubscriptionCreateParam struct {
 	TransactionTx  string `json:"transactionTx"`
 }
 
+// ChainLinkFoundParam address是admin地址
 type ChainLinkFoundParam struct {
+	Address       string `json:"address"`
 	Incr          string `json:"incr"`
 	TransactionTx string `json:"transactionTx"`
 }

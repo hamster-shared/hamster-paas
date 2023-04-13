@@ -199,7 +199,7 @@ func (rpc *RPCEthereumProxy) TransactionReceipt(hash string) (*types.Receipt, er
 	return rpc.client.TransactionReceipt(context.Background(), hashTx)
 }
 
-// 获取chain的client
+// GetChainClient 获取chain的client
 func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
 	var client *ethclient.Client
 	var err error
@@ -221,7 +221,7 @@ func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
 		// 连接成功，插入到ClientMap中
 		if err == nil {
 			ClientMap[ethNetwork] = client
-			//logger.Infof("chain client：%v 重新连接或连接失效，重新链接成功", ethNetwork)
+			logger.Infof("chain client：%v 重新连接或连接失效，重新链接成功", ethNetwork)
 			return client
 		}
 		time.Sleep(time.Second * 5)
