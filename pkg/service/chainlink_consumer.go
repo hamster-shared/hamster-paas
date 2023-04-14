@@ -32,7 +32,7 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	if err != nil {
 		return -1, err
 	}
-	_, err = models.ParseNetworkType(subscription.Network)
+	network, err := models.ParseNetworkType(subscription.Network)
 	if err != nil {
 		logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
 		return -1, err
@@ -46,9 +46,9 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 	// 不存在就创建
 	c.db.Create(&consumer)
 	// 异步判断TX status
-	//poolService.Submit(func() {
-	//	checkAndChangeConsumerStatus(network, consumer, c.db, subscriptionService)
-	//})
+	poolService.Submit(func() {
+		checkAndChangeConsumerStatus(network, consumer, c.db, subscriptionService)
+	})
 	return consumer.Id, nil
 }
 

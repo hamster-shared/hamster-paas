@@ -61,15 +61,15 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 	if err != nil {
 		return -1, err
 	}
-	_, err = models.ParseNetworkType(subscription.Network)
+	network, err := models.ParseNetworkType(subscription.Network)
 	if err != nil {
 		logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
 		return -1, err
 	}
 	// 异步检查Tx，修改Status
-	//poolService.Submit(func() {
-	//	//checkStatus(network, deposit, d.db)
-	//})
+	poolService.Submit(func() {
+		checkAndChangeDepositStatus(network, deposit, d.db)
+	})
 	return deposit.Id, nil
 }
 

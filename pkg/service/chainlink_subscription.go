@@ -33,9 +33,9 @@ func (s *ChainLinkSubscriptionService) CreateSubscription(subscription models.Su
 		return -1, err
 	}
 	// 异步 Tx 判断，更改 Status
-	//poolService.Submit(func() {
-	//	checkAndChangeSubscriptionStatus(network, subscription, s.db)
-	//})
+	poolService.Submit(func() {
+		checkAndChangeSubscriptionStatus(network, subscription, s.db)
+	})
 	return int64(subscription.Id), nil
 }
 

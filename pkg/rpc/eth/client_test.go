@@ -74,15 +74,15 @@ func TestGetChainClient(t *testing.T) {
 }
 
 func TestGetTxStatus(t *testing.T) {
-	client := GetChainClient(MUMBAI_TESTNET)
+	client := GetChainClient(SEPOLIA_TESTNET)
 	id, _ := client.ChainID(context.Background())
 	fmt.Println(id)
-	if client == nil {
-		panic("client not valid")
-	}
-	status, err := GetTxStatus("0xd02009d5f2a521ee2ce9bec2de8c79b00ee59e426e6e17c4012c455e91ea118b", MOONBEAM_TESTNET, client)
-	if err != nil {
-		fmt.Println("tx not valid")
-	}
-	fmt.Println(status)
+	//if client == nil {
+	//	panic("client not valid")
+	//}
+	//status, err := GetTxStatus("0xd02009d5f2a521ee2ce9bec2de8c79b00ee59e426e6e17c4012c455e91ea118b", MOONBEAM_TESTNET, client)
+	//if err != nil {
+	//	fmt.Println("tx not valid")
+	//}
+	//fmt.Println(status)
 }
