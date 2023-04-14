@@ -99,7 +99,6 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 		chainApps = append(chainApps, &chainApp)
 	}
 	var detail models.RpcChainDetail
-	// detail.RpcChainBaseInfo = chainType.BaseInfo()
 	detail.Chains = chainApps
 	return &detail, nil
 }

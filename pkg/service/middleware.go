@@ -24,13 +24,7 @@ func (s *MiddleWareService) MiddleWareRpc() ([]*models.MiddleWareRpc, error) {
 	}
 	var result []*models.MiddleWareRpc
 	for i := range chains {
-		// chainType, err := models.ParseChainType(chains[i].Name)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// chainBaseInfo := chainType.BaseInfo()
 		result = append(result, &models.MiddleWareRpc{
-			// RpcChainBaseInfo: chainBaseInfo,
 			RpcChain: chains[i],
 		})
 	}
