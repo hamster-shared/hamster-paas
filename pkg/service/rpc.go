@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
@@ -86,18 +87,19 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 			logger.Errorf("GetRpcAccount error: %s", err)
 			return nil, err
 		}
-		app, err := a.GetAppByChainNetwork(chainType, networkType)
+		app, err := a.GetAppBaseInfoByChainNetwork(chainType, networkType)
 		if err != nil {
 			logger.Errorf("GetAppByChainNetwork error: %s", err)
 			return nil, err
 		}
+		chain.NetworkName = fmt.Sprintf("%s %s", chainType.String(), networkType.StringWithSpace())
 		var chainApp models.RpcChainApp
 		chainApp.RpcChain = chain
 		chainApp.App = app
 		chainApps = append(chainApps, &chainApp)
 	}
 	var detail models.RpcChainDetail
-	detail.RpcChainBaseInfo = chainType.BaseInfo()
+	// detail.RpcChainBaseInfo = chainType.BaseInfo()
 	detail.Chains = chainApps
 	return &detail, nil
 }

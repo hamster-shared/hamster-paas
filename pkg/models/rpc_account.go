@@ -155,6 +155,10 @@ func (a *RpcAccount) GetAppByChainNetwork(chain ChainType, network NetworkType) 
 	return getAppByChainNetwork(a.Address, chain, network)
 }
 
+func (a *RpcAccount) GetAppBaseInfoByChainNetwork(chain ChainType, network NetworkType) (*ApiResponseRpcApp, error) {
+	return getAppBaseInfoByChainNetwork(a.Address, chain, network)
+}
+
 func (a *RpcAccount) GetAppRequestLogs(appKey string, p Pagination) ([]*RpcAppRequestLog, *Pagination, error) {
 	if !accountHaveApp(a.Address, appKey) {
 		return nil, &p, fmt.Errorf("account have not app %s", appKey)

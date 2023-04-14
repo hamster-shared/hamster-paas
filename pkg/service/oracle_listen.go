@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"hamster-paas/pkg/service/oracle"
-	"hamster-paas/pkg/service/oracle/proxy"
+	oracle_proxy "hamster-paas/pkg/service/oracle/proxy"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -131,7 +131,7 @@ func (l *OracleListener) StartListen() {
 			logger.Info("准备监听 Ethereum 获取 oracle request event")
 			err := l.MumbaiListen()
 			if err != nil {
-				logger.Errorf("监听 eth 出错: %s", err)
+				logger.Errorf("监听 eth 出错：%s", err)
 				time.Sleep(5 * time.Second)
 				go func() {
 					mumbaiChan <- struct{}{}
@@ -143,10 +143,10 @@ func (l *OracleListener) StartListen() {
 	}()
 	go func() {
 		for {
-			logger.Info("准备监听 sepolia 网络的event")
+			logger.Info("准备监听 sepolia 网络的 event")
 			err := l.SepoliaListen()
 			if err != nil {
-				logger.Errorf("监听 sepolia 出错: %s", err)
+				logger.Errorf("监听 sepolia 出错：%s", err)
 				time.Sleep(5 * time.Second)
 				go func() {
 					sepoliaChan <- struct{}{}
