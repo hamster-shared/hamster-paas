@@ -63,7 +63,7 @@ type RpcChain struct {
 	Network          string `json:"network"`
 	HttpAddress      string `json:"httpAddress"`
 	WebsocketAddress string `json:"websocketAddress"`
-	ChainID          int    `json:"chainID"`
+	ChainID          string `json:"chainID"`
 	NativeToken      string `json:"nativeToken"`
 	ExplorerUrl      string `json:"explorerUrl"`
 	NetworkUrl       string `json:"networkUrl"`

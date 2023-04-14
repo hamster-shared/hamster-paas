@@ -77,6 +77,7 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 	var chains []models.RpcChain
 	err = s.db.Model(&models.RpcChain{}).Where("name = ?", chainType.StringLower()).Find(&chains).Error
 	if err != nil {
+		logger.Errorf("GetChains error: %s", err)
 		return nil, err
 	}
 	var chainApps []*models.RpcChainApp

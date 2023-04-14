@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS t_cl_rpc_app (
 DROP TABLE IF EXISTS t_cl_rpc_chain;
 CREATE TABLE IF NOT EXISTS t_cl_rpc_chain (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    chain_id int NOT NULL,
+    chain_id varchar(255) NOT NULL,
     native_token varchar(255) NOT NULL,
     explorer_url varchar(255) NOT NULL,
     network_url varchar(255) NOT NULL,
@@ -49,7 +49,7 @@ INSERT INTO t_cl_rpc_chain (
         websocket_address
     )
 VALUES (
-        1,
+        '1',
         'ETH',
         'https://mainnet.etherscan.io',
         'https://mainnet.infura.io/v3/',
@@ -60,7 +60,27 @@ VALUES (
         'wss://ethereum-ws.api.hamsternet.io'
     ),
     (
-        5,
+        '13881',
+        'MATIC',
+        'https://explorer-mumbai.maticvigil.com/',
+        'https://rpc-mumbai.maticvigil.com',
+        'polygon',
+        'testnet-mumbai',
+        'http://54.69.42.237:9912',
+        ''
+    ),
+    (
+        '501',
+        'Hamster',
+        'https://hamsternet.io',
+        'https://rpc-moonbeam.hamster.newtouch.com',
+        'hamster',
+        'testnet-moonbeam',
+        'http://54.69.42.237:9912',
+        ''
+    ),
+    (
+        '5',
         'GETH',
         'https://goerli.etherscan.io',
         'https://goerli.infura.io/v3/',
@@ -71,18 +91,17 @@ VALUES (
         'wss://ethereum-goerli-ws.api.hamsternet.io'
     ),
     (
-        69,
+        'aa36a7',
         'Ether',
         'https://sepolia.etherscan.io',
         'https://sepolia.infura.io/v3/',
         'ethereum',
         'testnet-sepolia',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
         'http://54.69.42.237:9912',
-        'wss://ethereum-goerli-ws.api.hamsternet.io'
+        ''
     ),
     (
-        43114,
+        'a86a',
         'AVAX',
         'https://explorer.avax.network/',
         'https://api.avax.network/ext/bc/C/rpc',
@@ -93,7 +112,7 @@ VALUES (
         ''
     ),
     (
-        43113,
+        'a869',
         'AVAX',
         'https://explorer.avax-test.network/',
         'https://api.avax-test.network/ext/bc/C/rpc',
@@ -104,7 +123,7 @@ VALUES (
         'wss://ethereum-goerli-ws.api.hamsternet.io'
     ),
     (
-        10,
+        'a',
         'ETH',
         'https://optimistic.etherscan.io/',
         'https://mainnet.optimism.io',
@@ -116,7 +135,7 @@ VALUES (
         ''
     ),
     (
-        420,
+        '1a4',
         'ETH',
         'https://optimistic.etherscan.io/',
         'https://mainnet.optimism.io',
@@ -128,7 +147,7 @@ VALUES (
         ''
     ),
     (
-        420,
+        '1a4',
         'ETH',
         'https://optimistic.etherscan.io/',
         'https://goerli.optimism.io',
@@ -140,7 +159,7 @@ VALUES (
         ''
     ),
     (
-        420,
+        '1a4',
         'ETH',
         'https://optimistic.etherscan.io/',
         'https://goerli.optimism.io',
@@ -152,7 +171,7 @@ VALUES (
         ''
     ),
     (
-        0,
+        '0',
         'NEAR',
         'https://explorer.mainnet.near.org/',
         'https://rpc.mainnet.near.org',
@@ -163,18 +182,18 @@ VALUES (
         -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
         ''
     );
-    -- (
-    --     0,
-    --     'NEAR',
-    --     'https://explorer.testnet.near.org/',
-    --     'https://rpc.testnet.near.org',
-    --     'near',
-    --     'testnet-testnet',
-    --     -- 'https://ethereum-goerli.api.hamsternet.io',
-    --     'http://54.69.42.237:9912',
-    --     -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
-    --     ''
-    -- );
+-- (
+--     0,
+--     'NEAR',
+--     'https://explorer.testnet.near.org/',
+--     'https://rpc.testnet.near.org',
+--     'near',
+--     'testnet-testnet',
+--     -- 'https://ethereum-goerli.api.hamsternet.io',
+--     'http://54.69.42.237:9912',
+--     -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
+--     ''
+-- );
 DROP TABLE IF EXISTS t_cl_rpc_code_examples;
 CREATE TABLE IF NOT EXISTS t_cl_rpc_code_examples (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
