@@ -40,18 +40,18 @@ type DateRequest struct {
 }
 
 type RpcCodeExample struct {
-	Js     string `json:"js"`
-	Cli    string `json:"cli"`
-	Go     string `json:"go"`
-	Python string `json:"python"`
+	JavaScript string `json:"JavaScript"`
+	Cli        string `json:"Cli"`
+	Go         string `json:"Go"`
+	Python     string `json:"Python"`
 }
 
 func newCodeExample() RpcCodeExample {
 	return RpcCodeExample{
-		Js:     "this is js code example",
-		Cli:    "this is cli code example",
-		Go:     "this is go code example",
-		Python: "this is python code example",
+		JavaScript: "this is js code example",
+		Cli:        "this is cli code example",
+		Go:         "this is go code example",
+		Python:     "this is python code example",
 	}
 }
 
