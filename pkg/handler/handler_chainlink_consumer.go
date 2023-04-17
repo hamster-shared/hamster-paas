@@ -83,7 +83,6 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 		Fail("network not format", c)
 		return
 	}
-
 	// 通过project id 拿到对应的 consumer 信息
 	projectService, err := application.GetBean[*aline.ProjectService]("projectService")
 	if err != nil {

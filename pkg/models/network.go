@@ -37,7 +37,7 @@ func (n NetworkType) StringWithSpace() string {
 }
 
 func (n NetworkType) StringAline() string {
-	return [...]string{"Mainnet", "Testnet/Goerli", "Testnet/Ropsten", "Testnet/Kovan", "Testnet/Rinkeby", "Testnet/Sepolia", "Testnet/Hamster", "Testnet/Mumbai", "Testnet/Moonbeam"}[n]
+	return [...]string{"Mainnet", "Testnet/Goerli", "Testnet/Ropsten", "Testnet/Kovan", "Testnet/Rinkeby", "Testnet/Sepolia", "Testnet/Hamster", "Testnet/Mumbai", "Testnet/Hamster"}[n]
 }
 
 func (n NetworkType) NetworkType() eth.EthNetwork {
