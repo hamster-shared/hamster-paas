@@ -30,19 +30,19 @@ func (n NetworkType) StringLower() string {
 }
 
 func (n NetworkType) StringLowerWithDash() string {
-	return [...]string{"mainnet", "testnet-goerli", "testnet-ropsten", "testnet-kovan", "testnet-rinkeby", "testnet-sepolia", "testnet-hamster", "testnet-hamster", "testnet-mumbai"}[n]
+	return [...]string{"mainnet", "testnet-goerli", "testnet-ropsten", "testnet-kovan", "testnet-rinkeby", "testnet-sepolia", "testnet-hamster", "testnet-hamster", "testnet-mumbai", "testnet"}[n]
 }
 
 func (n NetworkType) StringWithSpace() string {
-	return [...]string{"Mainnet", "Goerli Testnet", "Ropsten Testnet", "Kovan Testnet", "Rinkeby Testnet", "Sepolia Testnet", "Hamster Testnet", "Mumbai Testnet", "Moonbeam Testnet"}[n]
+	return [...]string{"Mainnet", "Goerli Testnet", "Ropsten Testnet", "Kovan Testnet", "Rinkeby Testnet", "Sepolia Testnet", "Hamster Testnet", "Mumbai Testnet", "Moonbeam Testnet", "Testnet"}[n]
 }
 
 func (n NetworkType) StringAline() string {
-	return [...]string{"Mainnet", "Testnet/Goerli", "Testnet/Ropsten", "Testnet/Kovan", "Testnet/Rinkeby", "Testnet/Sepolia", "Testnet/Hamster", "Testnet/Mumbai", "Testnet/Hamster"}[n]
+	return [...]string{"Mainnet", "Testnet/Goerli", "Testnet/Ropsten", "Testnet/Kovan", "Testnet/Rinkeby", "Testnet/Sepolia", "Testnet/Hamster", "Testnet/Mumbai", "Testnet/Hamster", "Testnet"}[n]
 }
 
 func (n NetworkType) NetworkType() eth.EthNetwork {
-	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.SEPOLIA_TESTNET, eth.HAMSTER, eth.MUMBAI_TESTNET, eth.MOONBEAM_TESTNET}[n]
+	return [...]eth.EthNetwork{eth.MAINNET, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.GOERLI, eth.SEPOLIA_TESTNET, eth.HAMSTER, eth.MUMBAI_TESTNET, eth.MOONBEAM_TESTNET, eth.SEPOLIA_TESTNET}[n]
 }
 
 func GetNetworkIdAndUrl(network string) (string, string) {
