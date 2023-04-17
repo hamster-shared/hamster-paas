@@ -64,7 +64,7 @@ spec:
             - name: ALINE_DB_NAME
               value: "aline"
             - name: MYSQL_DATABASE
-              value: "aline"
+              value: "paas"
             - name: MYSQL_USER
               value: "aline"
             - name: MYSQL_PASSWORD

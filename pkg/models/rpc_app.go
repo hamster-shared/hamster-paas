@@ -14,7 +14,7 @@ import (
 
 type RpcApp struct {
 	AppID         int64     `json:"app_id"`
-	Account       string    `json:"account"`
+	Account       string    `json:"account,omitempty"`
 	Name          string    `json:"name"`
 	Description   string    `json:"description"`
 	Chain         string    `json:"chain"`
@@ -27,10 +27,10 @@ type RpcApp struct {
 
 type ApiResponseRpcApp struct {
 	*RpcApp
-	CodeExamples       []RpcCodeExample `json:"code_examples"`
-	TotalRequests24h   int64            `json:"total_requests_24h"`
-	DaylyRequests7Days []DateRequest    `json:"dayly_requests_7days"`
-	TotalRequestsAll   int64            `json:"total_requests_all"`
+	CodeExamples       RpcCodeExample `json:"code_examples,omitempty"`
+	TotalRequests24h   int64          `json:"total_requests_24h,omitempty"`
+	DaylyRequests7Days []DateRequest  `json:"dayly_requests_7days,omitempty"`
+	TotalRequestsAll   int64          `json:"total_requests_all,omitempty"`
 }
 
 type DateRequest struct {
@@ -39,7 +39,21 @@ type DateRequest struct {
 	RequestNumber int64  `json:"request"`
 }
 
-type RpcCodeExample struct{}
+type RpcCodeExample struct {
+	JavaScript string `json:"JavaScript"`
+	Cli        string `json:"Cli"`
+	Go         string `json:"Go"`
+	Python     string `json:"Python"`
+}
+
+func newCodeExample() RpcCodeExample {
+	return RpcCodeExample{
+		JavaScript: "this is js code example",
+		Cli:        "this is cli code example",
+		Go:         "this is go code example",
+		Python:     "this is python code example",
+	}
+}
 
 func newApp(account string, name, description string, chain ChainType, network NetworkType) (*RpcApp, error) {
 	a := &RpcApp{
@@ -129,6 +143,7 @@ func getAppByName(account string, name string) (*ApiResponseRpcApp, error) {
 	if err != nil {
 		logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
 	}
+	appResp.CodeExamples = newCodeExample()
 	return &appResp, nil
 }
 
@@ -142,6 +157,22 @@ func accountHaveApp(account string, appKey string) bool {
 		return false
 	}
 	return true
+}
+
+func getAppBaseInfoByChainNetwork(account string, chain ChainType, network NetworkType) (*ApiResponseRpcApp, error) {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return nil, err
+	}
+	var app RpcApp
+	if err := db.Where("account = ? AND chain = ? AND network = ?", account, chain.String(), network.String()).First(&app).Error; err != nil {
+		return nil, err
+	}
+	var appResp ApiResponseRpcApp
+	app.Account = ""
+	appResp.RpcApp = &app
+	appResp.CodeExamples = newCodeExample()
+	return &appResp, nil
 }
 
 func getAppByChainNetwork(account string, chain ChainType, network NetworkType) (*ApiResponseRpcApp, error) {
@@ -167,6 +198,7 @@ func getAppByChainNetwork(account string, chain ChainType, network NetworkType) 
 	if err != nil {
 		logger.Errorf("getTotalRequestsAll err: %s", err)
 	}
+	appResp.CodeExamples = newCodeExample()
 	return &appResp, nil
 }
 
@@ -210,6 +242,7 @@ func filterApps(account string, network string) ([]*ApiResponseRpcApp, error) {
 		if err != nil {
 			logger.Errorf("getTotalRequestsAll err: %s", err)
 		}
+		appResp.CodeExamples = newCodeExample()
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
 	return apiResponseApps, nil
@@ -241,6 +274,7 @@ func getApps(account string) ([]*ApiResponseRpcApp, error) {
 		if err != nil {
 			logger.Errorf("getTotalRequestsAll err: %s", err)
 		}
+		appResp.CodeExamples = newCodeExample()
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
 	return apiResponseApps, nil
@@ -272,6 +306,7 @@ func getAppsPagination(account string, p *Pagination) ([]*ApiResponseRpcApp, *Pa
 		if err != nil {
 			logger.Errorf("getTotalRequestsAll err: %s", err)
 		}
+		appResp.CodeExamples = newCodeExample()
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
 	var count int64
