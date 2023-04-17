@@ -24,7 +24,12 @@ func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
 		Fail("network not valid", c)
 		return
 	}
-	ov, err := h.chainLinkSubscriptionService.GetSubscriptionOverview(user.Id, network)
+	networkType, err := models.ParseNetworkType(network)
+	if err != nil {
+		Fail(fmt.Sprintf("network not valid: %s", network), c)
+		return
+	}
+	ov, err := h.chainLinkSubscriptionService.GetSubscriptionOverview(user.Id, networkType.String())
 	if err != nil {
 		logger.Error(fmt.Sprintf("getSubscriptionOverview failed: %s", err.Error()))
 		Fail(err.Error(), c)
