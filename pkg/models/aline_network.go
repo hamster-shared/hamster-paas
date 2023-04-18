@@ -53,3 +53,26 @@ func AlineNetworkToChainkLinkNetwork(alineNetwork string) string {
 		return "Network Unknown"
 	}
 }
+
+func GetChainFrameType(alineNetwork string) string {
+	switch alineNetwork {
+	case "Ethereum/Mainnet":
+		return "1"
+	case "Ethereum/Goerli":
+		return "1"
+	case "Ethereum/Sepolia":
+		return "1"
+	case "Ethereum/Hamster":
+		return "1"
+	case "Polygon/Mainnet":
+		return "1"
+	case "Polygon/Mumbai":
+		return "1"
+	case "Bsc/Mainnet":
+		return "1"
+	case "Bsc/Testnet":
+		return "1"
+	default:
+		return "Network Unknown"
+	}
+}

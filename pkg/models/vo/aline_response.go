@@ -9,3 +9,8 @@ type AlineProjectIDAndName struct {
 	Name   string    `json:"name"`
 	UserId int64     `json:"UserId"`
 }
+
+type AlineProjectParam struct {
+	Chain   string `json:"chain"`
+	Network string `json:"network"`
+}

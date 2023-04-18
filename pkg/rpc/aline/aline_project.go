@@ -17,10 +17,19 @@ func NewAlineProjectService(db *gorm.DB) *ProjectService {
 	}
 }
 
-func (p *ProjectService) GetProjectByUserId(userId uint) []*vo.AlineProjectIDAndName {
+func (p *ProjectService) GetProjectByUserId(userId uint, network string) []*vo.AlineProjectIDAndName {
 	var projectList []*vo.AlineProjectIDAndName
+	var projectListRet []*vo.AlineProjectIDAndName
 	p.db.Model(models.Project{}).Where("user_id = ? AND label_display = ?", userId, "Chainlink").Find(&projectList)
-	return projectList
+	// TODO 仅显示拥有对应chain network的合约的project id
+	for _, v := range projectList {
+		var c int64
+		p.db.Model(models.ContractDeploy{}).Where("project_id = ? AND network = ?", v.Id, network).Count(&c)
+		if c != 0 {
+			projectListRet = append(projectListRet, v)
+		}
+	}
+	return projectListRet
 }
 
 func (p *ProjectService) GetValidContract(page, size int, projectId string, network string) (*vo.AlineValidContractPage, error) {
