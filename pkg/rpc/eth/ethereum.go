@@ -145,15 +145,17 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 				log.Println("++++++++++++++++++++")
 				fmt.Printf("request id is:%s", requestIdData)
 				log.Println("++++++++++++++++++++")
-				var result string
-				numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
-				if err != nil {
-					result = string(data.Result)
-				} else {
-					result = strconv.Itoa(int(numData))
+				if requestIdData == requestId {
+					var result string
+					numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
+					if err != nil {
+						result = string(data.Result)
+					} else {
+						result = strconv.Itoa(int(numData))
+					}
+					utils.SendEmail(email, requestId, result, string(data.Err))
+					break
 				}
-				utils.SendEmail(email, requestId, result, string(data.Err))
-				break
 			} else {
 				logger.Errorf("parse OracleRequest data failed: %s", err)
 			}
