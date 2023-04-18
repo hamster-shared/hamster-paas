@@ -167,27 +167,36 @@ func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id int64, saveData 
 }
 
 func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.NetworkType) (*models.ApiResponseOverview, error) {
-	sqlQuery := `SELECT *
-FROM t_cl_subscription
-JOIN t_cl_oracle_request_event
-ON t_cl_subscription.chain_subscription_id = t_cl_oracle_request_event.subscription_id
-WHERE t_cl_subscription.chain_subscription_id IN (
-    SELECT chain_subscription_id FROM t_cl_subscription WHERE user_id = ?
-)
-AND t_cl_subscription.chain = ?
-AND t_cl_subscription.network = ?
-`
-	var result []models.OracleRequestEventAndName
-	err := r.db.Raw(sqlQuery, user.Id, "ethereum", networkType.StringWithSpace()).Scan(&result).Error
+	// 首先获取用户的所有订阅
+	var chainSubscriptionList []models.Subscription
+	err := r.db.Model(&models.Subscription{}).Where("user_id = ? and chain = ? and network = ?", user.Id, "polygon", networkType.StringWithSpace()).Find(&chainSubscriptionList).Error
 	if err != nil {
 		logger.Errorf("chain link oracle request overview error: %s", err)
 		return nil, err
+	}
+	type SqlResult struct {
+		CreatedAt time.Time
+	}
+	type chainSubscriptionResult struct {
+		models.Subscription
+		Request []SqlResult
+	}
+
+	var chainSubscriptionResultList []chainSubscriptionResult
+	for _, v := range chainSubscriptionList {
+		var result []SqlResult
+		sql := "select created_at from t_cl_oracle_request_event where subscription_id = ? AND chain = ? AND network = ?"
+		err := r.db.Raw(sql, v.ChainSubscriptionId, "polygon", networkType.StringLowerWithDash()).Scan(&result).Error
+		if err != nil {
+			logger.Errorf("chain link oracle request overview error: %s", err)
+		}
+		chainSubscriptionResultList = append(chainSubscriptionResultList, chainSubscriptionResult{v, result})
 	}
 
 	var apiResponseOverview models.ApiResponseOverview
 	apiResponseOverview.Network = networkType.StringWithSpace()
 	// 首先过滤出种类
-	for _, v := range result {
+	for _, v := range chainSubscriptionResultList {
 		if !contains(apiResponseOverview.LegendData, v.Name) {
 			apiResponseOverview.LegendData = append(apiResponseOverview.LegendData, v.Name)
 		}
@@ -203,9 +212,11 @@ AND t_cl_subscription.network = ?
 		serie.Name = v
 		for _, x := range apiResponseOverview.XaxisData {
 			var count int
-			for _, r := range result {
-				if r.Name == v && strings.Contains(r.CreatedAt.Format("2006-01-02"), x) {
-					count++
+			for _, r := range chainSubscriptionResultList {
+				for _, req := range r.Request {
+					if r.Name == v && strings.Contains(req.CreatedAt.Format("2006-01-02"), x) {
+						count++
+					}
 				}
 			}
 			serie.Data = append(serie.Data, count)
