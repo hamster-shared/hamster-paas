@@ -2,18 +2,18 @@ package eth
 
 import (
 	"context"
-	"errors"
+	"encoding/hex"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"hamster-paas/pkg/consts"
+	"hamster-paas/pkg/service/contract"
 	"hamster-paas/pkg/utils"
 	"hamster-paas/pkg/utils/logger"
+	"log"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -110,78 +110,103 @@ type OCRResponseEvent struct {
 }
 
 func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, email string) error {
+	log.Println("++++++++++++++++++++++++++++++++++++++")
 	// 要监听的合约地址
 	oracleContractAddress := common.HexToAddress(contractAddress)
-	//consumerContract, err := contract2.NewFunctionConsumer(oracleContractAddress, rpc.client)
-	//if err != nil {
-	//	fmt.Println("get contract failed:", err.Error())
-	//	return err
-	//}
-	//var requestIdBytes [32]byte
-	//copy((*[32]byte)(unsafe.Pointer(&requestIdBytes[0]))[:], requestId)
-	//var array [][32]byte
-	//array = append(array, requestIdBytes)
-	//eventChan := make(chan *contract2.FunctionConsumerOCRResponse)
-	//opts := &bind.WatchOpts{Context: context.Background()}
-	//sub, err := consumerContract.WatchOCRResponse(opts, eventChan, array)
-	//for {
-	//	select {
-	//	case event := <-eventChan:
-	//		fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	//		fmt.Printf("sender: %s, value: %s\n", event.Result, event.RequestId)
-	//		fmt.Println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-	//	case err := <-sub.Err():
-	//		fmt.Println(err.Error())
-	//	}
-	//}
-	contractAbi, err := abi.JSON(strings.NewReader(consts.ConsumerAbi))
-	// 监听请求结果
+	// 定义查询过滤器
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{oracleContractAddress},
 		Topics: [][]common.Hash{
 			{
-				contractAbi.Events["OCRResponse"].ID,
+				crypto.Keccak256Hash([]byte("OCRResponse(bytes32,bytes,bytes)")),
 			},
 		},
 	}
+	// 创建订阅
 	logs := make(chan types.Log)
 	sub, err := rpc.client.SubscribeFilterLogs(context.Background(), query, logs)
 	if err != nil {
-		//logger.Error("Error subscribing to logs:", err)
-		fmt.Printf("query logs failed: %s\n", err.Error())
-		return err
+		logger.Errorf("create Mumbai subscribe Oracle Request failed: %s", err)
 	}
-
-	// 处理请求结果
+	contractFilter, err := contract.NewFunctionConsumer(oracleContractAddress, rpc.client)
+	if err != nil {
+		logger.Errorf("create Oracle Request failed: %s", err)
+	}
+	// 监听订阅事件
 	for {
 		select {
 		case err := <-sub.Err():
-			fmt.Println("Error in subscription:", err)
-			return errors.New(fmt.Sprintf("Error in subscription:%s", err.Error()))
-		case log := <-logs:
-			// 解析事件数据
-			var eventData OCRResponseEvent
-			err = contractAbi.UnpackIntoInterface(&eventData, "OCRResponse", log.Data)
-			if err != nil {
-				fmt.Println("Failed to unpack event data: ", err.Error())
-				return err
-			}
-			if len(log.Topics) == 2 {
-				fmt.Printf("RequestId: %x\n", log.Topics[1])
-				if requestId == log.Topics[1].String() {
-					var result string
-					numData, err := strconv.ParseInt(hexToString(eventData.Result), 16, 64)
-					if err != nil {
-						result = string(eventData.Result)
-					} else {
-						result = strconv.Itoa(int(numData))
-					}
-					utils.SendEmail(email, requestId, result, string(eventData.Err))
-					break
+			logger.Errorf("subscribe Oracle Request event failed: %s", err)
+		case vLog := <-logs:
+			logger.Info("start watch Oracle Request event")
+			data, err := contractFilter.ParseOCRResponse(vLog)
+			if err == nil {
+				log.Println("++++++++++++++++++++")
+				fmt.Printf("request id is:%s", hex.EncodeToString(data.RequestId[:]))
+				log.Println("++++++++++++++++++++")
+				var result string
+				numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
+				if err != nil {
+					result = string(data.Result)
+				} else {
+					result = strconv.Itoa(int(numData))
 				}
+				utils.SendEmail(email, requestId, result, string(data.Err))
+				break
+			} else {
+				logger.Errorf("parse OracleRequest data failed: %s", err)
 			}
 		}
 	}
+
+	//contractAbi, err := abi.JSON(strings.NewReader(consts.ConsumerAbi))
+	//// 监听请求结果
+	//query := ethereum.FilterQuery{
+	//	Addresses: []common.Address{oracleContractAddress},
+	//	Topics: [][]common.Hash{
+	//		{
+	//			contractAbi.Events["OCRResponse"].ID,
+	//		},
+	//	},
+	//}
+	//logs := make(chan types.Log)
+	//sub, err := rpc.client.SubscribeFilterLogs(context.Background(), query, logs)
+	//if err != nil {
+	//	//logger.Error("Error subscribing to logs:", err)
+	//	fmt.Printf("query logs failed: %s\n", err.Error())
+	//	return err
+	//}
+	//
+	//// 处理请求结果
+	//for {
+	//	select {
+	//	case err := <-sub.Err():
+	//		fmt.Println("Error in subscription:", err)
+	//		return errors.New(fmt.Sprintf("Error in subscription:%s", err.Error()))
+	//	case log := <-logs:
+	//		// 解析事件数据
+	//		var eventData OCRResponseEvent
+	//		err = contractAbi.UnpackIntoInterface(&eventData, "OCRResponse", log.Data)
+	//		if err != nil {
+	//			fmt.Println("Failed to unpack event data: ", err.Error())
+	//			return err
+	//		}
+	//		if len(log.Topics) == 2 {
+	//			fmt.Printf("RequestId: %x\n", log.Topics[1])
+	//			if requestId == log.Topics[1].String() {
+	//				var result string
+	//				numData, err := strconv.ParseInt(hexToString(eventData.Result), 16, 64)
+	//				if err != nil {
+	//					result = string(eventData.Result)
+	//				} else {
+	//					result = strconv.Itoa(int(numData))
+	//				}
+	//				utils.SendEmail(email, requestId, result, string(eventData.Err))
+	//				break
+	//			}
+	//		}
+	//	}
+	//}
 	return nil
 }
 
