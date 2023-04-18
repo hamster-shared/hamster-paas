@@ -141,18 +141,21 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 			logger.Info("start watch Oracle Request event")
 			data, err := contractFilter.ParseOCRResponse(vLog)
 			if err == nil {
+				requestIdData := fmt.Sprintf("0x%s", hex.EncodeToString(data.RequestId[:]))
 				log.Println("++++++++++++++++++++")
-				fmt.Printf("request id is:%s", hex.EncodeToString(data.RequestId[:]))
+				fmt.Printf("request id is:%s", requestIdData)
 				log.Println("++++++++++++++++++++")
-				var result string
-				numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
-				if err != nil {
-					result = string(data.Result)
-				} else {
-					result = strconv.Itoa(int(numData))
+				if requestIdData == requestId {
+					var result string
+					numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
+					if err != nil {
+						result = string(data.Result)
+					} else {
+						result = strconv.Itoa(int(numData))
+					}
+					utils.SendEmail(email, requestId, result, string(data.Err))
+					break
 				}
-				utils.SendEmail(email, requestId, result, string(data.Err))
-				break
 			} else {
 				logger.Errorf("parse OracleRequest data failed: %s", err)
 			}
@@ -257,6 +260,10 @@ func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
 
 // GetTxStatus 获取交易状态
 func GetTxStatus(hash string, ethNetwork EthNetwork, client *ethclient.Client) (uint64, error) {
+	if len(hash) != 64 {
+		return 0, fmt.Errorf("hash length error")
+	}
+
 	r, err := client.TransactionReceipt(context.Background(), common.Hash(common.FromHex(hash)))
 	if err != nil {
 		return 0, fmt.Errorf("get tx receipt faild")

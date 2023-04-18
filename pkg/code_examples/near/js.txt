@@ -1,0 +1,15 @@
+var request = require('request');
+request.post('%s', {
+    json: {
+        "jsonrpc": "2.0",
+        "id": "dontcare",
+        "method": "block",
+        "params": { "finality": "final" }
+    }
+}, (error, resp, body) => {
+    if (!error && resp.statusCode == 200) {
+        console.log(body);
+    } else {
+        console.error(error);
+    }
+})

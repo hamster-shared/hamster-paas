@@ -170,7 +170,7 @@ func (l *OracleListener) saveOracleRequestEvent(r *oracle.OracleOracleRequest) {
 	event.BlockHash = r.Raw.BlockHash.Hex()
 	event.Index = r.Raw.Index
 	event.Removed = r.Raw.Removed
-	event.Chain = "ethereum"
+	event.Chain = "polygon"
 	event.Network = "testnet-mumbai"
 	event.CreatedAt = time.Now()
 	err := l.db.Create(&event).Error

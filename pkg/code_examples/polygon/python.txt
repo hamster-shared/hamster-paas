@@ -1,0 +1,7 @@
+from web3 import Web3
+
+chain_url = "%s"
+w3 = Web3(Web3.HTTPProvider(chain_url))
+
+# Get the latest block number
+print(w3.eth.block_number)

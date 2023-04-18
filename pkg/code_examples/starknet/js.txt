@@ -1,0 +1,6 @@
+import { Provider } from "starknet";
+
+const provider = new Provider({ rpc: { nodeUrl: "%s" } });
+let chainID = await provider.getChainId();
+
+console.log(chainID);

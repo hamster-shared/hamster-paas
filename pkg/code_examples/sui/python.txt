@@ -1,0 +1,5 @@
+import requests
+r = requests.post('%s', json={
+                  'jsonrpc': '2.0', 'method': 'rpc.discover', 'id': 1})
+print(r.json())
+

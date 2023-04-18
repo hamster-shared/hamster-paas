@@ -1,0 +1,13 @@
+var request = require('request');
+request.post('%s', {
+    json: {
+        'jsonrpc': '2.0',
+        'method': 'eth_blockNumber',
+        'params': [],
+        'id': 1
+    }
+}, (error, resp, body) => {
+    if (!error && resp.statusCode == 200) {
+        console.log(body);
+    }
+})
