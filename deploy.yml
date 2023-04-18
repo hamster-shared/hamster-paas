@@ -742,8 +742,15 @@ spec:
             - containerPort: 7700
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/log/nginx
+              name: hamster-paas-nginx-log
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
+      volumes:
+        - name: hamster-paas-nginx-log
+          persistentVolumeClaim:
+            claimName: hamster-paas-nginx-pvc
