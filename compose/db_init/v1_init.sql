@@ -61,23 +61,23 @@ VALUES (
     ),
     (
         -- ethereum goerli
-        '1',
-        'ETH',
-        'https://mainnet.etherscan.io',
-        'https://mainnet.infura.io/v3/',
+        '5',
+        'GoerliETH',
+        'https://goerli.etherscan.io',
+        'https://rpc.ankr.com/eth_goerli',
         'ethereum',
-        'mainnet',
+        'testnet-goerli',
         'https://ethereum-goerli.api.hamsternet.io',
         'wss://ethereum-goerli-ws.api.hamsternet.io'
     ),
     (
         -- ethereum sepolia
-        '1',
-        'ETH',
-        'https://mainnet.etherscan.io',
-        'https://mainnet.infura.io/v3/',
+        'aa36a7',
+        'SepoliaETH',
+        'https://sepolia.etherscan.io',
+        'https://rpc.ankr.com/eth_sepolia',
         'ethereum',
-        'mainnet',
+        'testnet-sepolia',
         'https://ethereum-sepolia.api.hamsternet.io',
         'wss://ethereum-sepolia-ws.api.hamsternet.io'
     ),
@@ -123,20 +123,20 @@ VALUES (
         'https://optimism-ws.api.hamsternet.io'
     ),
     (
-        'a',
+        '1a4',
         'ETH',
-        'https://optimistic.etherscan.io/',
-        'https://mainnet.optimism.io',
+        'https://goerli-explorer.optimism.io',
+        'https://goerli.optimism.io',
         'optimism',
         'testnet-goerli',
         'https://optimism-goerli.api.hamsternet.io',
         'https://optimism-goerli-ws.api.hamsternet.io'
     ),
     (
-        '0',
-        'NEAR',
-        'https://explorer.mainnet.near.org/',
-        'https://rpc.mainnet.near.org',
+        '4E454152',
+        'ETH',
+        'https://explorer.mainnet.aurora.dev/',
+        'https://mainnet.aurora.dev',
         'near',
         'mainnet',
         'https://near.api.hamsternet.io',
@@ -153,10 +153,11 @@ VALUES (
     --     ''
     -- ),
     (
-        '0',
+        -- aptos 不属于 eth 类型
+        '1',
         'unknown',
-        'https://explorer.mainnet.near.org/',
-        'https://rpc.mainnet.near.org',
+        '',
+        'https://fullnode.mainnet.aptoslabs.com/v1',
         'aptos',
         'mainnet',
         'https://aptos.api.hamsternet.io',
@@ -183,10 +184,11 @@ VALUES (
     --     ''
     -- ),
     (
+        -- starknet 不属于 eth 类型
         '0',
         'unknown',
-        'https://explorer.mainnet.near.org/',
-        'https://rpc.mainnet.near.org',
+        '',
+        '',
         'starknet',
         'mainnet',
         'https://starknet.api.hamsternet.io',
@@ -195,18 +197,18 @@ VALUES (
     (
         '0',
         'unknown',
-        'https://explorer.mainnet.near.org/',
-        'https://rpc.mainnet.near.org',
+        '',
+        '',
         'starknet',
         'testnet-goerli',
         'https://starknet-goerli.api.hamsternet.io',
         ''
     ),
     (
-        '13881',
+        '89',
         'MATIC',
-        'https://explorer-mumbai.maticvigil.com/',
-        'https://rpc-mumbai.maticvigil.com',
+        'https://polygonscan.com',
+        'https://polygon-rpc.com/',
         'polygon',
         'mainnet',
         'https://polygon.api.hamsternet.io',
@@ -215,7 +217,7 @@ VALUES (
     (
         '13881',
         'MATIC',
-        'https://explorer-mumbai.maticvigil.com/',
+        'https://mumbai.polygonscan.com/',
         'https://rpc-mumbai.maticvigil.com',
         'polygon',
         'testnet-mumbai',
@@ -229,7 +231,7 @@ VALUES (
         'https://rpc-moonbeam.hamster.newtouch.com',
         'hamster',
         'testnet-moonbeam',
-        'http://61.172.179.6:30311',
+        '',
         ''
     );
 DROP TABLE IF EXISTS t_cl_rpc_code_examples;
