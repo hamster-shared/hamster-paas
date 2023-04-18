@@ -141,8 +141,9 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 			logger.Info("start watch Oracle Request event")
 			data, err := contractFilter.ParseOCRResponse(vLog)
 			if err == nil {
+				requestIdData := fmt.Sprintf("0x%s", hex.EncodeToString(data.RequestId[:]))
 				log.Println("++++++++++++++++++++")
-				fmt.Printf("request id is:%s", hex.EncodeToString(data.RequestId[:]))
+				fmt.Printf("request id is:%s", requestIdData)
 				log.Println("++++++++++++++++++++")
 				var result string
 				numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
