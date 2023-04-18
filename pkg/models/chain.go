@@ -68,6 +68,7 @@ type RpcChain struct {
 	ExplorerUrl      string `json:"explorerUrl"`
 	NetworkUrl       string `json:"networkUrl"`
 	NetworkName      string `json:"networkName"`
+	Image            string `json:"image"`
 }
 
 type RpcChainDetail struct {

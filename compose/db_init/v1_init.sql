@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS t_cl_rpc_app (
 DROP TABLE IF EXISTS t_cl_rpc_chain;
 CREATE TABLE IF NOT EXISTS t_cl_rpc_chain (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    image varchar(255) NOT NULL DEFAULT '',
     chain_id varchar(255) NOT NULL,
     native_token varchar(255) NOT NULL,
     explorer_url varchar(255) NOT NULL,
@@ -40,6 +41,7 @@ CREATE TABLE IF NOT EXISTS t_cl_rpc_chain (
 );
 INSERT INTO t_cl_rpc_chain (
         chain_id,
+        image,
         native_token,
         explorer_url,
         network_url,
@@ -51,6 +53,7 @@ INSERT INTO t_cl_rpc_chain (
 VALUES (
         -- ethereum mainnet
         '1',
+        'https://chain-logo.api.hamsternet.io/ethereum.svg',
         'ETH',
         'https://mainnet.etherscan.io',
         'https://mainnet.infura.io/v3/',
@@ -62,6 +65,7 @@ VALUES (
     (
         -- ethereum goerli
         '5',
+        'https://chain-logo.api.hamsternet.io/ethereum.svg',
         'GoerliETH',
         'https://goerli.etherscan.io',
         'https://rpc.ankr.com/eth_goerli',
@@ -73,6 +77,7 @@ VALUES (
     (
         -- ethereum sepolia
         'aa36a7',
+        'https://chain-logo.api.hamsternet.io/ethereum.svg',
         'SepoliaETH',
         'https://sepolia.etherscan.io',
         'https://rpc.ankr.com/eth_sepolia',
@@ -84,6 +89,7 @@ VALUES (
     (
         -- sui testnet 不属于 ethereum
         'unknown',
+        'https://chain-logo.api.hamsternet.io/sui.svg',
         'Sui',
         'unknown',
         'unknown',
@@ -94,6 +100,7 @@ VALUES (
     ),
     (
         'a86a',
+        'https://chain-logo.api.hamsternet.io/avalanche.svg',
         'AVAX',
         'https://snowtrace.io/',
         'https://api.avax.network/ext/bc/C/rpc',
@@ -114,6 +121,7 @@ VALUES (
     -- ),
     (
         'a',
+        'https://chain-logo.api.hamsternet.io/optimism.svg',
         'ETH',
         'https://optimistic.etherscan.io/',
         'https://mainnet.optimism.io',
@@ -124,6 +132,7 @@ VALUES (
     ),
     (
         '1a4',
+        'https://chain-logo.api.hamsternet.io/optimism.svg',
         'ETH',
         'https://goerli-explorer.optimism.io',
         'https://goerli.optimism.io',
@@ -134,6 +143,7 @@ VALUES (
     ),
     (
         '4E454152',
+        'https://chain-logo.api.hamsternet.io/near.svg',
         'ETH',
         'https://explorer.mainnet.aurora.dev/',
         'https://mainnet.aurora.dev',
@@ -155,6 +165,7 @@ VALUES (
     (
         -- aptos 不属于 eth 类型
         '1',
+        'https://chain-logo.api.hamsternet.io/aptos.svg',
         'unknown',
         '',
         'https://fullnode.mainnet.aptoslabs.com/v1',
@@ -186,6 +197,7 @@ VALUES (
     (
         -- starknet 不属于 eth 类型
         '0',
+        'https://chain-logo.api.hamsternet.io/starknet.svg',
         'unknown',
         '',
         '',
@@ -196,6 +208,7 @@ VALUES (
     ),
     (
         '0',
+        'https://chain-logo.api.hamsternet.io/starknet.svg',
         'unknown',
         '',
         '',
@@ -206,6 +219,7 @@ VALUES (
     ),
     (
         '89',
+        'https://chain-logo.api.hamsternet.io/polygon.svg',
         'MATIC',
         'https://polygonscan.com',
         'https://polygon-rpc.com/',
@@ -216,6 +230,7 @@ VALUES (
     ),
     (
         '13881',
+        'https://chain-logo.api.hamsternet.io/polygon.svg',
         'MATIC',
         'https://mumbai.polygonscan.com/',
         'https://rpc-mumbai.maticvigil.com',
@@ -226,6 +241,7 @@ VALUES (
     ),
     (
         '501',
+        'https://chain-logo.api.hamsternet.io/hamster.svg',
         'Hamster',
         'https://hamsternet.io',
         'https://rpc-moonbeam.hamster.newtouch.com',
