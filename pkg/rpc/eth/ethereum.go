@@ -49,7 +49,7 @@ func init() {
 
 type EthereumProxy interface {
 	TransactionByHash(hash string) (tx *types.Transaction, isPending bool, err error)
-	WatchRequestResult(contractAddress, requestId, email string) error
+	WatchRequestResult(contractAddress, requestId, email, requestName string) error
 	TransactionReceipt(hash string) (*types.Receipt, error)
 }
 
@@ -109,7 +109,7 @@ type OCRResponseEvent struct {
 	Err       []byte
 }
 
-func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, email string) error {
+func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, email, requestName string) error {
 	log.Println("++++++++++++++++++++++++++++++++++++++")
 	// 要监听的合约地址
 	oracleContractAddress := common.HexToAddress(contractAddress)
@@ -153,7 +153,7 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 					} else {
 						result = strconv.Itoa(int(numData))
 					}
-					utils.SendEmail(email, requestId, result, string(data.Err))
+					utils.SendEmail(email, requestId, result, requestName, string(data.Err))
 					break
 				}
 			} else {
