@@ -4,14 +4,21 @@ import (
 	"log"
 	"net/smtp"
 	"os"
+	"time"
 )
 
-func SendEmail(toEmail, requestId, result, error string) {
+func SendEmail(toEmail, requestId, result, requestName, errorInfo string) {
 	from := os.Getenv("FROM_EMAIL")
 	password := os.Getenv("EMAIL_PASSWORD")
 	to := toEmail
-	subject := "Test email from Golang with HTML content"
-	body := "<html>\n<head>\n\t<meta charset=\"UTF-8\">\n\t<title>Email Template</title>\n\t<style type=\"text/css\">\n\t\tbody {\n\t\t\tbackground-color: #f6f6f6;\n\t\t\tmargin: 0;\n\t\t\tpadding: 0;\n\t\t\tfont-family: Arial, sans-serif;\n\t\t\tfont-size: 14px;\n\t\t\tline-height: 1.5;\n\t\t\tcolor: #333333;\n\t\t}\n\t\t.container {\n\t\t\tmax-width: 600px;\n\t\t\tmargin: 0 auto;\n\t\t\tbackground-color: #ffffff;\n\t\t\tpadding: 20px;\n\t\t\tborder-radius: 10px;\n\t\t\tbox-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);\n\t\t}\n\t\th1 {\n\t\t\tfont-size: 28px;\n\t\t\tfont-weight: bold;\n\t\t\tmargin-top: 0;\n\t\t\tmargin-bottom: 20px;\n\t\t\ttext-align: center;\n\t\t\tcolor: #333333;\n\t\t}\n\t\tp {\n\t\t\tmargin: 0 0 20px;\n\t\t}\n\t</style>\n</head>\n<body>\n\t<div class=\"container\">\n\t\t<h1>Request Result</h1>\n\t\t<div>\n\t\t    <p>RequestId:</p>\n\t\t    <p>" + requestId + "</p>\n\t\t</div>\n\t\t<div>\n\t\t    <p>Result:</p>\n\t\t    <p>" + result + "</p>\n\t\t</div>\n\t\t<div>\n\t\t    <p>Error:</p>\n\t\t    <p>" + error + "</p>\n\t\t</div>\n\t</div>\n</body>"
+	timeData := time.Now()
+	timeFormat := timeData.Format("2006-01-02 15:04:05")
+	subject := "Test Results"
+	flag := "Success"
+	if errorInfo != "" {
+		flag = "Failed"
+	}
+	body := "<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Test Results</title>\n    <style>\n\n        .content {\n            background-color: white;\n            padding: 20px;\n        }\n\n        .content .head {\n            font-family: BinancePlex, Arial, PingFangSC-Regular, 'Microsoft YaHei', sans-serif;\n            font-size: 20px;\n            font-weight: 900;\n            line-height: 25px;\n            text-align: left;\n            color: #000000;\n        }\n\n        .content .label {\n            font-size: 16px;\n            font-weight: 800;\n            line-height: 20px;\n            color: #000000;\n        }\n\n        .footer {\n            position: absolute;\n            bottom: 0;\n            right: 0;\n            padding: 10px;\n            font-size: 12px;\n            color: #000000;\n            text-align: right;\n        }\n\n        .footer a {\n            color: #000000;\n            text-decoration: none;\n        }\n\n        .wrapper {\n            position: relative;\n            min-height: 100%;\n        }\n\n        .content-wrapper {\n            padding-bottom: 60px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"wrapper\">\n<div class=\"content-wrapper\">\n            <div class=\"content\">\n                <div class=\"head\">Test Results</div>\n                <p>Your request test results are as follows:</p>\n                <table>\n                    <tr>\n                        <td class=\"label\">Request Name:</td>\n                        <td>" + requestName + "</td>\n                    </tr>\n                    <tr>\n                        <td class=\"label\">Request ID:</td>\n                        <td>" + requestId + "</td>\n                    </tr>\n                    <tr>\n                        <td class=\"label\">Send Time:</td>\n                        <td>" + timeFormat + "</td>\n                    </tr>\n                    <tr>\n                        <td class=\"label\">Test Results:</td>\n                        <td>" + flag + "</td>\n                    </tr>\n                    <tr>\n                        <td class=\"label\">Reason:</td>\n                        <td>" + errorInfo + "</td>\n                    </tr>\n                </table>\n            </div>\n        </div>\n        <div class=\"footer\">\n            <p>Hamster team</p>\n            <p><a href=\"http://www.hamsternet.io\">www.hamsternet.io</a></p>\n        </div>\n    </div>\n</body>\n</html>\n"
 	msg := "From: " + from + "\n" +
 		"To: " + to + "\n" +
 		"Subject: " + subject + "\n" +
