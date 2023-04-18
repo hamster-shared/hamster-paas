@@ -246,7 +246,7 @@ func checkAndChangeSubscriptionStatus(network models.NetworkType, subscription m
 	times := 0
 	needFalid := false
 	for {
-		if times == 90 {
+		if times == 6 {
 			needFalid = true
 			break
 		}
@@ -262,6 +262,7 @@ func checkAndChangeSubscriptionStatus(network models.NetworkType, subscription m
 		// 获取 tx 状态
 		txStatus, err := eth.GetTxStatus(subscription.TransactionTx, network.NetworkType(), client)
 		if err != nil {
+			logger.Errorf("get tx status error: %s", err)
 			continue
 		}
 		if txStatus == 1 {

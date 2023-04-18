@@ -66,6 +66,7 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 		logger.Error(fmt.Sprintf("network format error: %s", err.Error()))
 		return -1, err
 	}
+	fmt.Printf("deposit tx: %s\n", deposit.TransactionTx)
 	// 异步检查Tx，修改Status
 	poolService.Submit(func() {
 		checkAndChangeDepositStatus(network, deposit, d.db)
@@ -101,7 +102,7 @@ func checkAndChangeDepositStatus(network models.NetworkType, deposit models.Depo
 	times := 0
 	needFalid := false
 	for {
-		if times == 90 {
+		if times == 6 {
 			needFalid = true
 			break
 		}
@@ -117,6 +118,7 @@ func checkAndChangeDepositStatus(network models.NetworkType, deposit models.Depo
 		// 获取tx状态
 		txStatus, err := eth.GetTxStatus(deposit.TransactionTx, network.NetworkType(), client)
 		if err != nil {
+			logger.Errorf("get tx status error: %s", err)
 			continue
 		}
 		if txStatus == 1 {

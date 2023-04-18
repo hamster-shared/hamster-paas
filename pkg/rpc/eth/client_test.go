@@ -3,6 +3,7 @@ package eth
 import (
 	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/common"
 	"testing"
 	"time"
 )
@@ -74,9 +75,11 @@ func TestGetChainClient(t *testing.T) {
 }
 
 func TestGetTxStatus(t *testing.T) {
-	client := GetChainClient(SEPOLIA_TESTNET)
+	client := GetChainClient(MUMBAI_TESTNET)
 	id, _ := client.ChainID(context.Background())
 	fmt.Println(id)
+	re, _ := client.TransactionReceipt(context.Background(), common.Hash(common.FromHex("0xdd0b6b049aaccdba744c9e3d6a29d072ab5f0601ea6a08d71bd6ce8e419c3814")))
+	fmt.Println(re.Status)
 	//if client == nil {
 	//	panic("client not valid")
 	//}

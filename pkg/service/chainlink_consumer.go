@@ -139,7 +139,7 @@ func checkAndChangeConsumerStatus(network models.NetworkType, consumer models.Co
 	times := 0
 	needFalid := false
 	for {
-		if times == 90 {
+		if times == 6 {
 			needFalid = true
 			break
 		}
@@ -155,6 +155,7 @@ func checkAndChangeConsumerStatus(network models.NetworkType, consumer models.Co
 		// 获取tx状态
 		txStatus, err := eth.GetTxStatus(consumer.TransactionTx, network.NetworkType(), client)
 		if err != nil {
+			logger.Errorf("get tx status error: %s", err)
 			continue
 		}
 		if txStatus == 1 {
