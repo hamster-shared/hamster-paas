@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/utils/logger"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -40,19 +41,10 @@ type DateRequest struct {
 }
 
 type RpcCodeExample struct {
-	JavaScript string `json:"JavaScript"`
+	JavaScript string `json:"JavaScript" gorm:"column:javascript"`
 	Cli        string `json:"Cli"`
 	Go         string `json:"Go"`
 	Python     string `json:"Python"`
-}
-
-func newCodeExample() RpcCodeExample {
-	return RpcCodeExample{
-		JavaScript: "this is js code example",
-		Cli:        "this is cli code example",
-		Go:         "this is go code example",
-		Python:     "this is python code example",
-	}
 }
 
 func newApp(account string, name, description string, chain ChainType, network NetworkType) (*RpcApp, error) {
@@ -104,6 +96,22 @@ func (a *RpcApp) save() error {
 	return db.Model(&RpcApp{}).Create(a).Error
 }
 
+func (a *RpcApp) getCodeExample() (*RpcCodeExample, error) {
+	db, err := application.GetBean[*gorm.DB]("db")
+	if err != nil {
+		return nil, err
+	}
+	var codeExample RpcCodeExample
+	if err := db.Table("t_cl_rpc_code_examples").Where("chain = ?", strings.ToLower(a.Chain)).First(&codeExample).Error; err != nil {
+		return nil, err
+	}
+	codeExample.Cli = fmt.Sprintf(codeExample.Cli, a.HttpLink)
+	codeExample.Go = fmt.Sprintf(codeExample.Go, a.HttpLink)
+	codeExample.JavaScript = fmt.Sprintf(codeExample.JavaScript, a.HttpLink)
+	codeExample.Python = fmt.Sprintf(codeExample.Python, a.HttpLink)
+	return &codeExample, nil
+}
+
 func deleteApp(account string, id int) error {
 	db, err := application.GetBean[*gorm.DB]("db")
 	if err != nil {
@@ -143,7 +151,12 @@ func getAppByName(account string, name string) (*ApiResponseRpcApp, error) {
 	if err != nil {
 		logger.Errorf("getDaylyRequests7DaysWithStatusAll err: %s", err)
 	}
-	appResp.CodeExamples = newCodeExample()
+	codeExample, err := app.getCodeExample()
+	if err != nil {
+		logger.Errorf("getCodeExample err: %s", err)
+	} else {
+		appResp.CodeExamples = *codeExample
+	}
 	return &appResp, nil
 }
 
@@ -171,7 +184,12 @@ func getAppBaseInfoByChainNetwork(account string, chain ChainType, network Netwo
 	var appResp ApiResponseRpcApp
 	app.Account = ""
 	appResp.RpcApp = &app
-	appResp.CodeExamples = newCodeExample()
+	codeExample, err := app.getCodeExample()
+	if err != nil {
+		logger.Errorf("getCodeExample err: %s", err)
+	} else {
+		appResp.CodeExamples = *codeExample
+	}
 	return &appResp, nil
 }
 
@@ -198,7 +216,12 @@ func getAppByChainNetwork(account string, chain ChainType, network NetworkType) 
 	if err != nil {
 		logger.Errorf("getTotalRequestsAll err: %s", err)
 	}
-	appResp.CodeExamples = newCodeExample()
+	codeExample, err := app.getCodeExample()
+	if err != nil {
+		logger.Errorf("getCodeExample err: %s", err)
+	} else {
+		appResp.CodeExamples = *codeExample
+	}
 	return &appResp, nil
 }
 
@@ -242,7 +265,12 @@ func filterApps(account string, network string) ([]*ApiResponseRpcApp, error) {
 		if err != nil {
 			logger.Errorf("getTotalRequestsAll err: %s", err)
 		}
-		appResp.CodeExamples = newCodeExample()
+		codeExample, err := apps[i].getCodeExample()
+		if err != nil {
+			logger.Errorf("getCodeExample err: %s", err)
+		} else {
+			appResp.CodeExamples = *codeExample
+		}
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
 	return apiResponseApps, nil
@@ -274,7 +302,12 @@ func getApps(account string) ([]*ApiResponseRpcApp, error) {
 		if err != nil {
 			logger.Errorf("getTotalRequestsAll err: %s", err)
 		}
-		appResp.CodeExamples = newCodeExample()
+		codeExample, err := apps[i].getCodeExample()
+		if err != nil {
+			logger.Errorf("getCodeExample err: %s", err)
+		} else {
+			appResp.CodeExamples = *codeExample
+		}
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
 	return apiResponseApps, nil
@@ -306,7 +339,12 @@ func getAppsPagination(account string, p *Pagination) ([]*ApiResponseRpcApp, *Pa
 		if err != nil {
 			logger.Errorf("getTotalRequestsAll err: %s", err)
 		}
-		appResp.CodeExamples = newCodeExample()
+		codeExample, err := apps[i].getCodeExample()
+		if err != nil {
+			logger.Errorf("getCodeExample err: %s", err)
+		} else {
+			appResp.CodeExamples = *codeExample
+		}
 		apiResponseApps = append(apiResponseApps, &appResp)
 	}
 	var count int64

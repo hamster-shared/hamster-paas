@@ -49,57 +49,49 @@ INSERT INTO t_cl_rpc_chain (
         websocket_address
     )
 VALUES (
+        -- ethereum mainnet
         '1',
         'ETH',
         'https://mainnet.etherscan.io',
         'https://mainnet.infura.io/v3/',
         'ethereum',
         'mainnet',
-        -- 'https://ethereum.api.hamsternet.io',
-        'http://54.69.42.237:9912',
+        'https://ethereum.api.hamsternet.io',
         'wss://ethereum-ws.api.hamsternet.io'
     ),
     (
-        '13881',
-        'MATIC',
-        'https://explorer-mumbai.maticvigil.com/',
-        'https://rpc-mumbai.maticvigil.com',
-        'polygon',
-        'testnet-mumbai',
-        'http://54.69.42.237:9912',
-        ''
-    ),
-    (
-        '501',
-        'Hamster',
-        'https://hamsternet.io',
-        'https://rpc-moonbeam.hamster.newtouch.com',
-        'hamster',
-        'testnet-moonbeam',
-        'http://54.69.42.237:9912',
-        ''
-    ),
-    (
-        '5',
-        'GETH',
-        'https://goerli.etherscan.io',
-        'https://goerli.infura.io/v3/',
+        -- ethereum goerli
+        '1',
+        'ETH',
+        'https://mainnet.etherscan.io',
+        'https://mainnet.infura.io/v3/',
         'ethereum',
-        'testnet-goerli',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
-        'http://54.69.42.237:9912',
+        'mainnet',
+        'https://ethereum-goerli.api.hamsternet.io',
         'wss://ethereum-goerli-ws.api.hamsternet.io'
     ),
     (
-        'aa36a7',
-        'Ether',
-        'https://sepolia.etherscan.io',
-        'https://sepolia.infura.io/v3/',
+        -- ethereum sepolia
+        '1',
+        'ETH',
+        'https://mainnet.etherscan.io',
+        'https://mainnet.infura.io/v3/',
         'ethereum',
-        'testnet-sepolia',
-        'http://54.69.42.237:9912',
-        ''
+        'mainnet',
+        'https://ethereum-sepolia.api.hamsternet.io',
+        'wss://ethereum-sepolia-ws.api.hamsternet.io'
     ),
+    -- (
+    --     -- sui testnet
+    --     'unknown',
+    --     'Sui',
+    --     'https://mainnet.etherscan.io',
+    --     'https://mainnet.infura.io/v3/',
+    --     'sui',
+    --     'testnet-testnet',
+    --     'https://sui-testnet.api.hamsternet.io',
+    --     ''
+    -- ),
     (
         'a86a',
         'AVAX',
@@ -107,21 +99,19 @@ VALUES (
         'https://api.avax.network/ext/bc/C/rpc',
         'avalanche',
         'mainnet',
-        -- 'https://avalanche.api.hamsternet.io',
-        'http://54.69.42.237:9912',
-        ''
+        'https://avalanche.api.hamsternet.io',
+        'https://avalanche-ws.api.hamsternet.io'
     ),
-    (
-        'a869',
-        'AVAX',
-        'https://explorer.avax-test.network/',
-        'https://api.avax-test.network/ext/bc/C/rpc',
-        'avalanche',
-        'testnet-goerli',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
-        'http://54.69.42.237:9912',
-        'wss://ethereum-goerli-ws.api.hamsternet.io'
-    ),
+    -- (
+    --     'a869',
+    --     'AVAX',
+    --     'https://explorer.avax-test.network/',
+    --     'https://api.avax-test.network/ext/bc/C/rpc',
+    --     'avalanche',
+    --     'testnet-fuji',
+    --     'https://avalanche-fuji.api.hamsternet.io',
+    --     'https://avalanche-fuji-ws.api.hamsternet.io'
+    -- ),
     (
         'a',
         'ETH',
@@ -129,46 +119,18 @@ VALUES (
         'https://mainnet.optimism.io',
         'optimism',
         'mainnet',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
-        'http://54.69.42.237:9912',
-        -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
-        ''
+        'https://optimism.api.hamsternet.io',
+        'https://optimism-ws.api.hamsternet.io'
     ),
     (
-        '1a4',
+        'a',
         'ETH',
         'https://optimistic.etherscan.io/',
         'https://mainnet.optimism.io',
         'optimism',
-        'mainnet',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
-        'http://54.69.42.237:9912',
-        -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
-        ''
-    ),
-    (
-        '1a4',
-        'ETH',
-        'https://optimistic.etherscan.io/',
-        'https://goerli.optimism.io',
-        'optimism',
         'testnet-goerli',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
-        'http://54.69.42.237:9912',
-        -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
-        ''
-    ),
-    (
-        '1a4',
-        'ETH',
-        'https://optimistic.etherscan.io/',
-        'https://goerli.optimism.io',
-        'optimism',
-        'testnet-goerli',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
-        'http://54.69.42.237:9912',
-        -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
-        ''
+        'https://optimism-goerli.api.hamsternet.io',
+        'https://optimism-goerli-ws.api.hamsternet.io'
     ),
     (
         '0',
@@ -177,23 +139,99 @@ VALUES (
         'https://rpc.mainnet.near.org',
         'near',
         'mainnet',
-        -- 'https://ethereum-goerli.api.hamsternet.io',
-        'http://54.69.42.237:9912',
-        -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
+        'https://near.api.hamsternet.io',
+        ''
+    ),
+    -- (
+    --     '0',
+    --     'NEAR',
+    --     'https://explorer.mainnet.near.org/',
+    --     'https://rpc.mainnet.near.org',
+    --     'near',
+    --     'testnet-testnet',
+    --     'https://near-testnet.api.hamsternet.io',
+    --     ''
+    -- ),
+    (
+        '0',
+        'unknown',
+        'https://explorer.mainnet.near.org/',
+        'https://rpc.mainnet.near.org',
+        'aptos',
+        'mainnet',
+        'https://aptos.api.hamsternet.io',
+        ''
+    ),
+    -- (
+    --     '0',
+    --     'unknown',
+    --     'https://explorer.mainnet.near.org/',
+    --     'https://rpc.mainnet.near.org',
+    --     'aptos',
+    --     'testnt-testnet',
+    --     'https://aptos-testnet.api.hamsternet.io',
+    --     ''
+    -- ),
+    -- (
+    --     '0',
+    --     'unknown',
+    --     'https://explorer.mainnet.near.org/',
+    --     'https://rpc.mainnet.near.org',
+    --     'aptos',
+    --     'testnt-devnet',
+    --     'https://aptos-devnet.api.hamsternet.io',
+    --     ''
+    -- ),
+    (
+        '0',
+        'unknown',
+        'https://explorer.mainnet.near.org/',
+        'https://rpc.mainnet.near.org',
+        'starknet',
+        'mainnet',
+        'https://starknet.api.hamsternet.io',
+        ''
+    ),
+    (
+        '0',
+        'unknown',
+        'https://explorer.mainnet.near.org/',
+        'https://rpc.mainnet.near.org',
+        'starknet',
+        'testnet-goerli',
+        'https://starknet-goerli.api.hamsternet.io',
+        ''
+    ),
+    (
+        '13881',
+        'MATIC',
+        'https://explorer-mumbai.maticvigil.com/',
+        'https://rpc-mumbai.maticvigil.com',
+        'polygon',
+        'mainnet',
+        'https://polygon.api.hamsternet.io',
+        'https://polygon-ws.api.hamsternet.io'
+    ),
+    (
+        '13881',
+        'MATIC',
+        'https://explorer-mumbai.maticvigil.com/',
+        'https://rpc-mumbai.maticvigil.com',
+        'polygon',
+        'testnet-mumbai',
+        'https://polygon-mumbai.api.hamsternet.io',
+        'https://polygon-mumbai-ws.api.hamsternet.io'
+    ),
+    (
+        '501',
+        'Hamster',
+        'https://hamsternet.io',
+        'https://rpc-moonbeam.hamster.newtouch.com',
+        'hamster',
+        'testnet-moonbeam',
+        'http://61.172.179.6:30311',
         ''
     );
--- (
---     0,
---     'NEAR',
---     'https://explorer.testnet.near.org/',
---     'https://rpc.testnet.near.org',
---     'near',
---     'testnet-testnet',
---     -- 'https://ethereum-goerli.api.hamsternet.io',
---     'http://54.69.42.237:9912',
---     -- 'wss://ethereum-goerli-ws.api.hamsternet.io'
---     ''
--- );
 DROP TABLE IF EXISTS t_cl_rpc_code_examples;
 CREATE TABLE IF NOT EXISTS t_cl_rpc_code_examples (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
