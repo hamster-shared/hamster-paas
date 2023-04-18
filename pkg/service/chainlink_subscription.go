@@ -170,13 +170,14 @@ func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceAll(userId int6
 	for _, subscription := range subscriptions {
 		chainType, _ := models.ParseChainType(subscription.Chain)
 		networkType, _ := models.ParseNetworkType(subscription.Network)
-		if chainType != models.Ethereum || networkType != models.TestnetMumbai {
+		if chainType != models.Polygon || networkType != models.TestnetMumbai {
 			subscriptionBalances = append(subscriptionBalances, otherChainOrNetworkNotSupportedYet(subscription))
 			continue
 		}
 
 		balance, err := GetMumbaiSubscriptionBalance(uint64(subscription.ChainSubscriptionId))
 		if err != nil {
+			logger.Errorf("GetMumbaiSubscriptionBalance error: %s", err)
 			return nil, err
 		}
 		subscriptionBalance := SubscriptionBalance{
@@ -210,7 +211,7 @@ func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceById(userId int
 	}
 	chainType, _ := models.ParseChainType(subscription.Chain)
 	networkType, _ := models.ParseNetworkType(subscription.Network)
-	if chainType != models.Ethereum || networkType != models.TestnetMumbai {
+	if chainType != models.Polygon || networkType != models.TestnetMumbai {
 		result := otherChainOrNetworkNotSupportedYet(subscription)
 		return &result, nil
 	}
@@ -222,7 +223,7 @@ func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceById(userId int
 		Chain:               subscription.Chain,
 		Network:             subscription.Network,
 		SubscriptionId:      subscription.Id,
-		ChainSubscriptionId: subscriptionId,
+		ChainSubscriptionId: uint64(subscription.ChainSubscriptionId),
 		Balance:             balance,
 	}, nil
 }
