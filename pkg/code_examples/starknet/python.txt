@@ -1,0 +1,4 @@
+import requests
+r = requests.post('%s', json={
+                  'jsonrpc': '2.0', 'method': 'starknet_blockNumber', 'id': 1})
+print(r.json())

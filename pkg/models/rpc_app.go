@@ -27,10 +27,10 @@ type RpcApp struct {
 
 type ApiResponseRpcApp struct {
 	*RpcApp
-	CodeExamples       RpcCodeExample `json:"code_examples,omitempty"`
-	TotalRequests24h   int64          `json:"total_requests_24h,omitempty"`
-	DaylyRequests7Days []DateRequest  `json:"dayly_requests_7days,omitempty"`
-	TotalRequestsAll   int64          `json:"total_requests_all,omitempty"`
+	CodeExamples       RpcCodeExample `json:"code_examples"`
+	TotalRequests24h   int64          `json:"total_requests_24h"`
+	DaylyRequests7Days []DateRequest  `json:"dayly_requests_7days"`
+	TotalRequestsAll   int64          `json:"total_requests_all"`
 }
 
 type DateRequest struct {

@@ -1,0 +1,1 @@
+curl %s/v1/blocks/by_height/1 -H "Content-Type: application/json"

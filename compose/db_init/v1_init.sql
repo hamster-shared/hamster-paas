@@ -103,7 +103,7 @@ VALUES (
     (
         'a86a',
         'AVAX',
-        'https://explorer.avax.network/',
+        'https://snowtrace.io/',
         'https://api.avax.network/ext/bc/C/rpc',
         'avalanche',
         'mainnet',

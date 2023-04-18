@@ -1,0 +1,8 @@
+import requests
+r = requests.post('%s', json={
+    "jsonrpc": "2.0",
+    "id": "dontcare",
+    "method": "block",
+    "params": {"finality": "final"}
+})
+print(r.json())
