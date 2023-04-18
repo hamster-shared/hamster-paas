@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/models"
-	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
 )
 
@@ -15,14 +14,13 @@ func (h *HandlerServer) getProjectList(c *gin.Context) {
 		return
 	}
 	user := userAny.(aline.User)
-	// get param
-	var jsonParam vo.AlineProjectParam
-	err := c.BindJSON(&jsonParam)
-	if err != nil {
+	chain := c.Query("chain")
+	network := c.Query("network")
+	if chain == "" || network == "" {
 		Fail("param invalid", c)
 		return
 	}
-	network, err := models.GetAlineNetwork(jsonParam.Chain, jsonParam.Network)
+	network, err := models.GetAlineNetwork(chain, network)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
