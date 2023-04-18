@@ -81,17 +81,17 @@ VALUES (
         'https://ethereum-sepolia.api.hamsternet.io',
         'wss://ethereum-sepolia-ws.api.hamsternet.io'
     ),
-    -- (
-    --     -- sui testnet
-    --     'unknown',
-    --     'Sui',
-    --     'https://mainnet.etherscan.io',
-    --     'https://mainnet.infura.io/v3/',
-    --     'sui',
-    --     'testnet-testnet',
-    --     'https://sui-testnet.api.hamsternet.io',
-    --     ''
-    -- ),
+    (
+        -- sui testnet 不属于 ethereum
+        'unknown',
+        'Sui',
+        'unknown',
+        'unknown',
+        'sui',
+        'testnet',
+        'https://sui-testnet.api.hamsternet.io',
+        ''
+    ),
     (
         'a86a',
         'AVAX',
