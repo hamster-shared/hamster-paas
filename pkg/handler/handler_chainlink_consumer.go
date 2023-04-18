@@ -73,14 +73,10 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 		Fail("invalid params: chain an network", c)
 		return
 	}
-	_, err = models.ParseChainType(chainParam)
+	network, err := models.GetAlineNetwork(chainParam, networkParam)
 	if err != nil {
-		Fail("chain not format", c)
-		return
-	}
-	network, err := models.ParseNetworkType(networkParam)
-	if err != nil {
-		Fail("network not format", c)
+		logger.Error(fmt.Sprintf("get Hamster Consumer List failed: %s", err.Error()))
+		Fail(fmt.Sprintf("invalid chain and network: %s", err.Error()), c)
 		return
 	}
 	// 通过project id 拿到对应的 consumer 信息
@@ -89,7 +85,7 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 		Fail("get project service error", c)
 		return
 	}
-	data, err := projectService.GetValidContract(pageInt, sizeInt, projectIdString, network.StringAline())
+	data, err := projectService.GetValidContract(pageInt, sizeInt, projectIdString, network)
 	if err != nil {
 		logger.Error(fmt.Sprintf("get Hamster Consumer List failed: %s", err.Error()))
 		Fail(err.Error(), c)
