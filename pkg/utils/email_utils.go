@@ -3,14 +3,13 @@ package utils
 import (
 	"log"
 	"net/smtp"
+	"os"
 	"time"
 )
 
 func SendEmail(toEmail, requestId, result, requestName, errorInfo string) {
-	//from := os.Getenv("FROM_EMAIL")
-	from := "hamster@hamsternet.io"
-	password := "vbxvulwytjyevqhh"
-	//password := os.Getenv("EMAIL_PASSWORD")
+	from := os.Getenv("FROM_EMAIL")
+	password := os.Getenv("EMAIL_PASSWORD")
 	to := toEmail
 	timeData := time.Now()
 	timeFormat := timeData.Format("2006-01-02 15:04:05")
