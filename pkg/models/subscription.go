@@ -12,6 +12,7 @@ type Subscription struct {
 	Consumers           int8      `json:"consumers"`
 	UserId              uint64    `gorm:"column:user_id" json:"userId"`
 	Admin               string    `json:"admin"`
+	Balance             float64   `json:"balance"`
 	TransactionTx       string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status              string    `json:"status"`
 }

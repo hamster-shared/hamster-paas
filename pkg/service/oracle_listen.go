@@ -30,9 +30,6 @@ var MumbaiFunctionOracleAddress = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
 var SepoliaBillingRegistryAddress = "0x3c79f56407DCB9dc9b852D139a317246f43750Cc"
 var SepoliaFunctionOracleAddress = "0x649a2C205BE7A3d5e99206CEEFF30c794f0E31EC"
 
-var SepoliaOracleRegistryProxyAddress = "0x3c79f56407DCB9dc9b852D139a317246f43750Cc"
-var MumbaiOracleRegistryProxyAddress = "0xEe9Bf52E5Ea228404bB54BCFbbDa8c21131b9039"
-
 func (l *OracleListener) listenOracleRequestEvent(ethUrl, contractAddressString string) error {
 	// 连接到 Ethereum 节点
 	client, err := ethclient.Dial(ethUrl)
@@ -211,7 +208,7 @@ func (l *OracleListener) GetFund(subscriptionId uint64) (uint64, error) {
 	if l.client == nil {
 		return 0, fmt.Errorf("eth client is nil")
 	}
-	contractAddress := common.HexToAddress(MumbaiOracleRegistryProxyAddress)
+	contractAddress := common.HexToAddress(MumbaiBillingRegistryAddress)
 	caller, err := oracle_proxy.NewOracleProxyCaller(contractAddress, l.client)
 	if err != nil {
 		return 0, err
@@ -221,44 +218,6 @@ func (l *OracleListener) GetFund(subscriptionId uint64) (uint64, error) {
 		return 0, err
 	}
 	return result.Balance.Uint64(), nil
-}
-
-func (l *OracleListener) GetMumbaiNetSubscriptionBalance(subscriptionId uint64) float64 {
-	client, err := ethclient.Dial(eth.NetMap[eth.MUMBAI_TESTNET])
-	if err != nil {
-		logger.Errorf("connect Mumbai node failed: %s", err)
-		return 0
-	}
-	contractAddress := common.HexToAddress(MumbaiOracleRegistryProxyAddress)
-	caller, err := oracle_proxy.NewOracleProxyCaller(contractAddress, client)
-	if err != nil {
-		return 0
-	}
-	result, err := caller.GetSubscription(&bind.CallOpts{}, subscriptionId)
-	if err != nil {
-		return 0
-	}
-	balance, _ := weiToEth(result.Balance).Float64()
-	return balance
-}
-
-func (l *OracleListener) GetSepoliaSubscriptionBalance(subscriptionId uint64) float64 {
-	client, err := ethclient.Dial(eth.NetMap[eth.SEPOLIA_TESTNET])
-	if err != nil {
-		logger.Errorf("connect Sepolia node failed: %s", err)
-		return 0
-	}
-	contractAddress := common.HexToAddress(SepoliaOracleRegistryProxyAddress)
-	caller, err := oracle_proxy.NewOracleProxyCaller(contractAddress, client)
-	if err != nil {
-		return 0
-	}
-	result, err := caller.GetSubscription(&bind.CallOpts{}, subscriptionId)
-	if err != nil {
-		return 0
-	}
-	balance, _ := weiToEth(result.Balance).Float64()
-	return balance
 }
 
 func GetMumbaiSubscriptionBalance(subscriptionId uint64) (uint64, error) {

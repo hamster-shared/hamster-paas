@@ -143,6 +143,9 @@ func (b *BillingContractEventService) handleSubscriptionFundedData(data *contrac
 	var subscriptionData models.Subscription
 	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
 	if err == nil {
+		amount, _ := weiToEth(data.NewBalance).Float64()
+		subscriptionData.Balance = amount
+		b.db.Save(&subscriptionData)
 		signer := types.NewEIP155Signer(tx.ChainId())
 		fromAddress, err := signer.Sender(tx)
 		if err == nil {
@@ -152,7 +155,6 @@ func (b *BillingContractEventService) handleSubscriptionFundedData(data *contrac
 			depositData.TransactionTx = vLog.TxHash.Hex()
 			depositData.UserId = subscriptionData.UserId
 			depositData.Created = time.Now()
-			amount, _ := weiToEth(data.NewBalance).Float64()
 			depositData.Amount = amount
 			depositData.Address = fromAddress.Hex()
 			b.db.Create(&depositData)
