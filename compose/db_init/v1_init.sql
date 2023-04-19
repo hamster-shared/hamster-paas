@@ -66,7 +66,7 @@ VALUES (
         -- ethereum goerli
         '5',
         'https://chain-logo.api.hamsternet.io/ethereum.svg',
-        'GoerliETH',
+        'ETH',
         'https://goerli.etherscan.io',
         'https://rpc.ankr.com/eth_goerli',
         'ethereum',
@@ -78,7 +78,7 @@ VALUES (
         -- ethereum sepolia
         'aa36a7',
         'https://chain-logo.api.hamsternet.io/ethereum.svg',
-        'SepoliaETH',
+        'ETH',
         'https://sepolia.etherscan.io',
         'https://rpc.ankr.com/eth_sepolia',
         'ethereum',
@@ -90,8 +90,8 @@ VALUES (
         -- sui testnet 不属于 ethereum
         '0',
         'https://chain-logo.api.hamsternet.io/sui.svg',
-        'Sui',
-        '',
+        'SUI',
+        'https://explorer.sui.io/',
         '',
         'sui',
         'testnet',
@@ -166,8 +166,8 @@ VALUES (
         -- aptos 不属于 eth 类型
         '0',
         'https://chain-logo.api.hamsternet.io/aptos.svg',
-        '',
-        '',
+        'APT',
+        'https://explorer.aptoslabs.com/?network=mainnet',
         'https://fullnode.mainnet.aptoslabs.com/v1',
         'aptos',
         'mainnet',
@@ -198,8 +198,8 @@ VALUES (
         -- starknet 不属于 eth 类型
         '0',
         'https://chain-logo.api.hamsternet.io/starknet.svg',
-        '',
-        '',
+        'ETH',
+        'https://starkscan.co/',
         '',
         'starknet',
         'mainnet',
@@ -209,8 +209,8 @@ VALUES (
     (
         '0',
         'https://chain-logo.api.hamsternet.io/starknet.svg',
-        '',
-        '',
+        'ETH',
+        'https://testnet.starkscan.co/',
         '',
         'starknet',
         'testnet-goerli',
@@ -242,7 +242,7 @@ VALUES (
     (
         '501',
         'https://chain-logo.api.hamsternet.io/hamster.svg',
-        'Hamster',
+        'HA',
         'https://hamsternet.io',
         'https://rpc-moonbeam.hamster.newtouch.com',
         'hamster',
