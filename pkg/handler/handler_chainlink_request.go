@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
@@ -232,12 +231,7 @@ func (h *HandlerServer) overview(gin *gin.Context) {
 	}
 	// 获取路径参数
 	network := gin.Param("network")
-	networkType, err := models.ParseNetworkType(network)
-	if err != nil {
-		Fail(err.Error(), gin)
-		return
-	}
-	appResp, err := h.chainLinkRequestService.Overview(user.(aline.User), networkType)
+	appResp, err := h.chainLinkRequestService.Overview(user.(aline.User), network)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return

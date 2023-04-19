@@ -21,9 +21,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var URL = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
-
-var ORACLE = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
+var EthereumSepoliaURL = "wss://eth-sepolia.g.alchemy.com/v2/Zprj6NPmzkOwmoRLGWBo74-S-NkijXeQ"
+var PolygonMumbaiURL = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
+var EthereumSepoliaOracle = "0x649a2C205BE7A3d5e99206CEEFF30c794f0E31EC"
+var PolygonMumbaiOracle = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
 var MumbaiBillingRegistryAddress = "0xEe9Bf52E5Ea228404bB54BCFbbDa8c21131b9039"
 var MumbaiFunctionOracleAddress = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
 var SepoliaBillingRegistryAddress = "0x3c79f56407DCB9dc9b852D139a317246f43750Cc"
@@ -31,18 +32,18 @@ var SepoliaFunctionOracleAddress = "0x649a2C205BE7A3d5e99206CEEFF30c794f0E31EC"
 
 var ORACLE_BILLING_REGISTRY_PROXY = "0xee9bf52e5ea228404bb54bcfbbda8c21131b9039"
 
-func (l *OracleListener) listen() error {
+func (l *OracleListener) listenOracleRequestEvent(ethUrl, contractAddressString string) error {
 	// 连接到 Ethereum 节点
-	client, err := ethclient.Dial(URL)
+	client, err := ethclient.Dial(ethUrl)
 	if err != nil {
-		logger.Errorf("连接到 Ethereum 节点出错: %s", err)
+		logger.Errorf("连接到链节点出错: %s", err)
 		return err
 	}
-	logger.Info("已连接到 Ethereum 节点")
+	logger.Infof("已连接到链节点: %s", ethUrl)
 	l.client = client
 
 	// 智能合约地址
-	contractAddress := common.HexToAddress(ORACLE)
+	contractAddress := common.HexToAddress(contractAddressString)
 
 	// 定义查询过滤器
 	query := ethereum.FilterQuery{
@@ -82,7 +83,15 @@ func (l *OracleListener) listen() error {
 					return err
 				}
 				// spew.Dump(o)
-				l.saveOracleRequestEvent(o)
+				var chain, network string
+				if ethUrl == EthereumSepoliaURL {
+					chain = "Ethereum"
+					network = "Sepolia Testnet"
+				} else {
+					chain = "Polygon"
+					network = "Mumbai Testnet"
+				}
+				l.saveOracleRequestEvent(o, chain, network)
 
 			default:
 				// 非 OracleRequest 事件，不关心
@@ -108,22 +117,38 @@ func NewOracleListener(db *gorm.DB) *OracleListener {
 }
 
 func (l *OracleListener) StartListen() {
-	c := make(chan struct{})
+	mumbaiOracleChan := make(chan struct{})
+	sepoliaOracleChan := make(chan struct{})
 	mumbaiChan := make(chan struct{})
 	sepoliaChan := make(chan struct{})
 	go func() {
 		for {
-			logger.Info("准备监听 Ethereum 获取 oracle request event")
-			err := l.listen()
+			logger.Info("准备监听 polygon mumbai 获取 oracle request event")
+			err := l.listenOracleRequestEvent(PolygonMumbaiURL, PolygonMumbaiOracle)
 			if err != nil {
-				logger.Errorf("监听 eth 出错: %s", err)
+				logger.Errorf("监听 polygon mumbai 出错: %s", err)
 				time.Sleep(5 * time.Second)
 				go func() {
-					c <- struct{}{}
+					mumbaiOracleChan <- struct{}{}
 				}()
 			}
-			<-c
-			logger.Info("准备重试连接 Ethereum")
+			<-mumbaiOracleChan
+			logger.Info("准备重试连接 polygon mumbai")
+		}
+	}()
+	go func() {
+		for {
+			logger.Info("准备监听 ethereum sepolia 获取 oracle request event")
+			err := l.listenOracleRequestEvent(EthereumSepoliaURL, EthereumSepoliaOracle)
+			if err != nil {
+				logger.Errorf("监听 ethereum sepolia 出错: %s", err)
+				time.Sleep(5 * time.Second)
+				go func() {
+					sepoliaOracleChan <- struct{}{}
+				}()
+			}
+			<-sepoliaOracleChan
+			logger.Info("准备重试连接 ethereum sepolia")
 		}
 	}()
 	go func() {
@@ -158,7 +183,7 @@ func (l *OracleListener) StartListen() {
 	}()
 }
 
-func (l *OracleListener) saveOracleRequestEvent(r *oracle.OracleOracleRequest) {
+func (l *OracleListener) saveOracleRequestEvent(r *oracle.OracleOracleRequest, chain, network string) {
 	var event models.OracleRequestEvent
 	event.TransactionHash = r.Raw.TxHash.Hex()
 	event.RequestingContract = r.RequestingContract.Hex()
@@ -170,8 +195,8 @@ func (l *OracleListener) saveOracleRequestEvent(r *oracle.OracleOracleRequest) {
 	event.BlockHash = r.Raw.BlockHash.Hex()
 	event.Index = r.Raw.Index
 	event.Removed = r.Raw.Removed
-	event.Chain = "polygon"
-	event.Network = "testnet-mumbai"
+	event.Chain = chain
+	event.Network = network
 	event.CreatedAt = time.Now()
 	err := l.db.Create(&event).Error
 	if err != nil {

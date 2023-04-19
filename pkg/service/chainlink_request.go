@@ -166,10 +166,13 @@ func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id int64, saveData 
 	return nil
 }
 
-func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.NetworkType) (*models.ApiResponseOverview, error) {
+func (r *ChainLinkRequestService) Overview(user aline.User, networkType string) (*models.ApiResponseOverview, error) {
+	if networkType == "" {
+		networkType = "testnet"
+	}
 	// 首先获取用户的所有订阅
 	var chainSubscriptionList []models.Subscription
-	err := r.db.Model(&models.Subscription{}).Where("user_id = ? and chain = ? and network = ?", user.Id, "polygon", networkType.StringWithSpace()).Find(&chainSubscriptionList).Error
+	err := r.db.Model(&models.Subscription{}).Where("user_id = ? and network LIKE ?", user.Id, fmt.Sprintf("%%%s%%", networkType)).Find(&chainSubscriptionList).Error
 	if err != nil {
 		logger.Errorf("chain link oracle request overview error: %s", err)
 		return nil, err
@@ -186,7 +189,7 @@ func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.N
 	for _, v := range chainSubscriptionList {
 		var result []SqlResult
 		sql := "select created_at from t_cl_oracle_request_event where subscription_id = ? AND chain = ? AND network = ?"
-		err := r.db.Raw(sql, v.ChainSubscriptionId, "polygon", networkType.StringLowerWithDash()).Scan(&result).Error
+		err := r.db.Raw(sql, v.ChainSubscriptionId, v.Chain, v.Network).Scan(&result).Error
 		if err != nil {
 			logger.Errorf("chain link oracle request overview error: %s", err)
 		}
@@ -194,16 +197,18 @@ func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.N
 	}
 
 	var apiResponseOverview models.ApiResponseOverview
-	apiResponseOverview.Network = networkType.StringWithSpace()
+	apiResponseOverview.Network = networkType
 	// 首先过滤出种类
 	for _, v := range chainSubscriptionResultList {
-		if !contains(apiResponseOverview.LegendData, v.Name) {
-			apiResponseOverview.LegendData = append(apiResponseOverview.LegendData, v.Name)
+		if !contains(apiResponseOverview.LegendData, v.Network) {
+			apiResponseOverview.LegendData = append(apiResponseOverview.LegendData, v.Network)
 		}
 	}
+	// 生成 x 轴数据，7 天
 	for i := 0; i < 7; i++ {
 		apiResponseOverview.XaxisData = append(apiResponseOverview.XaxisData, time.Now().AddDate(0, 0, -i).Format("2006-01-02"))
 	}
+	// 反转一下，因为是倒序的
 	apiResponseOverview.XaxisData = reverseString(apiResponseOverview.XaxisData)
 
 	// 根据时间过滤，只保留最近 7 天的请求事件，每天一个，最后成一个数组，最终只要出现的次数而已
@@ -214,7 +219,7 @@ func (r *ChainLinkRequestService) Overview(user aline.User, networkType models.N
 			var count int
 			for _, r := range chainSubscriptionResultList {
 				for _, req := range r.Request {
-					if r.Name == v && strings.Contains(req.CreatedAt.Format("2006-01-02"), x) {
+					if r.Network == v && strings.Contains(req.CreatedAt.Format("2006-01-02"), x) {
 						count++
 					}
 				}
