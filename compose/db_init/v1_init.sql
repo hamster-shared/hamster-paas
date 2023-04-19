@@ -88,11 +88,11 @@ VALUES (
     ),
     (
         -- sui testnet 不属于 ethereum
-        'unknown',
+        '0',
         'https://chain-logo.api.hamsternet.io/sui.svg',
         'Sui',
-        'unknown',
-        'unknown',
+        '',
+        '',
         'sui',
         'testnet',
         'https://sui-testnet.api.hamsternet.io',
@@ -164,9 +164,9 @@ VALUES (
     -- ),
     (
         -- aptos 不属于 eth 类型
-        '1',
+        '0',
         'https://chain-logo.api.hamsternet.io/aptos.svg',
-        'unknown',
+        '',
         '',
         'https://fullnode.mainnet.aptoslabs.com/v1',
         'aptos',
@@ -198,7 +198,7 @@ VALUES (
         -- starknet 不属于 eth 类型
         '0',
         'https://chain-logo.api.hamsternet.io/starknet.svg',
-        'unknown',
+        '',
         '',
         '',
         'starknet',
@@ -209,7 +209,7 @@ VALUES (
     (
         '0',
         'https://chain-logo.api.hamsternet.io/starknet.svg',
-        'unknown',
+        '',
         '',
         '',
         'starknet',

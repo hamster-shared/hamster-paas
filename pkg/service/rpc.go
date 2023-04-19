@@ -104,6 +104,11 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 	}
 	var detail models.RpcChainDetail
 	detail.Chains = chainApps
+	if len(chainApps) > 0 {
+		name, _ := models.ParseChainType(chainApps[0].Name)
+		detail.Name = name.String()
+		detail.Image = chainApps[0].Image
+	}
 	return &detail, nil
 }
 
