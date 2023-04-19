@@ -53,7 +53,7 @@ func newApp(account string, name, description string, chain ChainType, network N
 		Name:        name,
 		Description: description,
 		Chain:       chain.String(),
-		Network:     network.String(),
+		Network:     network.StringWithSpace(),
 	}
 	err := a.generateKey()
 	if err != nil {
@@ -63,7 +63,7 @@ func newApp(account string, name, description string, chain ChainType, network N
 	if err != nil {
 		logger.Errorf("failed to get chain link: %s", err)
 		// 返回错误 该链没有此网络
-		return nil, fmt.Errorf("chain %s has no network %s", chain.String(), network.String())
+		return nil, fmt.Errorf("chain %s has no network %s", chain.String(), network.StringWithSpace())
 	}
 	if httpLink != "" {
 		a.HttpLink = fmt.Sprintf("%s/%s", httpLink, a.ApiKey)
@@ -187,7 +187,7 @@ func getAppBaseInfoByChainNetwork(account string, chain ChainType, network Netwo
 		return nil, err
 	}
 	var app RpcApp
-	if err := db.Where("account = ? AND chain = ? AND network = ?", account, chain.String(), network.String()).First(&app).Error; err != nil {
+	if err := db.Where("account = ? AND chain = ? AND network = ?", account, chain.String(), network.StringWithSpace()).First(&app).Error; err != nil {
 		return nil, err
 	}
 	var appResp ApiResponseRpcApp

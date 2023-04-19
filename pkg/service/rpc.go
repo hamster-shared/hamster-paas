@@ -24,11 +24,11 @@ func NewRpcService(db *gorm.DB) *RpcService {
 func (s *RpcService) GetChains() (chains []models.RpcChain, err error) {
 	err = s.db.Model(&models.RpcChain{}).Find(&chains).Error
 	for i := range chains {
-		chainType, err := models.ParseChainType(chains[i].Name)
-		if err != nil {
-			return nil, err
-		}
+		chainType, _ := models.ParseChainType(chains[i].Name)
+		networkType, _ := models.ParseNetworkType(chains[i].Network)
 		chains[i].Name = chainType.String()
+		chains[i].Network = networkType.StringWithSpace()
+		chains[i].Fullname = fmt.Sprintf("%s %s", chains[i].Name, chains[i].Network)
 	}
 	if err != nil {
 		return nil, err
@@ -90,6 +90,9 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 		}
 		app, err := a.GetAppBaseInfoByChainNetwork(chainType, networkType)
 		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				continue
+			}
 			logger.Errorf("GetAppByChainNetwork error: %s", err)
 			return nil, err
 		}
