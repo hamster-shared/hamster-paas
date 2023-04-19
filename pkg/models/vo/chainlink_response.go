@@ -51,16 +51,17 @@ type ChainLinkSubscriptionPage struct {
 }
 
 type ChainLinkSubscriptionVo struct {
-	Id            uint      `json:"id"`
-	Name          string    `json:"name"`
-	Created       time.Time `json:"created"`
-	Chain         string    `json:"chain"`
-	Network       string    `json:"network"`
-	Consumers     int8      `json:"consumers"`
-	Balance       float64   `json:"balance"`
-	TransactionTx string    `json:"transactionTx"`
-	Admin         string    `json:"admin"`
-	Status        string    `json:"status"`
+	Id                  uint      `json:"id"`
+	ChainSubscriptionId uint      `json:"subscriptionId"`
+	Name                string    `json:"name"`
+	Created             time.Time `json:"created"`
+	Chain               string    `json:"chain"`
+	Network             string    `json:"network"`
+	Consumers           int8      `json:"consumers"`
+	Balance             float64   `json:"balance"`
+	TransactionTx       string    `json:"transactionTx"`
+	Admin               string    `json:"admin"`
+	Status              string    `json:"status"`
 }
 
 type ChainLinkConsumerPage struct {

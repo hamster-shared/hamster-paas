@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
@@ -95,6 +96,18 @@ func (s *ChainLinkSubscriptionService) SubscriptionList(chain, network string, p
 		return &chainLinkSubscriptionPage, result.Error
 	}
 	copier.Copy(&chainLinkSubscriptionVoList, &chainLinkSubscriptionList)
+	oracleListener, err := application.GetBean[*OracleListener]("oracleListener")
+	if err == nil {
+		for _, subscriptionVo := range chainLinkSubscriptionVoList {
+			balance := 0.0
+			if eth.MUMBAI_TESTNET == eth.EthNetwork(subscriptionVo.Network) {
+				balance = oracleListener.GetMumbaiNetSubscriptionBalance(uint64(subscriptionVo.ChainSubscriptionId))
+			} else {
+				balance = oracleListener.GetSepoliaSubscriptionBalance(uint64(subscriptionVo.ChainSubscriptionId))
+			}
+			subscriptionVo.Balance = balance
+		}
+	}
 	chainLinkSubscriptionPage.Data = chainLinkSubscriptionVoList
 	chainLinkSubscriptionPage.Total = total
 	chainLinkSubscriptionPage.Page = page
