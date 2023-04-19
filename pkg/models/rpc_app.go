@@ -62,6 +62,8 @@ func newApp(account string, name, description string, chain ChainType, network N
 	httpLink, wsLink, err := GetChainLink(chain, network)
 	if err != nil {
 		logger.Errorf("failed to get chain link: %s", err)
+		// 返回错误 该链没有此网络
+		return nil, fmt.Errorf("chain %s has no network %s", chain.String(), network.String())
 	}
 	if httpLink != "" {
 		a.HttpLink = fmt.Sprintf("%s/%s", httpLink, a.ApiKey)
@@ -93,7 +95,14 @@ func (a *RpcApp) save() error {
 		appID = 0
 	}
 	a.AppID = appID + 1
-	return db.Model(&RpcApp{}).Create(a).Error
+	err = db.Model(&RpcApp{}).Create(a).Error
+	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return fmt.Errorf("service already active")
+		}
+		return err
+	}
+	return nil
 }
 
 func (a *RpcApp) getCodeExample() (*RpcCodeExample, error) {
