@@ -32,18 +32,6 @@ func (a *RpcAccount) save() error {
 	if err != nil {
 		return err
 	}
-	var chains []RpcChain
-	err = a.db.Model(&RpcChain{}).Find(&chains).Error
-	if err != nil {
-		return err
-	}
-	for _, chain := range chains {
-		name := fmt.Sprintf("%s:%s", chain.Name, chain.Network)
-		_, err = a.CreateAppByString(name, "", chain.Name, chain.Network)
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

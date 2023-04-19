@@ -53,7 +53,7 @@ func newApp(account string, name, description string, chain ChainType, network N
 		Name:        name,
 		Description: description,
 		Chain:       chain.String(),
-		Network:     network.String(),
+		Network:     network.StringWithSpace(),
 	}
 	err := a.generateKey()
 	if err != nil {
@@ -62,6 +62,8 @@ func newApp(account string, name, description string, chain ChainType, network N
 	httpLink, wsLink, err := GetChainLink(chain, network)
 	if err != nil {
 		logger.Errorf("failed to get chain link: %s", err)
+		// 返回错误 该链没有此网络
+		return nil, fmt.Errorf("chain %s has no network %s", chain.String(), network.StringWithSpace())
 	}
 	if httpLink != "" {
 		a.HttpLink = fmt.Sprintf("%s/%s", httpLink, a.ApiKey)
@@ -93,7 +95,14 @@ func (a *RpcApp) save() error {
 		appID = 0
 	}
 	a.AppID = appID + 1
-	return db.Model(&RpcApp{}).Create(a).Error
+	err = db.Model(&RpcApp{}).Create(a).Error
+	if err != nil {
+		if strings.Contains(err.Error(), "Duplicate entry") {
+			return fmt.Errorf("service already active")
+		}
+		return err
+	}
+	return nil
 }
 
 func (a *RpcApp) getCodeExample() (*RpcCodeExample, error) {
@@ -178,7 +187,7 @@ func getAppBaseInfoByChainNetwork(account string, chain ChainType, network Netwo
 		return nil, err
 	}
 	var app RpcApp
-	if err := db.Where("account = ? AND chain = ? AND network = ?", account, chain.String(), network.String()).First(&app).Error; err != nil {
+	if err := db.Where("account = ? AND chain = ? AND network = ?", account, chain.String(), network.StringWithSpace()).First(&app).Error; err != nil {
 		return nil, err
 	}
 	var appResp ApiResponseRpcApp

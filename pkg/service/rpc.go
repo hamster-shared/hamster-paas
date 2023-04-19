@@ -24,11 +24,11 @@ func NewRpcService(db *gorm.DB) *RpcService {
 func (s *RpcService) GetChains() (chains []models.RpcChain, err error) {
 	err = s.db.Model(&models.RpcChain{}).Find(&chains).Error
 	for i := range chains {
-		chainType, err := models.ParseChainType(chains[i].Name)
-		if err != nil {
-			return nil, err
-		}
+		chainType, _ := models.ParseChainType(chains[i].Name)
+		networkType, _ := models.ParseNetworkType(chains[i].Network)
 		chains[i].Name = chainType.String()
+		chains[i].Network = networkType.StringWithSpace()
+		chains[i].Fullname = fmt.Sprintf("%s %s", chains[i].Name, chains[i].Network)
 	}
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (s *RpcService) GetNetworks(chain string) ([]string, error) {
 }
 
 func (s *RpcService) Overview(user aline.User, network string) (*models.ApiResponseOverview, error) {
-	a, err := models.GetRpcAccount(user.Token)
+	a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (s *RpcService) Overview(user aline.User, network string) (*models.ApiRespo
 }
 
 func (s *RpcService) GetMyNetwork(user aline.User, p *models.Pagination) ([]*models.ApiResponseRpcApp, *models.Pagination, error) {
-	a, err := models.GetRpcAccount(user.Token)
+	a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
 	if err != nil {
 		return nil, p, err
 	}
@@ -83,13 +83,16 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 	var chainApps []*models.RpcChainApp
 	for _, chain := range chains {
 		networkType, _ := models.ParseNetworkType(chain.Network)
-		a, err := models.GetRpcAccount(user.Token)
+		a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
 		if err != nil {
 			logger.Errorf("GetRpcAccount error: %s", err)
 			return nil, err
 		}
 		app, err := a.GetAppBaseInfoByChainNetwork(chainType, networkType)
 		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				continue
+			}
 			logger.Errorf("GetAppByChainNetwork error: %s", err)
 			return nil, err
 		}
@@ -118,7 +121,7 @@ func (s *RpcService) AppRequestLog(user aline.User, appKey, page, size string) (
 		Page: pageInt,
 		Size: sizeInt,
 	}
-	a, err := models.GetRpcAccount(user.Token)
+	a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -138,10 +141,10 @@ func (s *RpcService) IsActive(user aline.User, serviceType string) bool {
 	return us.IsActive
 }
 
-func (s *RpcService) ActiveService(user aline.User, serviceType string) string {
+func (s *RpcService) ActiveService(user aline.User, serviceType, chain, network string) (string, error) {
 	t := strings.ToLower(serviceType)
 	if t != string(models.ServiceTypeRpc) && t != string(models.ServiceTypeOracle) {
-		return "service type error, only support rpc and oracle"
+		return "", fmt.Errorf("service type error, only support rpc and oracle")
 	}
 	var us models.UserService
 	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, t).First(&us).Error
@@ -152,11 +155,20 @@ func (s *RpcService) ActiveService(user aline.User, serviceType string) string {
 			us.IsActive = true
 			err = s.db.Model(&models.UserService{}).Create(&us).Error
 			if err != nil {
-				return err.Error()
+				return "", err
 			}
-			return "ok"
 		}
-		return err.Error()
 	}
-	return "service already active"
+	if t == "rpc" {
+		account, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
+		if err != nil {
+			return "", err
+		}
+		_, err = account.CreateAppByString(fmt.Sprintf("%s:%s", strings.ToLower(chain), strings.ToLower(network)), "", chain, network)
+		if err != nil {
+			return "", err
+		}
+		return "ok", nil
+	}
+	return "service already active", nil
 }

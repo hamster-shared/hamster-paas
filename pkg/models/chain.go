@@ -59,6 +59,7 @@ func ParseChainType(s string) (ChainType, error) {
 }
 
 type RpcChain struct {
+	Fullname         string `json:"fullname" gorm:"-"`
 	Name             string `json:"name"`
 	Network          string `json:"network"`
 	HttpAddress      string `json:"httpAddress"`

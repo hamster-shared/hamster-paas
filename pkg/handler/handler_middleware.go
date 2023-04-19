@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"hamster-paas/pkg/rpc/aline"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +35,22 @@ func (h *HandlerServer) activeService(c *gin.Context) {
 		return
 	}
 	serviceName := c.Param("serviceName")
-	msg := h.rpcService.ActiveService(user.(aline.User), serviceName)
+	type ApiRequest struct {
+		Chain   string `json:"chain"`
+		Network string `json:"network"`
+	}
+	var apiRequest ApiRequest
+	if strings.ToLower(serviceName) == "rpc" {
+		err := c.ShouldBindJSON(&apiRequest)
+		if err != nil {
+			Fail(fmt.Sprintf("invalid params, need 'chain' and 'network', err: %s", err), c)
+			return
+		}
+	}
+	msg, err := h.rpcService.ActiveService(user.(aline.User), serviceName, apiRequest.Chain, apiRequest.Network)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
 	Success(msg, c)
 }
