@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS t_cl_request_execute (
     request_id varchar(200) NOT NULL,
     consumer_address char(42) NOT NULL,
     secretsloction tinyint NOT NULL,
-    secret_url varchar(100) NOT NULL,
+    secret_url varchar(255) NOT NULL,
     args varchar(255) NOT NULL,
     transaction_tx char(80) NULL,
     status char(20),
