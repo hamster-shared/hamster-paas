@@ -90,10 +90,14 @@ func (b *BillingContractEventService) handleBillingEndData(data *contract.Billin
 	var subscriptionData models.Subscription
 	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, b.network).First(&subscriptionData).Error
 	if err == nil {
+		amount, _ := weiToEth(data.TotalCost).Float64()
+		if subscriptionData.Balance > amount {
+			subscriptionData.Balance = subscriptionData.Balance - amount
+			b.db.Save(&subscriptionData)
+		}
 		var execData models.RequestExecute
 		err = b.db.Model(models.RequestExecute{}).Where("request_id=?", fmt.Sprintf("0x%s", ethStr)).First(&execData).Error
 		if err == nil {
-			amount, _ := weiToEth(data.TotalCost).Float64()
 			execData.Amount = amount
 			b.db.Save(&execData)
 		}
