@@ -73,6 +73,8 @@ type RpcChain struct {
 }
 
 type RpcChainDetail struct {
+	Name   string         `json:"name"`
+	Image  string         `json:"image"`
 	Chains []*RpcChainApp `json:"chains"`
 }
 
