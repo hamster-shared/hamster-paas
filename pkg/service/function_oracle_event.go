@@ -24,13 +24,15 @@ type FunctionOracleEventService struct {
 	functionOracleContractAddress common.Address
 	client                        *ethclient.Client
 	db                            *gorm.DB
+	network                       eth.EthNetwork
 }
 
-func NewFunctionOracleEventService(functionOracleContractAddress string, client *ethclient.Client, db *gorm.DB) *FunctionOracleEventService {
+func NewFunctionOracleEventService(functionOracleContractAddress string, client *ethclient.Client, db *gorm.DB, network eth.EthNetwork) *FunctionOracleEventService {
 	return &FunctionOracleEventService{
 		functionOracleContractAddress: common.HexToAddress(functionOracleContractAddress),
 		client:                        client,
 		db:                            db,
+		network:                       network,
 	}
 }
 
@@ -82,7 +84,7 @@ func (f *FunctionOracleEventService) oracleRequestListen() {
 func (f *FunctionOracleEventService) handleWatchData(data *contract.ContractOracleRequest, vLog types.Log) {
 	ethStr := hex.EncodeToString(data.RequestId[:])
 	var subscriptionData models.Subscription
-	err := f.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
+	err := f.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, f.network).First(&subscriptionData).Error
 	if err == nil {
 		var execData models.RequestExecute
 		err = f.db.Model(models.RequestExecute{}).Where("transaction_tx=?", vLog.TxHash.Hex()).First(&execData).Error

@@ -30,6 +30,8 @@ var MumbaiFunctionOracleAddress = "0xeA6721aC65BCeD841B8ec3fc5fEdeA6141a0aDE4"
 var SepoliaBillingRegistryAddress = "0x3c79f56407DCB9dc9b852D139a317246f43750Cc"
 var SepoliaFunctionOracleAddress = "0x649a2C205BE7A3d5e99206CEEFF30c794f0E31EC"
 
+var ORACLE_BILLING_REGISTRY_PROXY = "0xee9bf52e5ea228404bb54bcfbbda8c21131b9039"
+
 func (l *OracleListener) listenOracleRequestEvent(ethUrl, contractAddressString string) error {
 	// 连接到 Ethereum 节点
 	client, err := ethclient.Dial(ethUrl)
@@ -208,7 +210,7 @@ func (l *OracleListener) GetFund(subscriptionId uint64) (uint64, error) {
 	if l.client == nil {
 		return 0, fmt.Errorf("eth client is nil")
 	}
-	contractAddress := common.HexToAddress(MumbaiBillingRegistryAddress)
+	contractAddress := common.HexToAddress(ORACLE_BILLING_REGISTRY_PROXY)
 	caller, err := oracle_proxy.NewOracleProxyCaller(contractAddress, l.client)
 	if err != nil {
 		return 0, err
@@ -235,9 +237,9 @@ func (l *OracleListener) MumbaiListen() error {
 		return err
 	}
 	logger.Info("connected Mumbai node")
-	billingRegistryService := NewBillingContractEventService(MumbaiBillingRegistryAddress, client, l.db)
+	billingRegistryService := NewBillingContractEventService(MumbaiBillingRegistryAddress, client, l.db, eth.MUMBAI_TESTNET)
 	billingRegistryService.BillingRegistryListen()
-	functionOracleService := NewFunctionOracleEventService(MumbaiFunctionOracleAddress, client, l.db)
+	functionOracleService := NewFunctionOracleEventService(MumbaiFunctionOracleAddress, client, l.db, eth.MUMBAI_TESTNET)
 	functionOracleService.FunctionOracleListen()
 	return nil
 }
@@ -249,9 +251,9 @@ func (l *OracleListener) SepoliaListen() error {
 		return err
 	}
 	logger.Info("connected Sepolia node")
-	billingRegistryService := NewBillingContractEventService(SepoliaBillingRegistryAddress, client, l.db)
+	billingRegistryService := NewBillingContractEventService(SepoliaBillingRegistryAddress, client, l.db, eth.SEPOLIA_TESTNET)
 	billingRegistryService.BillingRegistryListen()
-	functionOracleService := NewFunctionOracleEventService(SepoliaFunctionOracleAddress, client, l.db)
+	functionOracleService := NewFunctionOracleEventService(SepoliaFunctionOracleAddress, client, l.db, eth.SEPOLIA_TESTNET)
 	functionOracleService.FunctionOracleListen()
 	return nil
 }

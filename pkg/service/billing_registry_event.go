@@ -25,13 +25,15 @@ type BillingContractEventService struct {
 	billingContractAddress common.Address
 	client                 *ethclient.Client
 	db                     *gorm.DB
+	network                eth.EthNetwork
 }
 
-func NewBillingContractEventService(billingContractAddress string, client *ethclient.Client, db *gorm.DB) *BillingContractEventService {
+func NewBillingContractEventService(billingContractAddress string, client *ethclient.Client, db *gorm.DB, network eth.EthNetwork) *BillingContractEventService {
 	return &BillingContractEventService{
 		billingContractAddress: common.HexToAddress(billingContractAddress),
 		client:                 client,
 		db:                     db,
+		network:                network,
 	}
 }
 
@@ -86,7 +88,7 @@ func (b *BillingContractEventService) billingEndListen() {
 func (b *BillingContractEventService) handleBillingEndData(data *contract.BillingRegistryBillingEnd) {
 	ethStr := hex.EncodeToString(data.RequestId[:])
 	var subscriptionData models.Subscription
-	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
+	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, b.network).First(&subscriptionData).Error
 	if err == nil {
 		var execData models.RequestExecute
 		err = b.db.Model(models.RequestExecute{}).Where("request_id=?", fmt.Sprintf("0x%s", ethStr)).First(&execData).Error
@@ -141,7 +143,7 @@ func (b *BillingContractEventService) subscriptionFundedListen() {
 
 func (b *BillingContractEventService) handleSubscriptionFundedData(data *contract.BillingRegistrySubscriptionFunded, tx *types.Transaction, vLog types.Log) {
 	var subscriptionData models.Subscription
-	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, eth.MUMBAI_TESTNET).First(&subscriptionData).Error
+	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, b.network).First(&subscriptionData).Error
 	if err == nil {
 		amount, _ := weiToEth(data.NewBalance).Float64()
 		subscriptionData.Balance = amount
