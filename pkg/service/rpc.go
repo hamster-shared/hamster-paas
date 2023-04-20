@@ -195,7 +195,7 @@ func (s *RpcService) ActiveService(user aline.User, serviceType, chain, network 
 	if t == "rpc" {
 		return s.ActiveServiceRpc(user, chain, network)
 	}
-	return "service already active", nil
+	return "ok", nil
 }
 
 func (s *RpcService) ActiveServiceRpc(user aline.User, chain, network string) (string, error) {
