@@ -16,9 +16,9 @@ func NewMiddleWareService(db *gorm.DB) *MiddleWareService {
 	}
 }
 
-func (s *MiddleWareService) MiddleWareRpc() ([]*models.MiddleWareRpc, error) {
+func (s *MiddleWareService) MiddleWareRpc(userID string) ([]*models.MiddleWareRpc, error) {
 	rpcService := NewRpcService(s.db)
-	chains, err := rpcService.GetChains()
+	chains, err := rpcService.GetChainsWithUserID(userID)
 	if err != nil {
 		return nil, err
 	}
