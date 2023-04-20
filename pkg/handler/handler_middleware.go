@@ -24,8 +24,8 @@ func (h *HandlerServer) serviceIsActive(c *gin.Context) {
 		return
 	}
 	serviceName := c.Param("serviceName")
-	ok = h.rpcService.IsActive(user.(aline.User), serviceName)
-	Success(ok, c)
+	response := h.rpcService.IsActive(user.(aline.User), serviceName)
+	Success(response, c)
 }
 
 func (h *HandlerServer) activeService(c *gin.Context) {

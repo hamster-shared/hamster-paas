@@ -133,17 +133,45 @@ func (s *RpcService) AppRequestLog(user aline.User, appKey, page, size string) (
 	return a.GetAppRequestLogs(appKey, p)
 }
 
-func (s *RpcService) IsActive(user aline.User, serviceType string) bool {
+type ServiceIsActiveResponse struct {
+	ServiceType string `json:"service_type"`
+	IsActive    bool   `json:"is_active"`
+	ChildList   any    `json:"child_list"`
+}
+
+func (s *RpcService) IsActive(user aline.User, serviceType string) ServiceIsActiveResponse {
 	t := strings.ToLower(serviceType)
 	if t != string(models.ServiceTypeRpc) && t != string(models.ServiceTypeOracle) {
-		return false
+		return ServiceIsActiveResponse{ServiceType: serviceType, IsActive: false}
 	}
+	if t == string(models.ServiceTypeRpc) {
+		return s.getActiveRpcServiceResponse(fmt.Sprintf("%d", user.Id))
+	} else {
+		return s.getActiveOracleServiceResponse(fmt.Sprintf("%d", user.Id))
+	}
+}
+
+func (s *RpcService) getActiveRpcServiceResponse(userID string) ServiceIsActiveResponse {
 	var us models.UserService
-	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, strings.ToLower(serviceType)).First(&us).Error
+	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", userID, string(models.ServiceTypeRpc)).First(&us).Error
 	if err != nil {
-		return false
+		return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeRpc), IsActive: false}
 	}
-	return us.IsActive
+	var rpcApps []models.RpcApp
+	err = s.db.Model(&models.RpcApp{}).Where("account = ?", userID).Find(&rpcApps).Error
+	if err != nil {
+		return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeRpc), IsActive: us.IsActive}
+	}
+	return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeRpc), IsActive: us.IsActive, ChildList: rpcApps}
+}
+
+func (s *RpcService) getActiveOracleServiceResponse(userID string) ServiceIsActiveResponse {
+	var us models.UserService
+	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", userID, string(models.ServiceTypeOracle)).First(&us).Error
+	if err != nil {
+		return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeOracle), IsActive: false}
+	}
+	return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeOracle), IsActive: us.IsActive, ChildList: []string{"Chainlink Functios"}}
 }
 
 func (s *RpcService) ActiveService(user aline.User, serviceType, chain, network string) (string, error) {
@@ -165,15 +193,19 @@ func (s *RpcService) ActiveService(user aline.User, serviceType, chain, network 
 		}
 	}
 	if t == "rpc" {
-		account, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
-		if err != nil {
-			return "", err
-		}
-		_, err = account.CreateAppByString(fmt.Sprintf("%s:%s", strings.ToLower(chain), strings.ToLower(network)), "", chain, network)
-		if err != nil {
-			return "", err
-		}
-		return "ok", nil
+		return s.ActiveServiceRpc(user, chain, network)
 	}
 	return "service already active", nil
+}
+
+func (s *RpcService) ActiveServiceRpc(user aline.User, chain, network string) (string, error) {
+	account, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
+	if err != nil {
+		return "", err
+	}
+	_, err = account.CreateAppByString(fmt.Sprintf("%s:%s", strings.ToLower(chain), strings.ToLower(network)), "", chain, network)
+	if err != nil {
+		return "", err
+	}
+	return "ok", nil
 }
