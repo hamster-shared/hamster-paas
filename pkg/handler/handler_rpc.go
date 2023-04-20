@@ -57,7 +57,12 @@ func (h *HandlerServer) rpcGetMyNetwork(c *gin.Context) {
 }
 
 func (h *HandlerServer) rpcGetChains(c *gin.Context) {
-	chains, err := h.rpcService.GetChains()
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	chains, err := h.rpcService.GetChainsWithUserID(fmt.Sprintf("%d", user.(aline.User).Id))
 	if err != nil {
 		Fail(err.Error(), c)
 		return

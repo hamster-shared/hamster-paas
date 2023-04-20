@@ -23,6 +23,9 @@ func NewRpcService(db *gorm.DB) *RpcService {
 
 func (s *RpcService) GetChains() (chains []models.RpcChain, err error) {
 	err = s.db.Model(&models.RpcChain{}).Find(&chains).Error
+	if err != nil {
+		return nil, err
+	}
 	for i := range chains {
 		chainType, _ := models.ParseChainType(chains[i].Name)
 		networkType, _ := models.ParseNetworkType(chains[i].Network)
@@ -30,8 +33,32 @@ func (s *RpcService) GetChains() (chains []models.RpcChain, err error) {
 		chains[i].Network = networkType.StringWithSpace()
 		chains[i].Fullname = fmt.Sprintf("%s %s", chains[i].Name, chains[i].Network)
 	}
+	return
+}
+
+func (s *RpcService) GetChainsWithUserID(userID string) (chains []models.RpcChain, err error) {
+	err = s.db.Model(&models.RpcChain{}).Find(&chains).Error
 	if err != nil {
 		return nil, err
+	}
+	var userChains []models.RpcApp
+	err = s.db.Model(&models.RpcApp{}).Where("account = ?", userID).Find(&userChains).Error
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return nil, err
+		}
+	}
+	for i := range chains {
+		chainType, _ := models.ParseChainType(chains[i].Name)
+		networkType, _ := models.ParseNetworkType(chains[i].Network)
+		chains[i].Name = chainType.String()
+		chains[i].Network = networkType.StringWithSpace()
+		chains[i].Fullname = fmt.Sprintf("%s %s", chains[i].Name, chains[i].Network)
+		for _, userChain := range userChains {
+			if userChain.Chain == chains[i].Name && userChain.Network == chains[i].Network {
+				chains[i].UserActive = true
+			}
+		}
 	}
 	return
 }

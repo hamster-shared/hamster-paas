@@ -70,6 +70,7 @@ type RpcChain struct {
 	NetworkUrl       string `json:"networkUrl"`
 	NetworkName      string `json:"networkName"`
 	Image            string `json:"image"`
+	UserActive       bool   `json:"userActive"`
 }
 
 type RpcChainDetail struct {
