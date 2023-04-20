@@ -40,7 +40,11 @@ func (l *OracleListener) listenOracleRequestEvent(ethUrl, contractAddressString 
 		return err
 	}
 	logger.Infof("已连接到链节点: %s", ethUrl)
-	l.client = client
+	if ethUrl == EthereumSepoliaURL {
+		l.ethereumSepoliaClient = client
+	} else {
+		l.polygonMumbaiClient = client
+	}
 
 	// 智能合约地址
 	contractAddress := common.HexToAddress(contractAddressString)
@@ -106,8 +110,9 @@ func getOracleRequestTopic() common.Hash {
 }
 
 type OracleListener struct {
-	client *ethclient.Client
-	db     *gorm.DB
+	polygonMumbaiClient   *ethclient.Client
+	ethereumSepoliaClient *ethclient.Client
+	db                    *gorm.DB
 }
 
 func NewOracleListener(db *gorm.DB) *OracleListener {
@@ -207,11 +212,11 @@ func (l *OracleListener) saveOracleRequestEvent(r *oracle.OracleOracleRequest, c
 }
 
 func (l *OracleListener) GetFund(subscriptionId uint64) (uint64, error) {
-	if l.client == nil {
+	if l.polygonMumbaiClient == nil {
 		return 0, fmt.Errorf("eth client is nil")
 	}
 	contractAddress := common.HexToAddress(ORACLE_BILLING_REGISTRY_PROXY)
-	caller, err := oracle_proxy.NewOracleProxyCaller(contractAddress, l.client)
+	caller, err := oracle_proxy.NewOracleProxyCaller(contractAddress, l.polygonMumbaiClient)
 	if err != nil {
 		return 0, err
 	}
