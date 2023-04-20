@@ -134,9 +134,9 @@ func (s *RpcService) AppRequestLog(user aline.User, appKey, page, size string) (
 }
 
 type ServiceIsActiveResponse struct {
-	ServiceType string `json:"service_type"`
-	IsActive    bool   `json:"is_active"`
-	ChildList   any    `json:"child_list"`
+	ServiceType string `json:"serviceType"`
+	IsActive    bool   `json:"isActive"`
+	ChildList   any    `json:"childList"`
 }
 
 func (s *RpcService) IsActive(user aline.User, serviceType string) ServiceIsActiveResponse {
