@@ -9,7 +9,12 @@ import (
 )
 
 func (h *HandlerServer) middlewareRpc(c *gin.Context) {
-	result, err := h.middleWareService.MiddleWareRpc()
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+	result, err := h.middleWareService.MiddleWareRpc(fmt.Sprintf("%d", user.(aline.User).Id))
 	if err != nil {
 		Fail(err.Error(), c)
 		return
