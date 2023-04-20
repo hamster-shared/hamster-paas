@@ -65,6 +65,17 @@ func (r *ChainLinkRequestService) SaveChainLinkRequest(saveData vo.ChainLinkRequ
 	return errors.New(fmt.Sprintf("chainlink request:%s already exists", saveData.Name))
 }
 
+func (r *ChainLinkRequestService) GetRequestById(id int) (vo.ChainLinkRequestVo, error) {
+	var chainLinkRequest models.Request
+	var data vo.ChainLinkRequestVo
+	err := r.db.Model(models.Request{}).Where("id =?", id).First(&chainLinkRequest).Error
+	if err != nil {
+		return data, err
+	}
+	copier.Copy(&data, &chainLinkRequest)
+	return data, nil
+}
+
 func (r *ChainLinkRequestService) UpdateChainLinkRequest(id int64, updateData vo.ChainLinkRequest) error {
 	var chainLinkRequest models.Request
 	err := r.db.Where("name = ? and user_id = ?", updateData.Name, updateData.UserId).First(&chainLinkRequest).Error

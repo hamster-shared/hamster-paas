@@ -193,6 +193,22 @@ func (h *HandlerServer) saveChainLinkRequestExec(gin *gin.Context) {
 	Success(data, gin)
 }
 
+func (h *HandlerServer) getRequestId(gin *gin.Context) {
+	idStr := gin.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		logger.Error(fmt.Sprintf("request id question: %s", err.Error()))
+		Fail(err.Error(), gin)
+		return
+	}
+	data, err := h.chainLinkRequestService.GetRequestById(id)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(data, gin)
+}
+
 func (h *HandlerServer) updateChainLinkRequestById(gin *gin.Context) {
 	idStr := gin.Param("id")
 	id, err := strconv.Atoi(idStr)
