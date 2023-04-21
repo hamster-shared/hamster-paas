@@ -49,16 +49,23 @@ func NewLogParser() (*LogParser, error) {
 	// 创建索引
 	index := p.client.Index("nginx")
 	// 美丽搜索默认是容错的，我们不需要这个功能，禁用它
-	index.UpdateTypoTolerance(&meilisearch.TypoTolerance{
+	_, err = index.UpdateTypoTolerance(&meilisearch.TypoTolerance{
 		Enabled: false,
 	})
+	if err != nil {
+		logger.Errorf("设置美丽搜索不容错失败: %s", err)
+	}
 	// 添加文档，主键为 request_id
-	taskInfo, err := index.AddDocumentsNdjsonFromReader(file, "request_id")
+	_, err = index.AddDocumentsNdjsonFromReader(file, "request_id")
 	if err != nil {
 		logger.Errorf("meili search index error: %s", err)
 		return nil, err
 	}
-	logger.Debugf("meili search index taskInfo: %v", taskInfo)
+	taskInfo, err := index.UpdateSearchableAttributes(&[]string{"msec", "status", "request_uri"})
+	if err != nil {
+		logger.Errorf("meili search index error: %s", err)
+		return nil, err
+	}
 	p.latestTime = time.Now().Unix()
 	if taskInfo.Status == "failed" {
 		logger.Errorf("meili search index failed: %v", taskInfo)
@@ -67,18 +74,17 @@ func NewLogParser() (*LogParser, error) {
 
 	// 设置过滤器
 	filters := []string{
-		"msec", "connection", "connection_requests", "pid", "request_id", "request_length", "remote_addr", "remote_user", "remote_port", "time_local", "time_iso8601", "request", "request_uri", "args", "status", "body_bytes_sent", "bytes_sent", "http_referer", "http_user_agent", "http_x_forwarded_for", "http_host", "server_name", "request_time", "upstream", "upstream_connect_time", "upstream_header_time", "upstream_response_time", "upstream_response_length", "upstream_cache_status", "ssl_protocol", "ssl_cipher", "scheme", "request_method", "server_protocol", "pipe", "gzip_ratio", "http_cf_ray",
+		"msec", "status", "request_uri",
 	}
 	settings := meilisearch.Settings{
 		FilterableAttributes: filters,
 		SortableAttributes:   filters,
 	}
-	resp, err := client.Index("nginx").UpdateSettings(&settings)
+	_, err = client.Index("nginx").UpdateSettings(&settings)
 	if err != nil {
 		logger.Errorf("meili search update settings error: %s", err)
 		return nil, err
 	}
-	logger.Debugf("meili search update settings: %v", resp)
 
 	// 定时更新文档，每 1 秒
 	go p.TimedUpdate(1)

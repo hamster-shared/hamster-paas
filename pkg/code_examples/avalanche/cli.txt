@@ -1,5 +1,1 @@
 curl --url %s/ext/health -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"health.health","id":1}'
-
-
-
-curl --url http://127.0.0.1:9912/avalanche/3a269db1e1b366aaad0f77a8e9cb/ext/health -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"health.health","id":1}'
