@@ -1,0 +1,8 @@
+import requests
+
+url = "%s/api/v2/getAddressInformation?address=1"
+headers = {"accept": "application/json"}
+
+response = requests.get(url, headers=headers)
+
+print(response.text)
