@@ -124,6 +124,8 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 			return nil, err
 		}
 		chain.NetworkName = fmt.Sprintf("%s %s", chainType.String(), networkType.StringWithSpace())
+		chain.Network = networkType.StringWithSpace()
+		chain.Name = chainType.String()
 		var chainApp models.RpcChainApp
 		chainApp.RpcChain = chain
 		chainApp.App = app
