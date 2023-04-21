@@ -687,8 +687,84 @@ data:
                 rewrite ^(.*)$ /polygon-ws-mumbai;
             }
 
+            location /ton/ {
+                rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                proxy_set_header X-API-Key 'fc9ba9fd5f1da3b9f4e8865c221b0911c044a34db0753cceac8da21929c09760';
+                proxy_pass https://toncenter.com;
+                proxy_set_header User-Agent $http_user_agent;
+                proxy_set_header Referer $http_referer;
+                proxy_ssl_server_name on;
+                proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+            }
+
+            # arbitrum
+            location /arbitrum {
+                proxy_pass https://arb1.arbitrum.io/rpc	;
+                proxy_set_header User-Agent $http_user_agent;
+                proxy_set_header Referer $http_referer;
+                proxy_ssl_server_name on;
+                proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+            }
+
+            location ^~ /arbitrum/ {
+                rewrite ^(.*)$ /ethereum;
+            }
+
+            location /arbitrum-ws {
+                proxy_pass https://arb1.arbitrum.io/feed	;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection $connection_upgrade;
+
+                proxy_set_header User-Agent $http_user_agent;
+                proxy_set_header Referer $http_referer;
+
+                proxy_ssl_server_name on;
+                proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+            }
+
+            location ^~ /arbitrum-ws/ {
+                rewrite ^(.*)$ /arbitrum-ws;
+            }
+
+            # arbitrum goerli
+            location /arbitrum-goerli {
+                proxy_pass https://goerli-rollup.arbitrum.io/rpc	;
+                proxy_set_header User-Agent $http_user_agent;
+                proxy_set_header Referer $http_referer;
+                proxy_ssl_server_name on;
+                proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+            }
+
+            location ^~ /arbitrum-goerli/ {
+                rewrite ^(.*)$ /ethereum-goerli;
+            }
+
+            location /arbitrum-goerli-ws {
+                proxy_pass https://goerli-rollup.arbitrum.io/feed	;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection $connection_upgrade;
+
+                proxy_set_header User-Agent $http_user_agent;
+                proxy_set_header Referer $http_referer;
+
+                proxy_ssl_server_name on;
+                proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+            }
+
+            location ^~ /arbitrum-goerli-ws/ {
+                rewrite ^(.*)$ /arbitrum-goerli-ws;
+            }
         }
     }
+
+
 
 ---
 apiVersion: v1

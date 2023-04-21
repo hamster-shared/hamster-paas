@@ -21,38 +21,44 @@ const (
 	Aptos
 	Sui
 	Hamster
+	Ton
+	Arbitrum
 )
 
 func (c ChainType) String() string {
-	return [...]string{"Ethereum", "Bsc", "Polygon", "Avalanche", "Optimism", "StarkNet", "Near", "Aptos", "Sui", "Hamster"}[c]
+	return [...]string{"Ethereum", "Bsc", "Polygon", "Avalanche", "Optimism", "StarkNet", "Near", "Aptos", "Sui", "Hamster", "Ton", "Arbitrum"}[c]
 }
 
 func (c ChainType) StringLower() string {
-	return [...]string{"ethereum", "bsc", "polygon", "avalanche", "optimism", "starknet", "near", "aptos", "sui", "hamster"}[c]
+	return [...]string{"ethereum", "bsc", "polygon", "avalanche", "optimism", "starknet", "near", "aptos", "sui", "hamster", "ton", "arbitrum"}[c]
 }
 
 func ParseChainType(s string) (ChainType, error) {
 	switch strings.ToLower(s) {
-	case "ethereum", "Ethereum":
+	case "ethereum":
 		return Ethereum, nil
-	case "bsc", "Bsc":
+	case "bsc":
 		return Bsc, nil
-	case "polygon", "Polygon":
+	case "polygon":
 		return Polygon, nil
-	case "avalanche", "Avalanche":
+	case "avalanche":
 		return Avalanche, nil
-	case "optimism", "Optimism":
+	case "optimism":
 		return Optimism, nil
-	case "starknet", "Starknet":
+	case "starknet":
 		return StarkNet, nil
-	case "near", "Near":
+	case "near":
 		return Near, nil
-	case "aptos", "Aptos":
+	case "aptos":
 		return Aptos, nil
-	case "sui", "Sui":
+	case "sui":
 		return Sui, nil
-	case "hamster", "Hamster":
+	case "hamster":
 		return Hamster, nil
+	case "ton":
+		return Ton, nil
+	case "arbitrum":
+		return Arbitrum, nil
 	default:
 		return Ethereum, fmt.Errorf("invalid chain type: %s", s)
 	}

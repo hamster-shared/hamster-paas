@@ -249,7 +249,44 @@ VALUES (
         'testnet-moonbeam',
         '',
         ''
-    );
+    ),
+    (
+        -- ton 不属于 ethereum
+        '0',
+        'https://chain-logo.api.hamsternet.io/ton.svg',
+        'TON',
+        'https://tonscan.org/',
+        '',
+        'ton',
+        'mainnet',
+        'https://ton.api.hamsternet.io',
+        ''
+    ),
+    (
+        -- arbitrum
+        '42161',
+        'https://chain-logo.api.hamsternet.io/arbitrum.svg',
+        'ETH',
+        'https://arbiscan.io/',
+        'https://arb1.arbitrum.io/rpc',
+        'arbitrum',
+        'mainnet',
+        'https://arbitrum.api.hamsternet.io',
+        'wss://arbitrum-ws.api.hamsternet.io'
+    ),
+    (
+        -- arbitrum goerli
+        '421613',
+        'https://chain-logo.api.hamsternet.io/arbitrum.svg',
+        'ETH',
+        'https://goerli.arbiscan.io/',
+        'https://goerli-rollup.arbitrum.io/rpc',
+        'arbitrum',
+        'testnet-goerli',
+        'https://arbitrum-goerli.api.hamsternet.io',
+        'wss://arbitrum-goerli-ws.api.hamsternet.io'
+    )
+    ;
 DROP TABLE IF EXISTS t_cl_rpc_code_examples;
 CREATE TABLE IF NOT EXISTS t_cl_rpc_code_examples (
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,

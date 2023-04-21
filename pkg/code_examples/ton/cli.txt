@@ -1,1 +1,1 @@
-curl --url '%s/api/v2/getAddressInformation?address=1 -X 'GET' -H "accept: application/json"
+curl --url '%s/api/v2/getAddressInformation?address=1' -X 'GET' -H "accept: application/json"
