@@ -292,7 +292,7 @@ VALUES (
         'https://chain-logo.api.hamsternet.io/irisnet.svg',
         'ERIS',
         'https://irishub.iobscan.io/',
-        'https://rpc.irishub-1.irisnet.org',
+        'https://evmrpc.irishub-1.irisnet.org',
         'irisnet',
         'mainnet',
         'https://irisnet.api.hamsternet.io',
