@@ -23,14 +23,15 @@ const (
 	Hamster
 	Ton
 	Arbitrum
+	Irisnet
 )
 
 func (c ChainType) String() string {
-	return [...]string{"Ethereum", "Bsc", "Polygon", "Avalanche", "Optimism", "StarkNet", "Near", "Aptos", "Sui", "Hamster", "Ton", "Arbitrum"}[c]
+	return [...]string{"Ethereum", "Bsc", "Polygon", "Avalanche", "Optimism", "StarkNet", "Near", "Aptos", "Sui", "Hamster", "Ton", "Arbitrum", "Irisnet"}[c]
 }
 
 func (c ChainType) StringLower() string {
-	return [...]string{"ethereum", "bsc", "polygon", "avalanche", "optimism", "starknet", "near", "aptos", "sui", "hamster", "ton", "arbitrum"}[c]
+	return [...]string{"ethereum", "bsc", "polygon", "avalanche", "optimism", "starknet", "near", "aptos", "sui", "hamster", "ton", "arbitrum", "irisnet"}[c]
 }
 
 func ParseChainType(s string) (ChainType, error) {
@@ -59,6 +60,8 @@ func ParseChainType(s string) (ChainType, error) {
 		return Ton, nil
 	case "arbitrum":
 		return Arbitrum, nil
+	case "irisnet":
+		return Irisnet, nil
 	default:
 		return Ethereum, fmt.Errorf("invalid chain type: %s", s)
 	}

@@ -1,0 +1,6 @@
+import requests
+
+url = "%s/block_results?height=18952725"
+response = requests.get(url)
+
+print(response.text)
