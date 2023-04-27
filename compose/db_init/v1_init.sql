@@ -285,7 +285,31 @@ VALUES (
         'testnet-goerli',
         'https://arbitrum-goerli.api.hamsternet.io',
         'wss://arbitrum-goerli-ws.api.hamsternet.io'
+    ),
+    (
+        -- irisnet mainnet
+        '1a20',
+        'https://chain-logo.api.hamsternet.io/irisnet.svg',
+        'ERIS',
+        'https://irishub.iobscan.io/',
+        'https://rpc.irishub-1.irisnet.org',
+        'irisnet',
+        'mainnet',
+        'https://irisnet.api.hamsternet.io',
+        ''
     )
+    -- (
+    --     -- irisnet nyancat
+    --     '4130',
+    --     'https://chain-logo.api.hamsternet.io/irisnet.svg',
+    --     'ERIS',
+    --     'https://nyancat.iobscan.io/',
+    --     'https://rpc.irishub-1.irisnet.org',
+    --     'irisnet',
+    --     'testnet-nyancat',
+    --     'https://irisnet-nyancat.api.hamsternet.io',
+    --     ''
+    -- )
     ;
 DROP TABLE IF EXISTS t_cl_rpc_code_examples;
 CREATE TABLE IF NOT EXISTS t_cl_rpc_code_examples (
