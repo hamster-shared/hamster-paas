@@ -11,7 +11,7 @@ services:
       - ./compose/db_init:/docker-entrypoint-initdb.d
       - hamster-paas-db-data:/var/lib/mysql
     env_file:
-      - ./.docker.env
+      - ./.env
 
   nginx:
     container_name: hamster-paas-nginx

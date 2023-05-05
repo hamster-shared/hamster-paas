@@ -11,6 +11,53 @@ _One-stop Toolkit and Middleware Platform for Web3.0 Developers_
 
 </div>
 
+## Getting Started
+
+To get started with Hamster PaaS, follow the steps below:
+
+1. **Prepare your environment file:** You will need to create a `.env` file in the root directory of the project. You can find an example file named `.env.example` in the repository. Copy and rename this file to `.env`, and update the necessary fields according to your configuration.
+
+Here is an example of the contents of the `.env` file:
+
+```
+# GIN_MODE=release
+PORT=9898
+MEILI_SEARCH="http://127.0.0.1:7700"
+NGINX_LOG_PATH=./compose/nginx/log/access.log
+
+MYSQL_DATABASE=aline
+MYSQL_USER=aline
+MYSQL_PASSWORD=changeme
+MYSQL_ROOT_PASSWORD=changeme
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+
+ALINE_DB_USER=root
+ALINE_DB_PASSWORD=changeme
+ALINE_DB_HOST=127.0.0.1
+ALINE_DB_PORT=30303
+ALINE_DB_NAME=aline
+
+FROM_EMAIL=
+EMAIL_PASSWORD=
+```
+
+2. **Start Docker containers:** Run the following command in the terminal to start the required Docker containers:
+
+```bash
+docker-compose up -d
+```
+
+This command will start all the necessary services, such as database and search engine, in the background.
+
+3. **Run the application:** Finally, execute the following command to start the Hamster PaaS application:
+
+```bash
+go run .
+```
+
+The application should now be up and running. You can access the Hamster PaaS dashboard by navigating to `http://localhost:9898` in your browser.
+
 ## About Hamster
 
 Hamster is aiming to build the one-stop infrastructure developer toolkits for Web3.0. It defines itself as a development, operation and maintenance DevOps service platform, providing a set of development tools as well as O&M tools, empowering projects in Web3.0 to improve their coding and delivery speed, quality and efficiency, as well as product reliability & safety.
