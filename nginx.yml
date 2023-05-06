@@ -1,0 +1,603 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hamster-paas-nginx-config
+  namespace: hamster
+data:
+  nginx.conf: |-
+      #user http;
+      worker_processes 1;
+
+      error_log /var/log/nginx/error.log;
+
+      #pid        logs/nginx.pid;
+
+      events {
+          worker_connections 1024;
+      }
+
+      http {
+          include mime.types;
+          default_type application/octet-stream;
+          resolver 127.0.0.11;
+
+          map $request $filtered_request {
+              default "";
+              "~^(?<printable_request>[[:print:]]+)$" $printable_request;
+          }
+
+          log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+          '$status $body_bytes_sent "$http_referer" '
+          '"$http_user_agent" "$http_x_forwarded_for" '
+          '"$request_body"';
+
+          log_format json_analytics
+              '{"msec": $msec, ' # request unixtime in seconds with a milliseconds resolution
+              '"connection": "$connection", ' # connection serial number
+              '"connection_requests": "$connection_requests", ' # number of requests made in connection
+              '"pid": "$pid", ' # process pid
+              '"request_id": "$request_id", ' # the unique request id
+              '"request_length": "$request_length", ' # request length (including headers and body)
+              '"remote_addr": "$remote_addr", ' # client IP
+              '"remote_user": "$remote_user", ' # client HTTP username
+              '"remote_port": "$remote_port", ' # client port
+              '"time_local": "$time_local", '
+              '"time_iso8601": "$time_iso8601", ' # local time in the ISO 8601 standard format
+              '"request": "$filtered_request", ' # full path no arguments if the request
+              '"request_uri": "$request_uri", ' # full path and arguments if the request
+              '"args": "$args", ' # args
+              '"status": "$status", ' # response status code
+              '"body_bytes_sent": "$body_bytes_sent", ' # the number of body bytes exclude headers sent to a client
+              '"bytes_sent": "$bytes_sent", ' # the number of bytes sent to a client
+              '"http_referer": "$http_referer", ' # HTTP referer
+              '"http_user_agent": "$http_user_agent", ' # user agent
+              '"http_x_forwarded_for": "$http_x_forwarded_for", ' # http_x_forwarded_for
+              '"http_host": "$http_host", ' # the request Host: header
+              '"server_name": "$server_name", ' # the name of the vhost serving the request
+              '"request_time": "$request_time", ' # request processing time in seconds with msec resolution
+              '"upstream": "$upstream_addr", ' # upstream backend server for proxied requests
+              '"upstream_connect_time": "$upstream_connect_time", ' # upstream handshake time incl. TLS
+              '"upstream_header_time": "$upstream_header_time", ' # time spent receiving upstream headers
+              '"upstream_response_time": "$upstream_response_time", ' # time spend receiving upstream body
+              '"upstream_response_length": "$upstream_response_length", ' # upstream response length
+              '"upstream_cache_status": "$upstream_cache_status", ' # cache HIT/MISS where applicable
+              '"ssl_protocol": "$ssl_protocol", ' # TLS protocol
+              '"ssl_cipher": "$ssl_cipher", ' # TLS cipher
+              '"scheme": "$scheme", ' # http or https
+              '"request_method": "$request_method", ' # request method
+              '"server_protocol": "$server_protocol", ' # request protocol, like HTTP/1.1 or HTTP/2.0
+              '"pipe": "$pipe", ' # "p" if request was pipelined, "." otherwise
+              '"gzip_ratio": "$gzip_ratio", '
+              '"http_cf_ray": "$http_cf_ray"}';
+
+          access_log /var/log/nginx/access.log json_analytics;
+
+          sendfile on;
+          #tcp_nopush     on;
+
+          keepalive_timeout 65;
+
+          gzip  on;
+
+          map $http_upgrade $connection_upgrade {
+              default upgrade;
+              '' close;
+          }
+
+          server {
+              listen 80;
+              server_name localhost;
+
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-NginX-Proxy true;
+              proxy_set_header X-Forwarded-Proto $scheme;
+              proxy_set_header Host $host;
+              proxy_redirect off;
+              client_max_body_size 20m;
+
+              #charset koi8-r;
+
+              location / {
+                  root /usr/share/nginx/html;
+                  index index.html index.htm;
+              }
+
+              #error_page  404              /404.html;
+
+              error_page 500 502 503 504 /50x.html;
+              location = /50x.html {
+                  root /usr/share/nginx/html;
+              }
+
+              # ethereum mainnet
+              location /ethereum {
+                  proxy_pass https://eth-mainnet.g.alchemy.com/v2/cu_gUD5XTpS23KFjEpz7nGRGwYeWjpD-;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /ethereum/ {
+                  rewrite ^(.*)$ /ethereum;
+              }
+
+              location /ethereum-ws {
+                  proxy_pass https://eth-mainnet.g.alchemy.com/v2/cu_gUD5XTpS23KFjEpz7nGRGwYeWjpD-;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /ethereum-ws/ {
+                  rewrite ^(.*)$ /ethereum-ws;
+              }
+
+              # ethereum goerli
+              location /ethereum-goerli {
+                  proxy_pass https://eth-goerli.g.alchemy.com/v2/_2Jp5G5aTvaG6XY2POIsG6qrENNVmTbQ;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /ethereum-goerli/ {
+                  rewrite ^(.*)$ /ethereum-goerli;
+              }
+
+              location /ethereum-ws-goerli {
+                  proxy_pass https://eth-goerli.g.alchemy.com/v2/_2Jp5G5aTvaG6XY2POIsG6qrENNVmTbQ;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /ethereum-ws-goerli/ {
+                  rewrite ^(.*)$ /ethereum-ws-goerli;
+              }
+
+              # ethereum sepolia
+              location /ethereum-sepolia {
+                  proxy_pass https://eth-sepolia.g.alchemy.com/v2/Zprj6NPmzkOwmoRLGWBo74-S-NkijXeQ;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /ethereum-sepolia/ {
+                  rewrite ^(.*)$ /ethereum-sepolia;
+              }
+
+              location /ethereum-ws-sepolia {
+                  proxy_pass https://eth-sepolia.g.alchemy.com/v2/Zprj6NPmzkOwmoRLGWBo74-S-NkijXeQ;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /ethereum-ws-sepolia/ {
+                  rewrite ^(.*)$ /ethereum-ws-sepolia;
+              }
+
+              # Sui testnet
+              location /sui-testnet {
+                  proxy_pass https://fullnode.testnet.sui.io/;
+                  proxy_set_header user-agent $http_user_agent;
+                  proxy_set_header referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols tlsv1 tlsv1.1 tlsv1.2 tlsv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /sui-testnet/ {
+                  rewrite ^(.*)$ /sui-testnet;
+              }
+
+              # avalanche mainnet
+              location /avalanche {
+                  proxy_pass https://api.avax.network/ext/bc/C/rpc;
+                  proxy_set_header user-agent $http_user_agent;
+                  proxy_set_header referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols tlsv1 tlsv1.1 tlsv1.2 tlsv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /avalanche/ {
+                  rewrite ^(.*)$ /avalanche;
+              }
+
+              location /avalanche-ws {
+                  proxy_pass https://api.avax.network/ext/bc/C/ws;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /avalanche-ws/ {
+                  rewrite ^(.*)$ /avalanche-ws;
+              }
+
+              # avalanche fuji
+              location /avalanche-fuji {
+                  rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                  proxy_pass https://api.avax-test.network/ext/bc/C/rpc;
+                  proxy_set_header user-agent $http_user_agent;
+                  proxy_set_header referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols tlsv1 tlsv1.1 tlsv1.2 tlsv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /avalanche-fuji/ {
+                  rewrite ^(.*)$ /avalanche-fuji;
+              }
+
+              location /avalanche-fuji-ws {
+                  proxy_pass https://api.avax-test.network/ext/bc/C/ws;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /avalanche-fuji-ws/ {
+                  rewrite ^(.*)$ /avalanche-fuji-ws;
+              }
+
+              # optimism-mainnet
+              location /optimism {
+                  proxy_pass https://opt-mainnet.g.alchemy.com/v2/l4Et940Ku_5tNGUJEkxrYY6IBDAPqQ5i;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /optimism/ {
+                  rewrite ^(.*)$ /optimism;
+              }
+
+              location /optimism-ws {
+                  proxy_pass https://opt-mainnet.g.alchemy.com/v2/l4Et940Ku_5tNGUJEkxrYY6IBDAPqQ5i;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /optimism-ws/ {
+                  rewrite ^(.*)$ /optimism-ws;
+              }
+
+              # optimism-goerli
+              location /optimism-goerli {
+                  proxy_pass https://opt-goerli.g.alchemy.com/v2/XlGcdpfsQvgImThhdfLiGGmiiKYjbCxn;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /optimism-goerli/ {
+                  rewrite ^(.*)$ /optimism-goerli;
+              }
+
+              location /optimism-ws-goerli {
+                  proxy_pass https://opt-goerli.g.alchemy.com/v2/XlGcdpfsQvgImThhdfLiGGmiiKYjbCxn;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /optimism-ws-goerli/ {
+                  rewrite ^(.*)$ /optimism-ws-goerli;
+              }
+
+              # near mainnet
+              location /near {
+                  proxy_pass https://near-mainnet.infura.io/v3/e98318a88a6244a2a4cc78400cdf03f2;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /near/ {
+                  rewrite ^(.*)$ /near;
+              }
+
+              # near testnet
+              location /near-testnet {
+                  proxy_pass https://near-testnet.infura.io/v3/e98318a88a6244a2a4cc78400cdf03f2;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /near-testnet/ {
+                  rewrite ^(.*)$ /near-testnet;
+              }
+
+              # aptos mainnet
+              location /aptos/ {
+                  rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                  proxy_pass https://fullnode.mainnet.aptoslabs.com;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              # aptos testnet
+              location /aptos-testnet/ {
+                  rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                  proxy_pass https://fullnode.testnet.aptoslabs.com;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              # aptos devnet
+              location /aptos-devnet/ {
+                  rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                  proxy_pass https://fullnode.devnet.aptoslabs.com;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+
+              # starknet-mainnet
+              location /starknet {
+                  proxy_pass https://starknet-mainnet.infura.io/v3/e98318a88a6244a2a4cc78400cdf03f2;
+                  proxy_set_header user-agent $http_user_agent;
+                  proxy_set_header referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols tlsv1 tlsv1.1 tlsv1.2 tlsv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /starknet/ {
+                  rewrite ^(.*)$ /starknet;
+              }
+
+              # starknet-goerli
+              location /starknet-goerli {
+                  proxy_pass https://starknet-goerli.infura.io/v3/e98318a88a6244a2a4cc78400cdf03f2;
+                  proxy_set_header user-agent $http_user_agent;
+                  proxy_set_header referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols tlsv1 tlsv1.1 tlsv1.2 tlsv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /starknet-goerli/ {
+                  rewrite ^(.*)$ /starknet-goerli;
+              }
+              
+              # polygon-mainnet
+              location /polygon {
+                  proxy_pass https://polygon-mainnet.g.alchemy.com/v2/tgzwxkvgsq4hnvpkyihlgw2tgj7er7vb;
+                  proxy_set_header user-agent $http_user_agent;
+                  proxy_set_header referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols tlsv1 tlsv1.1 tlsv1.2 tlsv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /polygon/ {
+                  rewrite ^(.*)$ /polygon;
+              }
+
+              location /polygon-ws {
+                  proxy_pass https://polygon-mainnet.g.alchemy.com/v2/tgzwxkvgsq4hnvpkyihlgw2tgj7er7vb;
+                  proxy_http_version 1.1;
+                  proxy_set_header upgrade $http_upgrade;
+                  proxy_set_header connection $connection_upgrade;
+
+                  proxy_set_header user-agent $http_user_agent;
+                  proxy_set_header referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols tlsv1 tlsv1.1 tlsv1.2 tlsv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /polygon-ws/ {
+                  rewrite ^(.*)$ /polygon-ws;
+              }
+
+              # polygon-mumbai
+              location /polygon-mumbai {
+                  proxy_pass https://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /polygon-mumbai/ {
+                  rewrite ^(.*)$ /polygon-mumbai;
+              }
+
+              location /polygon-ws-mumbai {
+                  proxy_pass https://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /polygon-ws-mumbai/ {
+                  rewrite ^(.*)$ /polygon-ws-mumbai;
+              }
+
+              location /ton/ {
+                  rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                  proxy_set_header X-API-Key 'fc9ba9fd5f1da3b9f4e8865c221b0911c044a34db0753cceac8da21929c09760';
+                  proxy_pass https://toncenter.com;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              # arbitrum
+              location /arbitrum {
+                  proxy_pass https://arb1.arbitrum.io/rpc	;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /arbitrum/ {
+                  rewrite ^(.*)$ /ethereum;
+              }
+
+              location /arbitrum-ws {
+                  proxy_pass https://arb1.arbitrum.io/feed	;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /arbitrum-ws/ {
+                  rewrite ^(.*)$ /arbitrum-ws;
+              }
+
+              # arbitrum goerli
+              location /arbitrum-goerli {
+                  proxy_pass https://goerli-rollup.arbitrum.io/rpc	;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /arbitrum-goerli/ {
+                  rewrite ^(.*)$ /ethereum-goerli;
+              }
+
+              location /arbitrum-goerli-ws {
+                  proxy_pass https://goerli-rollup.arbitrum.io/feed	;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection $connection_upgrade;
+
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location ^~ /arbitrum-goerli-ws/ {
+                  rewrite ^(.*)$ /arbitrum-goerli-ws;
+              }
+
+              location /irisnet/ {
+                  rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                  proxy_pass https://rpc.irishub-1.irisnet.org;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+              location /irisnet-nyancat/ {
+                  rewrite "/([0-9a-zA-Z]{32})/(.*)$" /$2 break;
+                  proxy_pass https://rpc.nyancat.irisnet.org;
+                  proxy_set_header User-Agent $http_user_agent;
+                  proxy_set_header Referer $http_referer;
+                  proxy_ssl_server_name on;
+                  proxy_ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3;
+                  proxy_ssl_ciphers 'TLS_AES_128_GCM_SHA256:TLS_AES_256_GCM_SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA';
+              }
+
+          }
+      }
