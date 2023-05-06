@@ -144,7 +144,7 @@ VALUES (
     (
         '4E454152',
         'https://chain-logo.api.hamsternet.io/near.svg',
-        'ETH',
+        'NEAR',
         'https://explorer.mainnet.aurora.dev/',
         'https://mainnet.aurora.dev',
         'near',
