@@ -38,7 +38,7 @@ func setup() {
 	NetMap[HAMSTER] = "wss://polygon-mumbai.g.alchemy.com/v2/BM4kwUJwMKmdh1zaDDByzNr19jgzdRiV"
 	NetMap[BSC_MAINNET] = "https://bsc-dataseed1.defibit.io/"
 	NetMap[BSC_TESTNET] = "https://data-seed-prebsc-2-s1.binance.org:8545/"
-	NetMap[MUMBAI_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/ag4Hb9DuuoRxhWou2mHdJrdQdc9_JFXG"
+	NetMap[MUMBAI_TESTNET] = "wss://polygon-mumbai.g.alchemy.com/v2/IEkENUoDuUXe0FgJJKLYJOAjRXrz7f_x"
 	NetMap[SEPOLIA_TESTNET] = "wss://sepolia.infura.io/ws/v3/4dedc8f77c3b43ba80078c3a561939f3"
 	NetMap[MOONBEAM_TESTNET] = "wss://ws-moonbeam.hamster.newtouch.com"
 }
@@ -138,7 +138,7 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 		case err := <-sub.Err():
 			logger.Errorf("subscribe Oracle Request event failed: %s", err)
 		case vLog := <-logs:
-			logger.Info("start watch Oracle Request event")
+			logger.Info("start watch Oracle Request event send email")
 			data, err := contractFilter.ParseOCRResponse(vLog)
 			if err == nil {
 				requestIdData := fmt.Sprintf("0x%s", hex.EncodeToString(data.RequestId[:]))
