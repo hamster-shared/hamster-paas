@@ -80,6 +80,7 @@ type RpcChain struct {
 	NetworkName      string `json:"networkName"`
 	Image            string `json:"image"`
 	UserActive       bool   `json:"userActive" gorm:"-"`
+	IsEvm            bool   `json:"isEvm"`
 }
 
 type RpcChainDetail struct {
