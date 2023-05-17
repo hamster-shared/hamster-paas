@@ -147,9 +147,15 @@ func (b *BillingContractEventService) subscriptionFundedListen() {
 
 func (b *BillingContractEventService) handleSubscriptionFundedData(data *contract.BillingRegistrySubscriptionFunded, tx *types.Transaction, vLog types.Log) {
 	var subscriptionData models.Subscription
+	logger.Info("Start handle data--------------------")
 	err := b.db.Model(models.Subscription{}).Where("chain_subscription_id=? and network=?", data.SubscriptionId, b.network).First(&subscriptionData).Error
 	if err == nil {
 		amount, _ := weiToEth(data.NewBalance).Float64()
+		logger.Info("+++++++++++++++++")
+		logger.Info(b.network)
+		logger.Info(data.SubscriptionId)
+		logger.Info(amount)
+		logger.Info("+++++++++++++++++")
 		subscriptionData.Balance = amount
 		b.db.Save(&subscriptionData)
 		signer := types.NewEIP155Signer(tx.ChainId())
