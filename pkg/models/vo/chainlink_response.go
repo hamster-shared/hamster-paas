@@ -24,6 +24,7 @@ type RequestTemplateVo struct {
 	Id          int64  `json:"id"`
 	Name        string `json:"name"`
 	Author      string `json:"author"`
+	AuthorUrl   string `json:"authorUrl"`
 	Description string `json:"description"`
 }
 

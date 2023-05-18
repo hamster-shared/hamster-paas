@@ -9,6 +9,7 @@ type RequestTemplate struct {
 	Script      string    `json:"script"`
 	Author      string    `json:"author"`
 	Description string    `json:"description"`
+	AuthorUrl   string    `json:"authorUrl"`
 	ParamsCount int       `json:"paramsCount"`
 }
 
