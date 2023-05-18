@@ -200,7 +200,7 @@ func (s *RpcService) getActiveOracleServiceResponse(userID string) ServiceIsActi
 	if err != nil {
 		return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeOracle), IsActive: false}
 	}
-	return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeOracle), IsActive: us.IsActive, ChildList: []string{"Chainlink Functions"}}
+	return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeOracle), IsActive: us.IsActive, ChildList: []string{"HamsLink"}}
 }
 
 func (s *RpcService) ActiveService(user aline.User, serviceType, chain, network string) (string, error) {
