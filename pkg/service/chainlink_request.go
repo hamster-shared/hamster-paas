@@ -78,8 +78,15 @@ func (r *ChainLinkRequestService) GetRequestById(id int) (vo.ChainLinkRequestVo,
 
 func (r *ChainLinkRequestService) UpdateChainLinkRequest(id int64, updateData vo.ChainLinkRequest) error {
 	var chainLinkRequest models.Request
-	err := r.db.Where("user_id = ?", updateData.UserId).First(&chainLinkRequest).Error
+	err := r.db.Where("name = ? and user_id = ?", updateData.Name, updateData.UserId).First(&chainLinkRequest).Error
 	if err == gorm.ErrRecordNotFound {
+		result := r.db.Model(chainLinkRequest).Where("id = ?", id).Updates(models.Request{Name: updateData.Name, Script: updateData.Script})
+		if result.Error != nil {
+			return result.Error
+		}
+		return nil
+	}
+	if chainLinkRequest.Id == id {
 		result := r.db.Model(chainLinkRequest).Where("id = ?", id).Updates(models.Request{Name: updateData.Name, Script: updateData.Script})
 		if result.Error != nil {
 			return result.Error
