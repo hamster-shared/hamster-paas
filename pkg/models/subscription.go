@@ -15,6 +15,7 @@ type Subscription struct {
 	Balance             float64   `json:"balance"`
 	TransactionTx       string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status              string    `json:"status"`
+	ErrorMessage        string    `json:"errorMessage"`
 }
 
 func (m Subscription) TableName() string {

@@ -259,13 +259,13 @@ func GetChainClient(ethNetwork EthNetwork) *ethclient.Client {
 }
 
 // GetTxStatus 获取交易状态
-func GetTxStatus(hash string, ethNetwork EthNetwork, client *ethclient.Client) (uint64, error) {
+func GetTxStatus(hash string, ethNetwork EthNetwork, client *ethclient.Client) (*types.Receipt, error) {
 	if len(hash) != 66 {
-		return 0, fmt.Errorf("hash length error")
+		return nil, fmt.Errorf("hash length error")
 	}
 	r, err := client.TransactionReceipt(context.Background(), common.Hash(common.FromHex(hash)))
 	if err != nil {
-		return 0, fmt.Errorf("get tx receipt faild")
+		return nil, fmt.Errorf("get tx receipt faild")
 	}
-	return r.Status, nil
+	return r, nil
 }

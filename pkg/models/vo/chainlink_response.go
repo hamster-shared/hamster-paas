@@ -63,6 +63,7 @@ type ChainLinkSubscriptionVo struct {
 	TransactionTx       string    `json:"transactionTx"`
 	Admin               string    `json:"admin"`
 	Status              string    `json:"status"`
+	ErrorMessage        string    `json:"errorMessage"`
 }
 
 type ChainLinkConsumerPage struct {

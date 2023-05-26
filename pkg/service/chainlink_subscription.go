@@ -3,11 +3,14 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/utils/logger"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -260,20 +263,37 @@ func checkAndChangeSubscriptionStatus(network models.NetworkType, subscription m
 			break
 		}
 		// 获取 tx 状态
-		txStatus, err := eth.GetTxStatus(subscription.TransactionTx, network.NetworkType(), client)
+		re, err := eth.GetTxStatus(subscription.TransactionTx, network.NetworkType(), client)
 		if err != nil {
 			logger.Errorf("get tx status error: %s", err)
 			continue
 		}
-		if txStatus == 1 {
+		if re.Status == 1 {
 			// 修改状态为成功
 			logger.Infof("Create Subscription : Tx Success, change Subscription id: %d status to success", subscription.Id)
 			db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.SUCCESS)
 			break
-		} else if txStatus == 0 {
+		} else if re.Status == 0 {
 			// 修改状态为失败
 			logger.Infof("Create Subscription : Tx failed, change Subscription id: %d status to failed", subscription.Id)
-			db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Update("status", consts.FAILED)
+			var errorMessage string
+			if len(re.Logs) > 0 {
+				event := &types.Log{}
+				err = rlp.DecodeBytes(re.Logs[0].Data, event)
+				if err != nil {
+					errorMessage = err.Error()
+				}
+				errMsg := string(event.Data)
+				errMsg = strings.Trim(errMsg, "\x00")
+				errorMessage = errMsg
+			} else {
+				errorMessage = "Transaction failed without error information"
+			}
+			updates := map[string]interface{}{
+				"status":        consts.FAILED,
+				"error_message": errorMessage,
+			}
+			db.Model(models.Subscription{}).Where("id = ?", subscription.Id).Updates(updates)
 			break
 		}
 	}

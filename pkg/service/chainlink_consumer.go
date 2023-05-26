@@ -153,12 +153,12 @@ func checkAndChangeConsumerStatus(network models.NetworkType, consumer models.Co
 			break
 		}
 		// 获取tx状态
-		txStatus, err := eth.GetTxStatus(consumer.TransactionTx, network.NetworkType(), client)
+		re, err := eth.GetTxStatus(consumer.TransactionTx, network.NetworkType(), client)
 		if err != nil {
 			logger.Errorf("get tx status error: %s", err)
 			continue
 		}
-		if txStatus == 1 {
+		if re.Status == 1 {
 			// 修改状态为成功
 			logger.Infof("Create Consumer : Tx Success, change consumer id: %d status to success", consumer.Id)
 			db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.SUCCESS)
@@ -175,7 +175,7 @@ func checkAndChangeConsumerStatus(network models.NetworkType, consumer models.Co
 				break
 			}
 			break
-		} else if txStatus == 0 {
+		} else if re.Status == 0 {
 			// 修改状态为失败
 			logger.Infof("Create Consumer : Tx failed, change consumer id: %d status to failed", consumer.Id)
 			db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
