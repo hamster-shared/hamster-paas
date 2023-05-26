@@ -11,6 +11,7 @@ type Deposit struct {
 	Status         string    `json:"status,omitempty"`
 	Address        string    `json:"address"`
 	UserId         uint64    `gorm:"column:user_id" json:"userId"`
+	ErrorMessage   string    `json:"errorMessage"`
 }
 
 func (m Deposit) TableName() string {

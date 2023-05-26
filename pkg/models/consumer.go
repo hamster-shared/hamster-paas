@@ -10,6 +10,7 @@ type Consumer struct {
 	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status          string    `json:"status"`
 	UserId          uint64    `gorm:"column:user_id" json:"userId"`
+	ErrorMessage    string    `json:"errorMessage"`
 }
 
 func (m Consumer) TableName() string {

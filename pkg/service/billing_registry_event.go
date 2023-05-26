@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/ethereum/go-ethereum/rlp"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/consts"
@@ -18,6 +19,7 @@ import (
 	"hamster-paas/pkg/utils/logger"
 	"math"
 	"math/big"
+	"strings"
 	"time"
 )
 
@@ -159,20 +161,42 @@ func (b *BillingContractEventService) handleSubscriptionFundedData(data *contrac
 		subscriptionData.Balance = amount
 		b.db.Save(&subscriptionData)
 		signer := types.NewEIP155Signer(tx.ChainId())
-		fromAddress, err := signer.Sender(tx)
-		if err == nil {
-			var depositData models.Deposit
-			depositData.SubscriptionId = int64(subscriptionData.Id)
-			depositData.Status = consts.SUCCESS
-			depositData.TransactionTx = vLog.TxHash.Hex()
-			depositData.UserId = subscriptionData.UserId
-			depositData.Created = time.Now()
-			depositData.Amount = amount
-			depositData.Address = fromAddress.Hex()
-			b.db.Create(&depositData)
-		} else {
-			logger.Errorf("get from address failed: %s", err)
+		fromAddress, _ := signer.Sender(tx)
+		var status string
+		var errorMessage string
+		re, err := eth.GetTxStatus(tx.Hash().Hex(), b.network, b.client)
+		if err != nil {
+			logger.Errorf("get tx status error: %s", err)
+			status = consts.FAILED
+			errorMessage = "get tx failed"
 		}
+		if re.Status == 1 {
+			status = consts.SUCCESS
+		}
+		if re.Status == 0 {
+			if len(re.Logs) > 0 {
+				event := &types.Log{}
+				err = rlp.DecodeBytes(re.Logs[0].Data, event)
+				if err != nil {
+					errorMessage = err.Error()
+				}
+				errMsg := string(event.Data)
+				errMsg = strings.Trim(errMsg, "\x00")
+				errorMessage = errMsg
+			} else {
+				errorMessage = "Transaction failed without error information"
+			}
+		}
+		var depositData models.Deposit
+		depositData.SubscriptionId = int64(subscriptionData.Id)
+		depositData.Status = status
+		depositData.TransactionTx = vLog.TxHash.Hex()
+		depositData.UserId = subscriptionData.UserId
+		depositData.Created = time.Now()
+		depositData.Amount = amount
+		depositData.Address = fromAddress.Hex()
+		depositData.ErrorMessage = errorMessage
+		b.db.Create(&depositData)
 	}
 }
 

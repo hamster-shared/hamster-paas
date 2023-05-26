@@ -3,6 +3,8 @@ package service
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/consts"
@@ -10,6 +12,7 @@ import (
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/utils/logger"
+	"strings"
 	"time"
 )
 
@@ -178,7 +181,24 @@ func checkAndChangeConsumerStatus(network models.NetworkType, consumer models.Co
 		} else if re.Status == 0 {
 			// 修改状态为失败
 			logger.Infof("Create Consumer : Tx failed, change consumer id: %d status to failed", consumer.Id)
-			db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Update("status", consts.FAILED)
+			var errorMessage string
+			if len(re.Logs) > 0 {
+				event := &types.Log{}
+				err = rlp.DecodeBytes(re.Logs[0].Data, event)
+				if err != nil {
+					errorMessage = err.Error()
+				}
+				errMsg := string(event.Data)
+				errMsg = strings.Trim(errMsg, "\x00")
+				errorMessage = errMsg
+			} else {
+				errorMessage = "Transaction failed without error information"
+			}
+			updates := map[string]interface{}{
+				"status":        consts.FAILED,
+				"error_message": errorMessage,
+			}
+			db.Model(models.Consumer{}).Where("id = ?", consumer.Id).Updates(updates)
 			break
 		}
 	}

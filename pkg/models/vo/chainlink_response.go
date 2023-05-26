@@ -79,6 +79,7 @@ type ChainLinkConsumerVo struct {
 	ConsumerAddress string    `gorm:"column:consumer_address" json:"consumerAddress"`
 	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Status          string    `json:"status"`
+	ErrorMessage    string    `json:"errorMessage"`
 }
 
 type ChainLinkDepositPage struct {
@@ -95,6 +96,7 @@ type ChainLinkDepositVo struct {
 	TransactionTx string    `gorm:"column:transaction_tx" json:"transactionTx"`
 	Address       string    `json:"address"`
 	Status        string    `json:"status,omitempty"`
+	ErrorMessage  string    `json:"errorMessage"`
 }
 
 type ChainLinkExpensePage struct {
