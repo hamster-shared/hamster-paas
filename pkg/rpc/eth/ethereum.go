@@ -133,6 +133,7 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 		logger.Errorf("create Oracle Request failed: %s", err)
 	}
 	// 监听订阅事件
+	logger.Infof("start ------")
 	for {
 		select {
 		case err := <-sub.Err():
