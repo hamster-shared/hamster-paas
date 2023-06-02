@@ -81,6 +81,7 @@ type RpcChain struct {
 	Image            string `json:"image"`
 	UserActive       bool   `json:"userActive" gorm:"-"`
 	IsEvm            bool   `json:"isEvm"`
+	Decimals         int    `json:"decimals" gorm:"-"` // 精度，默认 18
 }
 
 type RpcChainDetail struct {

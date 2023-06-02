@@ -282,7 +282,7 @@ VALUES (
     ),
     (
         -- arbitrum
-        '42161',
+        'a4b1',
         'https://chain-logo.api.hamsternet.io/arbitrum.svg',
         'ETH',
         1,
@@ -295,7 +295,7 @@ VALUES (
     ),
     (
         -- arbitrum goerli
-        '421613',
+        '66eed',
         'https://chain-logo.api.hamsternet.io/arbitrum.svg',
         'ETH',
         1,
@@ -326,7 +326,7 @@ VALUES (
         'ERIS',
         1,
         'https://nyancat.iobscan.io/',
-        'https://rpc.nyancat.irisnet.org/',
+        'https://evmrpc.nyancat.irisnet.org/',
         'irisnet',
         'testnet-nyancat',
         'https://irisnet-nyancat.api.hamsternet.io',

@@ -32,6 +32,7 @@ func (s *RpcService) GetChains() (chains []models.RpcChain, err error) {
 		chains[i].Name = chainType.String()
 		chains[i].Network = networkType.StringWithSpace()
 		chains[i].Fullname = fmt.Sprintf("%s %s", chains[i].Name, chains[i].Network)
+		chains[i].Decimals = 18
 	}
 	return
 }
@@ -54,6 +55,7 @@ func (s *RpcService) GetChainsWithUserID(userID string) (chains []models.RpcChai
 		chains[i].Name = chainType.String()
 		chains[i].Network = networkType.StringWithSpace()
 		chains[i].Fullname = fmt.Sprintf("%s %s", chains[i].Name, chains[i].Network)
+		chains[i].Decimals = 18
 		for _, userChain := range userChains {
 			if userChain.Chain == chains[i].Name && userChain.Network == chains[i].Network {
 				chains[i].UserActive = true
@@ -129,6 +131,7 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 		var chainApp models.RpcChainApp
 		chainApp.RpcChain = chain
 		chainApp.App = app
+		chainApp.Decimals = 18
 		chainApps = append(chainApps, &chainApp)
 	}
 	var detail models.RpcChainDetail
