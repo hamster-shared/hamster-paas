@@ -143,9 +143,9 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 			data, err := contractFilter.ParseOCRResponse(vLog)
 			if err == nil {
 				requestIdData := fmt.Sprintf("0x%s", hex.EncodeToString(data.RequestId[:]))
-				log.Println("++++++++++++++++++++")
+				logger.Debugf("++++++++++++++++++++")
 				fmt.Printf("request id is:%s", requestIdData)
-				log.Println("++++++++++++++++++++")
+				logger.Debugf("++++++++++++++++++++")
 				if requestIdData == requestId {
 					var result string
 					numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
@@ -155,10 +155,11 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 						result = strconv.Itoa(int(numData))
 					}
 					utils.SendEmail(email, requestId, result, requestName, string(data.Err))
-					break
+					return nil
 				}
 			} else {
 				logger.Errorf("parse OracleRequest data failed: %s", err)
+				return err
 			}
 		}
 	}

@@ -181,7 +181,7 @@ func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceAll(userId int6
 		balance, err := GetMumbaiSubscriptionBalance(uint64(subscription.ChainSubscriptionId))
 		if err != nil {
 			logger.Errorf("GetMumbaiSubscriptionBalance error: %s", err)
-			return nil, err
+			continue
 		}
 		subscriptionBalance := SubscriptionBalance{
 			Chain:               subscription.Chain,

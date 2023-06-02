@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"gorm.io/gorm"
-	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/eth"
@@ -36,14 +35,14 @@ func NewFunctionOracleEventService(functionOracleContractAddress string, client 
 	}
 }
 
-func (f *FunctionOracleEventService) FunctionOracleListen() {
-	longLinkPoolService, _ := application.GetBean[*LongLinkPoolService]("longLinkPoolService")
-	longLinkPoolService.Submit(func() {
-		f.oracleRequestListen()
-	})
+func (f *FunctionOracleEventService) FunctionOracleListen(errChan chan error) {
+	go func() {
+		err := f.oracleRequestListen()
+		errChan <- err
+	}()
 }
 
-func (f *FunctionOracleEventService) oracleRequestListen() {
+func (f *FunctionOracleEventService) oracleRequestListen() error {
 	// 定义查询过滤器
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{f.functionOracleContractAddress},
@@ -58,17 +57,20 @@ func (f *FunctionOracleEventService) oracleRequestListen() {
 	sub, err := f.client.SubscribeFilterLogs(context.Background(), query, logs)
 	if err != nil {
 		logger.Errorf("create Mumbai subscribe Oracle Request failed: %s", err)
+		return err
 	}
 
 	contractFilter, err := contract.NewContract(f.functionOracleContractAddress, f.client)
 	if err != nil {
 		logger.Errorf("create Oracle Request failed: %s", err)
+		return err
 	}
 	// 监听订阅事件
 	for {
 		select {
 		case err := <-sub.Err():
 			logger.Errorf("subscribe Oracle Request event failed: %s", err)
+			return err
 		case vLog := <-logs:
 			logger.Info("start watch Oracle Request event")
 			data, err := contractFilter.ParseOracleRequest(vLog)
@@ -76,6 +78,7 @@ func (f *FunctionOracleEventService) oracleRequestListen() {
 				f.handleWatchData(data, vLog)
 			} else {
 				logger.Errorf("parse OracleRequest data failed: %s", err)
+				return err
 			}
 		}
 	}

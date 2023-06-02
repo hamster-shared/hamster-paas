@@ -243,9 +243,23 @@ func (l *OracleListener) MumbaiListen() error {
 	}
 	logger.Info("connected Mumbai node")
 	billingRegistryService := NewBillingContractEventService(MumbaiBillingRegistryAddress, client, l.db, eth.MUMBAI_TESTNET)
-	billingRegistryService.BillingRegistryListen()
+	errChan, errChan2, errChan3 := make(chan error), make(chan error), make(chan error)
+	billingRegistryService.BillingRegistryListen(errChan, errChan2)
 	functionOracleService := NewFunctionOracleEventService(MumbaiFunctionOracleAddress, client, l.db, eth.MUMBAI_TESTNET)
-	functionOracleService.FunctionOracleListen()
+	functionOracleService.FunctionOracleListen(errChan3)
+	for {
+		select {
+		case err1 := <-errChan:
+			logger.Errorf("mubai watch event error, error1 is : %s", err1)
+			return err1
+		case err2 := <-errChan2:
+			logger.Errorf("mubai watch event error, error2 is : %s", err2)
+			return err2
+		case err3 := <-errChan3:
+			logger.Errorf("mubai watch event error, error3 is : %s", err3)
+			return err3
+		}
+	}
 	return nil
 }
 
@@ -257,8 +271,22 @@ func (l *OracleListener) SepoliaListen() error {
 	}
 	logger.Info("connected Sepolia node")
 	billingRegistryService := NewBillingContractEventService(SepoliaBillingRegistryAddress, client, l.db, eth.SEPOLIA_TESTNET)
-	billingRegistryService.BillingRegistryListen()
+	errChan, errChan2, errChan3 := make(chan error), make(chan error), make(chan error)
+	billingRegistryService.BillingRegistryListen(errChan, errChan2)
 	functionOracleService := NewFunctionOracleEventService(SepoliaFunctionOracleAddress, client, l.db, eth.SEPOLIA_TESTNET)
-	functionOracleService.FunctionOracleListen()
+	functionOracleService.FunctionOracleListen(errChan3)
+	for {
+		select {
+		case err1 := <-errChan:
+			logger.Errorf("speol watch event error, error1 is : %s", err1)
+			return err1
+		case err2 := <-errChan2:
+			logger.Errorf("speol watch event error, error2 is : %s", err2)
+			return err2
+		case err3 := <-errChan3:
+			logger.Errorf("speol watch event error, error3 is : %s", err3)
+			return err3
+		}
+	}
 	return nil
 }

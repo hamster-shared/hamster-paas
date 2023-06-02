@@ -11,7 +11,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/rlp"
 	"gorm.io/gorm"
-	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/eth"
@@ -39,17 +38,18 @@ func NewBillingContractEventService(billingContractAddress string, client *ethcl
 	}
 }
 
-func (b *BillingContractEventService) BillingRegistryListen() {
-	longLinkPoolService, _ := application.GetBean[*LongLinkPoolService]("longLinkPoolService")
-	longLinkPoolService.Submit(func() {
-		b.billingEndListen()
-	})
-	longLinkPoolService.Submit(func() {
-		b.subscriptionFundedListen()
-	})
+func (b *BillingContractEventService) BillingRegistryListen(errorChan chan error, chanTwo chan error) {
+	go func() {
+		err := b.billingEndListen()
+		errorChan <- err
+	}()
+	go func() {
+		err := b.subscriptionFundedListen()
+		chanTwo <- err
+	}()
 }
 
-func (b *BillingContractEventService) billingEndListen() {
+func (b *BillingContractEventService) billingEndListen() error {
 	// 定义查询过滤器
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{b.billingContractAddress},
@@ -64,17 +64,20 @@ func (b *BillingContractEventService) billingEndListen() {
 	sub, err := b.client.SubscribeFilterLogs(context.Background(), query, logs)
 	if err != nil {
 		logger.Errorf("create Mumbai subscription billing end failed: %s", err)
+		return err
 	}
 
 	contractFilter, err := contract.NewBillingRegistryFilterer(b.billingContractAddress, b.client)
 	if err != nil {
 		logger.Errorf("create billing registry filter failed: %s", err)
+		return err
 	}
 	// 监听订阅事件
 	for {
 		select {
 		case err := <-sub.Err():
 			logger.Errorf("subscription billing end event failed: %s", err)
+			return err
 		case vLog := <-logs:
 			logger.Info("start watch billing end event:")
 			data, err := contractFilter.ParseBillingEnd(vLog)
@@ -82,6 +85,7 @@ func (b *BillingContractEventService) billingEndListen() {
 				b.handleBillingEndData(data)
 			} else {
 				logger.Errorf("parse billing end data failed: %s", err)
+				return err
 			}
 		}
 	}
@@ -106,7 +110,7 @@ func (b *BillingContractEventService) handleBillingEndData(data *contract.Billin
 	}
 }
 
-func (b *BillingContractEventService) subscriptionFundedListen() {
+func (b *BillingContractEventService) subscriptionFundedListen() error {
 	// 定义查询过滤器
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{b.billingContractAddress},
@@ -121,17 +125,20 @@ func (b *BillingContractEventService) subscriptionFundedListen() {
 	sub, err := b.client.SubscribeFilterLogs(context.Background(), query, logs)
 	if err != nil {
 		logger.Errorf("create Mumbai subscription Subscription Funded failed: %s", err)
+		return err
 	}
 
 	contractFilter, err := contract.NewBillingRegistryFilterer(b.billingContractAddress, b.client)
 	if err != nil {
 		logger.Errorf("crate Subscription Funded filter failed: %s", err)
+		return err
 	}
 	// 监听订阅事件
 	for {
 		select {
 		case err := <-sub.Err():
 			logger.Errorf("订阅 Subscription Funded event出错: %s", err)
+			return err
 		case vLog := <-logs:
 			logger.Info("watch Subscription Funded event")
 			data, err := contractFilter.ParseSubscriptionFunded(vLog)
@@ -142,6 +149,7 @@ func (b *BillingContractEventService) subscriptionFundedListen() {
 				}
 			} else {
 				logger.Errorf("parse SubscriptionFunded data failed: %s", err)
+				return err
 			}
 		}
 	}
@@ -161,42 +169,44 @@ func (b *BillingContractEventService) handleSubscriptionFundedData(data *contrac
 		subscriptionData.Balance = amount
 		b.db.Save(&subscriptionData)
 		signer := types.NewEIP155Signer(tx.ChainId())
-		fromAddress, _ := signer.Sender(tx)
-		var status string
-		var errorMessage string
-		re, err := eth.GetTxStatus(tx.Hash().Hex(), b.network, b.client)
-		if err != nil {
-			logger.Errorf("get tx status error: %s", err)
-			status = consts.FAILED
-			errorMessage = "get tx failed"
-		}
-		if re.Status == 1 {
-			status = consts.SUCCESS
-		}
-		if re.Status == 0 {
-			if len(re.Logs) > 0 {
-				event := &types.Log{}
-				err = rlp.DecodeBytes(re.Logs[0].Data, event)
-				if err != nil {
-					errorMessage = err.Error()
-				}
-				errMsg := string(event.Data)
-				errMsg = strings.Trim(errMsg, "\x00")
-				errorMessage = errMsg
-			} else {
-				errorMessage = "Transaction failed without error information"
+		fromAddress, err := signer.Sender(tx)
+		if err == nil {
+			var status string
+			var errorMessage string
+			re, err := eth.GetTxStatus(tx.Hash().Hex(), b.network, b.client)
+			if err != nil {
+				logger.Errorf("get tx status error: %s", err)
+				status = consts.FAILED
+				errorMessage = "get tx failed"
 			}
+			if re.Status == 1 {
+				status = consts.SUCCESS
+			}
+			if re.Status == 0 {
+				if len(re.Logs) > 0 {
+					event := &types.Log{}
+					err = rlp.DecodeBytes(re.Logs[0].Data, event)
+					if err != nil {
+						errorMessage = err.Error()
+					}
+					errMsg := string(event.Data)
+					errMsg = strings.Trim(errMsg, "\x00")
+					errorMessage = errMsg
+				} else {
+					errorMessage = "Transaction failed without error information"
+				}
+			}
+			var depositData models.Deposit
+			depositData.SubscriptionId = int64(subscriptionData.Id)
+			depositData.Status = status
+			depositData.TransactionTx = vLog.TxHash.Hex()
+			depositData.UserId = subscriptionData.UserId
+			depositData.Created = time.Now()
+			depositData.Amount = amount
+			depositData.Address = fromAddress.Hex()
+			depositData.ErrorMessage = errorMessage
+			b.db.Create(&depositData)
 		}
-		var depositData models.Deposit
-		depositData.SubscriptionId = int64(subscriptionData.Id)
-		depositData.Status = status
-		depositData.TransactionTx = vLog.TxHash.Hex()
-		depositData.UserId = subscriptionData.UserId
-		depositData.Created = time.Now()
-		depositData.Amount = amount
-		depositData.Address = fromAddress.Hex()
-		depositData.ErrorMessage = errorMessage
-		b.db.Create(&depositData)
 	}
 }
 
