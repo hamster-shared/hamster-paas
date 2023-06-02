@@ -32,12 +32,13 @@ data:
           '"$http_user_agent" "$http_x_forwarded_for" '
           '"$request_body"';
 
-          log_format json_analytics
+          log_format json_analytics escape=json
               '{"msec": $msec, ' # request unixtime in seconds with a milliseconds resolution
               '"connection": "$connection", ' # connection serial number
               '"connection_requests": "$connection_requests", ' # number of requests made in connection
               '"pid": "$pid", ' # process pid
               '"request_id": "$request_id", ' # the unique request id
+              '"request_body": "$request_body", '
               '"request_length": "$request_length", ' # request length (including headers and body)
               '"remote_addr": "$remote_addr", ' # client IP
               '"remote_user": "$remote_user", ' # client HTTP username
