@@ -243,10 +243,12 @@ func (l *OracleListener) MumbaiListen() error {
 	}
 	logger.Info("connected Mumbai node")
 	billingRegistryService := NewBillingContractEventService(MumbaiBillingRegistryAddress, client, l.db, eth.MUMBAI_TESTNET)
-	errChan, errChan2, errChan3 := make(chan error), make(chan error), make(chan error)
+	errChan, errChan2, errChan3, errChan4 := make(chan error), make(chan error), make(chan error), make(chan error)
 	billingRegistryService.BillingRegistryListen(errChan, errChan2)
 	functionOracleService := NewFunctionOracleEventService(MumbaiFunctionOracleAddress, client, l.db, eth.MUMBAI_TESTNET)
 	functionOracleService.FunctionOracleListen(errChan3)
+	functionConsumerService := NewFunctionConsumerEventService(client, l.db, eth.MUMBAI_TESTNET)
+	functionConsumerService.FunctionConsumerListen(errChan4)
 	for {
 		select {
 		case err1 := <-errChan:
@@ -258,6 +260,9 @@ func (l *OracleListener) MumbaiListen() error {
 		case err3 := <-errChan3:
 			logger.Errorf("mubai watch event error, error3 is : %s", err3)
 			return err3
+		case err4 := <-errChan4:
+			logger.Errorf("mubai watch event error, error4 is : %s", err4)
+			return err4
 		}
 	}
 	return nil
@@ -271,10 +276,12 @@ func (l *OracleListener) SepoliaListen() error {
 	}
 	logger.Info("connected Sepolia node")
 	billingRegistryService := NewBillingContractEventService(SepoliaBillingRegistryAddress, client, l.db, eth.SEPOLIA_TESTNET)
-	errChan, errChan2, errChan3 := make(chan error), make(chan error), make(chan error)
+	errChan, errChan2, errChan3, errChan4 := make(chan error), make(chan error), make(chan error), make(chan error)
 	billingRegistryService.BillingRegistryListen(errChan, errChan2)
 	functionOracleService := NewFunctionOracleEventService(SepoliaFunctionOracleAddress, client, l.db, eth.SEPOLIA_TESTNET)
 	functionOracleService.FunctionOracleListen(errChan3)
+	functionConsumerService := NewFunctionConsumerEventService(client, l.db, eth.MUMBAI_TESTNET)
+	functionConsumerService.FunctionConsumerListen(errChan4)
 	for {
 		select {
 		case err1 := <-errChan:
@@ -286,6 +293,9 @@ func (l *OracleListener) SepoliaListen() error {
 		case err3 := <-errChan3:
 			logger.Errorf("speol watch event error, error3 is : %s", err3)
 			return err3
+		case err4 := <-errChan4:
+			logger.Errorf("speol watch event error, error4 is : %s", err4)
+			return err4
 		}
 	}
 	return nil

@@ -9,6 +9,7 @@ import (
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/rpc/eth"
+	"hamster-paas/pkg/utils"
 	"hamster-paas/pkg/utils/logger"
 	"strings"
 	"time"
@@ -171,17 +172,41 @@ func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id int64, saveData 
 	data.Status = consts.SUCCESS
 	data.RequestId = saveData.RequestId
 	r.db.Save(&data)
-	client := eth.NewEthereumProxyFactory().GetClient(eth.EthNetwork(saveData.Network))
-	chainLinkPoolService, err := application.GetBean[*PoolService]("chainLinkPoolService")
+	err = r.sendEmail(saveData.RequestId, user.UserEmail, data.RequestName)
 	if err != nil {
-		logger.Error(fmt.Sprintf("get pool service failed:%s", err.Error()))
+		logger.Debugf("send email failed")
+		return err
+	}
+	//client := eth.NewEthereumProxyFactory().GetClient(eth.EthNetwork(saveData.Network))
+	//chainLinkPoolService, err := application.GetBean[*PoolService]("chainLinkPoolService")
+	//if err != nil {
+	//	logger.Error(fmt.Sprintf("get pool service failed:%s", err.Error()))
+	//	return nil
+	//}
+	//statusFun := func() {
+	//	watchRequest(data.ConsumerAddress, saveData.RequestId, user.UserEmail, data.RequestName, client)
+	//}
+	//chainLinkPoolService.Submit(statusFun)
+	return nil
+}
+
+func (r *ChainLinkRequestService) sendEmail(requestId, email, requestName string) error {
+	logger.Debugf("start send email")
+	times := 0
+	for {
+		if times == 5 {
+			return errors.New("Request result not responding")
+		}
+		times++
+		var eventData models.FunctionConsumerEvent
+		err := r.db.Model(models.FunctionConsumerEvent{}).Where("request_id = ?", requestId).First(&eventData).Error
+		if err != nil {
+			time.Sleep(time.Second * 20)
+			continue
+		}
+		utils.SendEmail(email, requestId, eventData.Result, requestName, eventData.ErrorInfo)
 		return nil
 	}
-	statusFun := func() {
-		watchRequest(data.ConsumerAddress, saveData.RequestId, user.UserEmail, data.RequestName, client)
-	}
-	chainLinkPoolService.Submit(statusFun)
-	return nil
 }
 
 func (r *ChainLinkRequestService) Overview(user aline.User, networkType string) (*models.ApiResponseOverview, error) {
