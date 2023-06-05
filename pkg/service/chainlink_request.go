@@ -178,7 +178,7 @@ func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id int64, saveData 
 		return nil
 	}
 	statusFun := func() {
-		watchRequest(data.ConsumerAddress, saveData.RequestId, user.UserEmail, data.RequestName, client, r.db)
+		watchRequest(data.ConsumerAddress, saveData.RequestId, user.UserEmail, data.RequestName, client)
 	}
 	chainLinkPoolService.Submit(statusFun)
 	return nil
@@ -266,8 +266,8 @@ func reverseString(in []string) []string {
 	return in
 }
 
-func watchRequest(contractAddress, requestId, email, requestName string, client eth.EthereumProxy, db *gorm.DB) {
-	client.WatchRequestResult(contractAddress, requestId, email, requestName, db)
+func watchRequest(contractAddress, requestId, email, requestName string, client eth.EthereumProxy) {
+	client.WatchRequestResult(contractAddress, requestId, email, requestName)
 }
 
 func watchExecStatus(data models.RequestExecute, db *gorm.DB, client eth.EthereumProxy) {
