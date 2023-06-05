@@ -544,7 +544,9 @@ func (a *RpcApp) getAppRequestLogs(appKey string, p Pagination) ([]*RpcAppReques
 		log := &RpcAppRequestLog{}
 		log.Number = resp.EstimatedTotalHits - int64(i) - int64(p.Size*(p.Page-1))
 		log.Time = resp.Hits[i].(map[string]any)["time_iso8601"].(string)
-		log.RequestEvent = resp.Hits[i].(map[string]any)["args"].(string)
+		if resp.Hits[i].(map[string]any)["request_body"] != nil {
+			log.RequestEvent = resp.Hits[i].(map[string]any)["request_body"].(string)
+		}
 		log.RequestResult = resp.Hits[i].(map[string]any)["status"].(string)
 		logs = append(logs, log)
 	}
