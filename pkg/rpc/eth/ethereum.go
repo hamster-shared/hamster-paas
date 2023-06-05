@@ -3,12 +3,14 @@ package eth
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"gorm.io/gorm"
 	"hamster-paas/pkg/service/contract"
 	"hamster-paas/pkg/utils"
 	"hamster-paas/pkg/utils/logger"
@@ -49,7 +51,7 @@ func init() {
 
 type EthereumProxy interface {
 	TransactionByHash(hash string) (tx *types.Transaction, isPending bool, err error)
-	WatchRequestResult(contractAddress, requestId, email, requestName string) error
+	WatchRequestResult(contractAddress, requestId, email, requestName string, db *gorm.DB) error
 	TransactionReceipt(hash string) (*types.Receipt, error)
 }
 
@@ -109,7 +111,7 @@ type OCRResponseEvent struct {
 	Err       []byte
 }
 
-func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, email, requestName string) error {
+func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, email, requestName string, db *gorm.DB) error {
 	log.Println("++++++++++++++++++++++++++++++++++++++")
 	// 要监听的合约地址
 	oracleContractAddress := common.HexToAddress(contractAddress)
@@ -142,20 +144,10 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 			logger.Info("start watch Oracle Request event send email")
 			data, err := contractFilter.ParseOCRResponse(vLog)
 			if err == nil {
-				requestIdData := fmt.Sprintf("0x%s", hex.EncodeToString(data.RequestId[:]))
-				logger.Debugf("++++++++++++++++++++")
-				fmt.Printf("request id is:%s", requestIdData)
-				logger.Debugf("++++++++++++++++++++")
-				if requestIdData == requestId {
-					var result string
-					numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
-					if err != nil {
-						result = string(data.Result)
-					} else {
-						result = strconv.Itoa(int(numData))
-					}
-					utils.SendEmail(email, requestId, result, requestName, string(data.Err))
-					return nil
+				err = handlerData(data, db)
+				if err != nil {
+					logger.Errorf("handler function consumer data failed: %s", err)
+					return err
 				}
 			} else {
 				logger.Errorf("parse OracleRequest data failed: %s", err)
@@ -215,6 +207,44 @@ func (rpc *RPCEthereumProxy) WatchRequestResult(contractAddress, requestId, emai
 	return nil
 }
 
+func handlerData(data *contract.FunctionConsumerOCRResponse, db *gorm.DB) error {
+	var list []RequestExecute
+	err := db.Model(RequestExecute{}).Where("created >= DATE_SUB(NOW(), INTERVAL 20 MINUTE) and send_email = 0 ").Find(&list).Error
+	logger.Debugf("exec list length is: %d", len(list))
+	if err == nil {
+		requestIdData := fmt.Sprintf("0x%s", hex.EncodeToString(data.RequestId[:]))
+		logger.Debugf("++++++++++++++++++++")
+		fmt.Printf("request id is:%s", requestIdData)
+		logger.Debugf("++++++++++++++++++++")
+		if len(list) > 0 {
+			for _, execute := range list {
+				if requestIdData == execute.RequestId {
+					var result string
+					numData, err := strconv.ParseInt(hexToString(data.Result), 16, 64)
+					if err != nil {
+						result = string(data.Result)
+					} else {
+						result = strconv.Itoa(int(numData))
+					}
+					var user User
+					err = db.Model(User{}).Where("id = ?", execute.UserId).First(&user).Error
+					if err != nil {
+						continue
+					}
+					utils.SendEmail(user.UserEmail, execute.RequestId, result, execute.RequestName, string(data.Err))
+					execute.SendEmail = 1
+					db.Save(&execute)
+					return nil
+				}
+
+			}
+		} else {
+			return errors.New("exec list is empty")
+		}
+	}
+	return nil
+}
+
 func hexToString(hex []byte) string {
 	s := ""
 	for _, b := range hex {
@@ -270,4 +300,32 @@ func GetTxStatus(hash string, ethNetwork EthNetwork, client *ethclient.Client) (
 		return nil, fmt.Errorf("get tx receipt faild")
 	}
 	return r, nil
+}
+
+type RequestExecute struct {
+	Id              int64     `json:"id"`
+	SubscriptionId  int64     `gorm:"column:subscription_id" json:"subscriptionId"`
+	RequestId       string    `json:"requestId"`
+	ConsumerAddress string    `gorm:"column:consumer_address" json:"consumerAddress"`
+	Secretsloction  int8      `json:"secretsloction"`
+	SecretUrl       string    `json:"secretUrl"`
+	Args            string    `json:"args"`
+	TransactionTx   string    `gorm:"column:transaction_tx" json:"transactionTx"`
+	Status          string    `json:"status"`
+	UserId          uint64    `gorm:"column:user_id" json:"userId"`
+	RequestName     string    `json:"requestName"`
+	Amount          float64   `json:"amount"`
+	Created         time.Time `json:"created"`
+	SendEmail       int       `json:"sendEmail"`
+}
+
+type User struct {
+	Id         uint      `gorm:"primaryKey" json:"id"`
+	Username   string    `gorm:"username" json:"username"`
+	Token      string    `json:"token"`
+	AvatarUrl  string    `json:"avatarUrl"`
+	HtmlUrl    string    `json:"htmlUrl"`
+	FirstState int       `json:"firstState"`
+	UserEmail  string    `json:"userEmail"`
+	CreateTime time.Time `gorm:"column:create_time;default:current_timestamp" json:"create_time"`
 }

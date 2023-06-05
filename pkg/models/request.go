@@ -36,6 +36,7 @@ type RequestExecute struct {
 	RequestName     string    `json:"requestName"`
 	Amount          float64   `json:"amount"`
 	Created         time.Time `json:"created"`
+	SendEmail       int       `json:"sendEmail"`
 }
 
 func (m RequestTemplate) TableName() string {
