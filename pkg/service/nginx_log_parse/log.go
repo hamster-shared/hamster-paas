@@ -10,7 +10,7 @@ type NginxLog struct {
 	ConnectionRequests     string `json:"connection_requests"`
 	Pid                    string `json:"pid"`
 	RequestID              string `json:"request_id"`
-	RequestBody            string `json:"request_body"`
+	RequestBody            string `json:"request_body,omitempty"`
 	RequestLength          string `json:"request_length"`
 	RemoteAddr             string `json:"remote_addr"`
 	RemoteUser             string `json:"remote_user"`
