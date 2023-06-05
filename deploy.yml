@@ -40,7 +40,7 @@ spec:
         app: hamster-paas
     spec:
       containers:
-        - image: hamstershare/hamster-pass:06051042
+        - image: hamstershare/hamster-pass:${hamster_paas_version}
           imagePullPolicy: Always
           name: hamster-paas
           env:
