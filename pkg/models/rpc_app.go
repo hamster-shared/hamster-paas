@@ -2,6 +2,7 @@ package models
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/utils/logger"
@@ -545,10 +546,20 @@ func (a *RpcApp) getAppRequestLogs(appKey string, p Pagination) ([]*RpcAppReques
 		log.Number = resp.EstimatedTotalHits - int64(i) - int64(p.Size*(p.Page-1))
 		log.Time = resp.Hits[i].(map[string]any)["time_iso8601"].(string)
 		if resp.Hits[i].(map[string]any)["request_body"] != nil {
-			log.RequestEvent = resp.Hits[i].(map[string]any)["request_body"].(string)
+			requestBody := resp.Hits[i].(map[string]any)["request_body"].(string)
+			var jsonRpcRequest JsonRpcRequest
+			err := json.Unmarshal([]byte(requestBody), &jsonRpcRequest)
+			if err != nil {
+				log.RequestEvent = requestBody
+			}
+			log.RequestEvent = jsonRpcRequest.Method
 		}
 		log.RequestResult = resp.Hits[i].(map[string]any)["status"].(string)
 		logs = append(logs, log)
 	}
 	return logs, &p, nil
+}
+
+type JsonRpcRequest struct {
+	Method string `json:"method,omitempty"`
 }
