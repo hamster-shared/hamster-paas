@@ -1,6 +1,7 @@
 package order
 
 import (
+	"database/sql"
 	"github.com/shopspring/decimal"
 	"hamster-paas/pkg/models/node"
 )
@@ -24,15 +25,29 @@ const (
 
 type Order struct {
 	Id      uint   `gorm:"primaryKey" json:"id"`
-	OrderId string `json:"order_id"`
+	OrderId string `json:"orderId"`
 	// 用户id
-	UserId         uint               `json:"user_id"`
-	OrderType      OrderType          `json:"order_type"`
-	ResourceType   string             `json:"resource_type"`
+	UserId         uint               `json:"userId"`
+	OrderTime      sql.NullTime       `json:"orderTime"`
+	OrderType      OrderType          `json:"orderType"`
+	ResourceType   string             `json:"resourceType"`
 	Status         OrderStatus        `json:"status"`
 	Chain          node.ChainProtocol `json:"chain"`
 	Amount         decimal.Decimal    `json:"amount"`
-	PayAddress     string             `json:"pay_address"`
-	ReceiveAddress string             `json:"receive_address"`
-	PayTx          string             `json:"pay_tx"`
+	PayAddress     string             `json:"payAddress"`
+	ReceiveAddress string             `json:"receiveAddress"`
+	PayTx          string             `json:"payTx"`
+
+	BuyTime int `json:"buyTime"`
+}
+
+type OrderNode struct {
+	Id         uint         `gorm:"primaryKey" json:"id"`
+	OrderId    uint         `json:"orderId"`
+	UserId     uint         `json:"userId"`
+	NodeName   string       `json:"nodeName"`
+	Resource   string       `json:"resource"`
+	Protocol   string       `json:"protocol"`
+	Region     string       `json:"region"`
+	CreateTime sql.NullTime `json:"createTime"`
 }

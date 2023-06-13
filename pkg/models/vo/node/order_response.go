@@ -1,0 +1,32 @@
+package node
+
+import (
+	"database/sql"
+	"github.com/shopspring/decimal"
+	"hamster-paas/pkg/models/node"
+	"hamster-paas/pkg/models/order"
+)
+
+type OrderVo struct {
+	Id           uint               `gorm:"primaryKey" json:"id"`
+	OrderId      string             `json:"orderId"`
+	OrderTime    sql.NullTime       `json:"orderTime"`
+	OrderType    order.OrderType    `json:"orderType"`
+	ResourceType string             `json:"resourceType"`
+	Status       order.OrderStatus  `json:"status"`
+	Chain        node.ChainProtocol `json:"chain"`
+	Amount       decimal.Decimal    `json:"amount"`
+	BuyTime      int                `json:"buyTime"`
+}
+
+type OrderPage struct {
+	Data     []OrderVo `json:"data"`
+	Total    int64     `json:"total"`
+	Page     int       `json:"page"`
+	PageSize int       `json:"pageSize"`
+}
+
+type PayOrderDetail struct {
+	OrderVo
+	ReceiveAddress string `json:"receiveAddress"`
+}

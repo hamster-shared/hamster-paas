@@ -75,5 +75,16 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/subscription/:id/deposits", h.handlerServer.depositList)
 	chainLinkApi.GET("/dashboard/all", h.handlerServer.dashboardAll)
 
+	//node api
+	nodeApi := r.Group("/api/node")
+	nodeApi.Use(h.handlerServer.Authorize())
+	nodeApi.GET("/list", h.handlerServer.nodeList)
+	nodeApi.GET("/statistics-info", h.handlerServer.nodeStatisticsInfo)
+	nodeApi.GET("/:id", h.handlerServer.nodeDetail)
+	nodeApi.POST("/order/launch", h.handlerServer.launchOrder)
+	nodeApi.GET("/order/list", h.handlerServer.orderList)
+	nodeApi.GET("/order/:id", h.handlerServer.payOrderDetail)
+	nodeApi.PUT("/order/:id/cancel", h.handlerServer.cancelOrder)
+	nodeApi.GET("/resource-standard/:protocol", h.handlerServer.queryResourceStandard)
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

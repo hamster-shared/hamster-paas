@@ -3,6 +3,7 @@ module hamster-paas
 go 1.20
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/gammazero/workerpool v1.1.3
 	github.com/gin-gonic/gin v1.9.0
@@ -11,6 +12,7 @@ require (
 	github.com/jinzhu/copier v0.3.5
 	github.com/joho/godotenv v1.5.1
 	github.com/meilisearch/meilisearch-go v0.23.1
+	github.com/shopspring/decimal v1.3.1
 	go.uber.org/zap v1.24.0
 	gorm.io/driver/mysql v1.4.7
 	gorm.io/gorm v1.24.6
@@ -50,7 +52,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tklauser/numcpus v0.2.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

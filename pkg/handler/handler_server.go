@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/service"
+	service2 "hamster-paas/pkg/service/node"
 	"hamster-paas/pkg/utils/logger"
 )
 
@@ -16,6 +17,9 @@ type HandlerServer struct {
 	chainlinkPoolService         service.PoolService
 	rpcService                   service.RpcService
 	middleWareService            service.MiddleWareService
+	nodeService                  service2.NodeService
+	orderService                 service2.OrderService
+	resourceStandardService      service2.ResourceStandardService
 }
 
 func NewHandlerServer() *HandlerServer {
@@ -70,6 +74,26 @@ func NewHandlerServer() *HandlerServer {
 		panic(fmt.Sprintf("application get middleware service failed: %s", err.Error()))
 	}
 	handlerServer.middleWareService = *middleWareService
+
+	nodeService, err := application.GetBean[*service2.NodeService]("nodeService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get node service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get node service failed: %s", err.Error()))
+	}
+	handlerServer.nodeService = *nodeService
+	orderService, err := application.GetBean[*service2.OrderService]("orderService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get order service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get order service failed: %s", err.Error()))
+	}
+	handlerServer.orderService = *orderService
+
+	resourceStandardService, err := application.GetBean[*service2.ResourceStandardService]("resourceStandardService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get resource standard service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get resource stanard service failed: %s", err.Error()))
+	}
+	handlerServer.resourceStandardService = *resourceStandardService
 
 	return &handlerServer
 }
