@@ -7,6 +7,7 @@ import (
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/service"
 	"hamster-paas/pkg/service/nginx_log_parse"
+	service2 "hamster-paas/pkg/service/node"
 	"hamster-paas/pkg/utils/logger"
 	"os"
 
@@ -70,6 +71,10 @@ func Init() {
 	oracleListener := service.NewOracleListener(db)
 	oracleListener.StartListen()
 	application.SetBean("oracleListener", oracleListener)
+
+	application.SetBean("nodeService", service2.NewNodeService(db))
+	application.SetBean("orderService", service2.NewOrderService(db))
+	application.SetBean("resourceStandardService", service2.NewResourceStandardService(db))
 
 	fmt.Println("handler server")
 	httpHandler := handler.NewHandlerServer()
