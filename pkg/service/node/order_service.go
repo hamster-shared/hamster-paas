@@ -34,9 +34,14 @@ func NewOrderService(db *gorm.DB) *OrderService {
 }
 
 func (o *OrderService) LaunchOrder(userId int, launchData node.LaunchOrderParam) (uint, error) {
+	var orderNodeData order.OrderNode
+	err := o.db.Model(order.OrderNode{}).Where("user_id = ? and node_name = ?", userId, launchData.NodeName).First(&orderNodeData).Error
+	if err == nil {
+		return 0, fmt.Errorf("node name: %s is areadly exists", launchData.NodeName)
+	}
 	var changeAccount modelsNode.UserChargeAccount
 	var orderData order.Order
-	err := o.db.Model(modelsNode.UserChargeAccount{}).Where("user_id = ?", userId).First(&changeAccount).Error
+	err = o.db.Model(modelsNode.UserChargeAccount{}).Where("user_id = ?", userId).First(&changeAccount).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			address, privateKey, err := GenerateEthAddress()

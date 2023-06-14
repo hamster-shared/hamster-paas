@@ -67,14 +67,16 @@ func (n *NodeService) NodeList(userId, page, size int) (node.NodePage, error) {
 }
 
 // node detail
-func (n *NodeService) NodeDetail(nodeId int) (modelsNode.RPCNode, error) {
+func (n *NodeService) NodeDetail(nodeId int) (node.NodeDetail, error) {
 	var nodeData modelsNode.RPCNode
+	var detailData node.NodeDetail
 	err := n.db.Model(modelsNode.RPCNode{}).Where("id = ?", nodeId).First(&nodeData).Error
 	if err != nil {
 		logger.Errorf("query node  detail failed: %s", err)
-		return nodeData, err
+		return detailData, err
 	}
-	return nodeData, nil
+	copier.Copy(&detailData, &nodeData)
+	return detailData, nil
 }
 
 func (n *NodeService) SaveNode(userId int, nodeData node.SaveNodeParam) error {

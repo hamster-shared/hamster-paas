@@ -16,7 +16,7 @@ create table t_cl_rpc_node (
     block_time  varchar(20) comment '平均出块时间',
     http_endpoint   varchar(75) comment 'http 请求地址',
     websocket_endpoint varchar(75) comment  'websocket 请求地址',
-    created datetime NOT NULL
+    created timestamp NOT NULL
 ) comment 'rpc 节点表';
 
 create table t_cl_rpc_node_resource_standard(

@@ -16,7 +16,7 @@ type UserNode struct {
 type RPCNodeStatus uint
 
 const (
-	Initializing RPCNodeStatus = iota
+	Initializing RPCNodeStatus = iota + 1
 	Launching
 	Syncing
 	Synced
@@ -42,7 +42,7 @@ type RPCNode struct {
 	// 用户id
 	UserId uint `json:"userId"`
 	// 链体系
-	Chain ChainProtocol `json:"chain"`
+	ChainProtocol ChainProtocol `json:"chainProtocol"`
 	// 节点状态	#see RPCNodeStatus
 	Status RPCNodeStatus `json:"status"`
 	// 公网IP
@@ -68,7 +68,8 @@ type RPCNode struct {
 	// http rpc 端口地址
 	HttpEndpoint string `json:"httpEndpoint"`
 	// websocket rpc 端口地址
-	WebsocketEndpoint string `json:"websocketEndpoint"`
+	WebsocketEndpoint string       `json:"websocketEndpoint"`
+	Created           sql.NullTime `json:"created"`
 }
 
 type RpcNodeResourceStandard struct {
