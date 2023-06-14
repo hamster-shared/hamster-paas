@@ -15,7 +15,7 @@ const (
 type OrderStatus uint
 
 const (
-	PaymentPending OrderStatus = iota
+	PaymentPending OrderStatus = iota + 1
 	Paid
 	Cancelled
 	RefundPending
