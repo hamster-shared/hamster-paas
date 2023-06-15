@@ -9,14 +9,14 @@ create table t_cl_rpc_node (
     launch_time timestamp   comment '启动时间',
     resource varchar(100) comment '资源规格',
     chain_version   varchar(20) comment '部署链的版本',
-    next_payment_date timestamp comment '下一次支付时间',
+    next_payment_date timestamp NULL DEFAULT CURRENT_TIMESTAMP comment '下一次支付时间',
     payment_per_month decimal(10,2) comment '每月支付金额',
     remaining_sync_time varchar(20) comment '剩余同步时间',
     current_height  int(11) comment '当前区块高度',
     block_time  varchar(20) comment '平均出块时间',
     http_endpoint   varchar(75) comment 'http 请求地址',
     websocket_endpoint varchar(75) comment  'websocket 请求地址',
-    created timestamp NOT NULL
+    created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) comment 'rpc 节点表';
 
 create table t_cl_rpc_node_resource_standard(
