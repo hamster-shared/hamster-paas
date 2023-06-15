@@ -48,6 +48,7 @@ create table t_cl_order(
     buy_time  int     comment '购买时间(单位:month)',
     pay_address varchar(50) comment '支付地址',
     receive_address varchar(50) comment '收款地址',
+    address_init_balance decimal(10,2),
     pay_tx varchar(64) comment '交易事务号',
     index (order_id),
     index (user_id)
