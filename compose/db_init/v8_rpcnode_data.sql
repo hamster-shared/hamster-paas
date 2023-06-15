@@ -48,7 +48,7 @@ create table t_cl_order(
     buy_time  int     comment '购买时间(单位:month)',
     pay_address varchar(50) comment '支付地址',
     receive_address varchar(50) comment '收款地址',
-    address_init_balance decimal(10,2),
+    address_init_balance decimal(10,2) comment '下单时地址余额',
     pay_tx varchar(64) comment '交易事务号',
     index (order_id),
     index (user_id)
@@ -64,4 +64,21 @@ create table t_cl_order_node (
     region   varchar(20),
     create_time timestamp,
     index (order_id)
-)
+);
+
+create table t_cl_black_height(
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    black_height bigint not null DEFAULT 1 comment '扫描到块高',
+    type varchar(50) not null DEFAULT 'Transfer' comment '扫描到块高'
+);
+
+
+create table t_cl_receipt_records(
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    black_height bigint not null DEFAULT 1 comment '块高',
+    pay_address varchar(50) comment '支付地址',
+    receive_address varchar(50) comment '收款地址',
+    amount decimal(10,2) comment '总价',
+    pay_tx varchar(64) comment '交易事务号',
+    pay_time timestamp not null comment '交易时间'
+);

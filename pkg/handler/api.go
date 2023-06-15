@@ -2,21 +2,23 @@ package handler
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	socketIo "github.com/googollee/go-socket.io"
 	"hamster-paas/pkg/utils/logger"
 	"os"
-
-	"github.com/gin-gonic/gin"
 )
 
 type HttpServer struct {
-	handlerServer HandlerServer
-	port          string
+	handlerServer  HandlerServer
+	port           string
+	socketIoServer *socketIo.Server
 }
 
-func NewHttpService(handlerServer HandlerServer, port string) *HttpServer {
+func NewHttpService(handlerServer HandlerServer, port string, socketIoServer *socketIo.Server) *HttpServer {
 	return &HttpServer{
-		handlerServer: handlerServer,
-		port:          port,
+		handlerServer:  handlerServer,
+		port:           port,
+		socketIoServer: socketIoServer,
 	}
 }
 
@@ -24,6 +26,16 @@ func (h *HttpServer) StartHttpServer() error {
 	logger.Infof("start api server on port %s", h.port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
+	//socket
+
+	go func() {
+		if err := h.socketIoServer.Serve(); err != nil {
+			logger.Errorf("socketIo listen error: %s\n", err)
+		}
+	}()
+	defer h.socketIoServer.Close()
+	r.GET("/socket.io/*any", gin.WrapH(h.socketIoServer))
+	r.POST("/socket.io/*any", gin.WrapH(h.socketIoServer))
 
 	rpcApi := r.Group("/api/rpc")
 	rpcApi.Use(h.handlerServer.Authorize())
