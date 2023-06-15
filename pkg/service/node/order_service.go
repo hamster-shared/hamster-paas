@@ -222,8 +222,13 @@ func AccountBalance(address string) (string, error) {
 		logger.Errorf("address is: %s,get balance failed: %s", address, err)
 		return "", err
 	}
+	decimals, err := erc20Contract.Decimals(&bind.CallOpts{})
+	if err != nil {
+		logger.Errorf("get token decimals failed: %s", err)
+		return "", err
+	}
 	balanceDecimal := new(big.Float).SetInt(balance)
-	exp := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(6)), nil)
+	exp := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
 	balanceDecimal.Quo(balanceDecimal, new(big.Float).SetInt(exp))
 	return balanceDecimal.Text('f', 2), nil
 }
