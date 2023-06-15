@@ -206,13 +206,13 @@ func GenerateEthAddress() (string, string, error) {
 }
 
 func AccountBalance(address string) (string, error) {
-	client, err := ethclient.Dial(os.Getenv("node_url"))
+	client, err := ethclient.Dial(os.Getenv("NODE_URL"))
 	if err != nil {
 		logger.Errorf("get eth client failed: %s", err)
 		return "", err
 	}
 	accountAddress := common.HexToAddress(address)
-	erc20Contract, err := contract.NewErc20(common.HexToAddress(os.Getenv("token_address")), client)
+	erc20Contract, err := contract.NewErc20(common.HexToAddress(os.Getenv("TOKEN_ADDRESS")), client)
 	if err != nil {
 		logger.Errorf("get erc20 contract failed: %s", err)
 		return "", err
