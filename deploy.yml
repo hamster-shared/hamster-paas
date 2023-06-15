@@ -88,6 +88,16 @@ spec:
                 configMapKeyRef:
                   name: hamster-aline
                   key: email_password
+            - name: NODE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-aline
+                  key: node_url
+            - name: TOKEN_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-aline
+                  key: token_address
           resources: {}
           ports:
             - containerPort: 9898

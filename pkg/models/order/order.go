@@ -27,18 +27,18 @@ type Order struct {
 	Id      uint   `gorm:"primaryKey" json:"id"`
 	OrderId string `json:"orderId"`
 	// 用户id
-	UserId         uint               `json:"userId"`
-	OrderTime      sql.NullTime       `json:"orderTime"`
-	OrderType      OrderType          `json:"orderType"`
-	ResourceType   string             `json:"resourceType"`
-	Status         OrderStatus        `json:"status"`
-	Chain          node.ChainProtocol `json:"chain"`
-	Amount         decimal.Decimal    `json:"amount"`
-	PayAddress     string             `json:"payAddress"`
-	ReceiveAddress string             `json:"receiveAddress"`
-	PayTx          string             `json:"payTx"`
-
-	BuyTime int `json:"buyTime"`
+	UserId             uint               `json:"userId"`
+	OrderTime          sql.NullTime       `json:"orderTime"`
+	OrderType          OrderType          `json:"orderType"`
+	ResourceType       string             `json:"resourceType"`
+	Status             OrderStatus        `json:"status"`
+	Chain              node.ChainProtocol `json:"chain"`
+	Amount             decimal.Decimal    `json:"amount"`
+	PayAddress         string             `json:"payAddress"`
+	ReceiveAddress     string             `json:"receiveAddress"`
+	PayTx              string             `json:"payTx"`
+	AddressInitBalance decimal.Decimal    `json:"addressInitBalance"`
+	BuyTime            int                `json:"buyTime"`
 }
 
 type OrderNode struct {

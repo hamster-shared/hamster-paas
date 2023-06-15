@@ -5,14 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bwmarrin/snowflake"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/jinzhu/copier"
+	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
 	modelsNode "hamster-paas/pkg/models/node"
 	"hamster-paas/pkg/models/order"
 	"hamster-paas/pkg/models/vo/node"
+	"hamster-paas/pkg/service/contract"
 	"hamster-paas/pkg/utils/logger"
+	"math/big"
+	"os"
 	"time"
 )
 
@@ -62,12 +69,23 @@ func (o *OrderService) LaunchOrder(userId int, launchData node.LaunchOrderParam)
 			return 0, err
 		}
 	}
+	data, err := AccountBalance(changeAccount.Address)
+	if err != nil {
+		logger.Errorf("get balance failed: %s", err)
+		return 0, err
+	}
+	balance, err := decimal.NewFromString(data)
+	if err != nil {
+		logger.Errorf("balance to decimal failed: %s", err)
+		return 0, err
+	}
 	orderId := o.snowFlakeNode.Generate().String()
 	orderData.OrderId = orderId
 	orderData.OrderTime = sql.NullTime{
 		Time:  time.Now(),
 		Valid: true,
 	}
+	orderData.AddressInitBalance = balance
 	orderData.OrderType = order.NodeService
 	orderData.UserId = uint(userId)
 	orderData.Status = order.PaymentPending
@@ -185,4 +203,32 @@ func GenerateEthAddress() (string, string, error) {
 	privateKeyHex := hexutil.Encode(crypto.FromECDSA(privateKey))
 	address := crypto.PubkeyToAddress(privateKey.PublicKey).Hex()
 	return address, privateKeyHex, nil
+}
+
+func AccountBalance(address string) (string, error) {
+	client, err := ethclient.Dial(os.Getenv("NODE_URL"))
+	if err != nil {
+		logger.Errorf("get eth client failed: %s", err)
+		return "", err
+	}
+	accountAddress := common.HexToAddress(address)
+	erc20Contract, err := contract.NewErc20(common.HexToAddress(os.Getenv("TOKEN_ADDRESS")), client)
+	if err != nil {
+		logger.Errorf("get erc20 contract failed: %s", err)
+		return "", err
+	}
+	balance, err := erc20Contract.BalanceOf(&bind.CallOpts{}, accountAddress)
+	if err != nil {
+		logger.Errorf("address is: %s,get balance failed: %s", address, err)
+		return "", err
+	}
+	decimals, err := erc20Contract.Decimals(&bind.CallOpts{})
+	if err != nil {
+		logger.Errorf("get token decimals failed: %s", err)
+		return "", err
+	}
+	balanceDecimal := new(big.Float).SetInt(balance)
+	exp := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
+	balanceDecimal.Quo(balanceDecimal, new(big.Float).SetInt(exp))
+	return balanceDecimal.Text('f', 2), nil
 }
