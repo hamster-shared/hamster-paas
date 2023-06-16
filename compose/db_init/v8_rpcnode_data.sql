@@ -9,14 +9,14 @@ create table t_cl_rpc_node (
     launch_time timestamp   comment '启动时间',
     resource varchar(100) comment '资源规格',
     chain_version   varchar(20) comment '部署链的版本',
-    next_payment_date timestamp comment '下一次支付时间',
+    next_payment_date timestamp NULL DEFAULT CURRENT_TIMESTAMP comment '下一次支付时间',
     payment_per_month decimal(10,2) comment '每月支付金额',
     remaining_sync_time varchar(20) comment '剩余同步时间',
     current_height  int(11) comment '当前区块高度',
     block_time  varchar(20) comment '平均出块时间',
     http_endpoint   varchar(75) comment 'http 请求地址',
     websocket_endpoint varchar(75) comment  'websocket 请求地址',
-    created timestamp NOT NULL
+    created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) comment 'rpc 节点表';
 
 create table t_cl_rpc_node_resource_standard(
@@ -48,7 +48,7 @@ create table t_cl_order(
     buy_time  int     comment '购买时间(单位:month)',
     pay_address varchar(50) comment '支付地址',
     receive_address varchar(50) comment '收款地址',
-    address_init_balance decimal(10,2),
+    address_init_balance decimal(10,2) comment '下单时地址余额',
     pay_tx varchar(64) comment '交易事务号',
     index (order_id),
     index (user_id)
@@ -64,4 +64,21 @@ create table t_cl_order_node (
     region   varchar(20),
     create_time timestamp,
     index (order_id)
-)
+);
+
+create table t_cl_black_height(
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    black_height bigint not null DEFAULT 1 comment '扫描到块高',
+    type varchar(50) not null DEFAULT 'Transfer' comment '扫描到块高'
+);
+
+
+create table t_cl_receipt_records(
+    id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    black_height bigint not null DEFAULT 1 comment '块高',
+    pay_address varchar(50) comment '支付地址',
+    receive_address varchar(50) comment '收款地址',
+    amount decimal(10,2) comment '总价',
+    pay_tx varchar(64) comment '交易事务号',
+    pay_time timestamp not null comment '交易时间'
+);

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/shopspring/decimal"
 	"hamster-paas/pkg/models/node"
+	"time"
 )
 
 type OrderType uint
@@ -50,4 +51,22 @@ type OrderNode struct {
 	Protocol   string       `json:"protocol"`
 	Region     string       `json:"region"`
 	CreateTime sql.NullTime `json:"createTime"`
+}
+
+// BlackHeight 区块扫描表
+type BlackHeight struct {
+	Id          uint   `gorm:"primaryKey" json:"id"`
+	BlackHeight int64  `json:"blackHeight"`
+	EventType   string `json:"eventType"`
+}
+
+// ReceiptRecords 收款记录表
+type ReceiptRecords struct {
+	Id             uint            `gorm:"primaryKey" json:"id"`
+	BlackHeight    int64           `json:"blackHeight"`
+	Amount         decimal.Decimal `json:"amount"`
+	PayAddress     string          `json:"payAddress"`
+	ReceiveAddress string          `json:"receiveAddress"`
+	PayTx          string          `json:"payTx"`
+	PayTime        time.Time       `json:"payTime"`
 }

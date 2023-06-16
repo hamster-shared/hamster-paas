@@ -12,6 +12,7 @@ require (
 	github.com/jinzhu/copier v0.3.5
 	github.com/joho/godotenv v1.5.1
 	github.com/meilisearch/meilisearch-go v0.23.1
+	github.com/robfig/cron/v3 v3.0.0
 	github.com/shopspring/decimal v1.3.1
 	go.uber.org/zap v1.24.0
 	gorm.io/driver/mysql v1.4.7
@@ -36,7 +37,10 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/goccy/go-json v0.10.0 // indirect
+	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
+	github.com/gomodule/redigo v1.8.4 // indirect
+	github.com/googollee/go-socket.io v1.7.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/holiman/uint256 v1.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
