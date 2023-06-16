@@ -7,4 +7,4 @@ VALUES (1,'Ethereum','4','32','3000','US East',530.00),
        (6,'Optimism','4','16','200','US East',164.30),
        (7,'Avalanche','8','16','1000','US East',413.40);
 
-INSERT INTO t_cl_black_height (id, black_height, event_type) VALUES (1, 1, 'Transfer');
+INSERT INTO t_cl_black_height (id, black_height, event_type) VALUES (1, 36902587, 'Transfer');

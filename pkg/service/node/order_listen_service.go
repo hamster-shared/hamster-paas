@@ -94,7 +94,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 func (ol *OrderListeningService) StartScanBlockInformation() {
 	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
-	EntryID, err := c.AddFunc("*/15 * * * * *", func() {
+	EntryID, err := c.AddFunc("*/15 * 9 * * *", func() {
 		fmt.Println(time.Now(), "开始扫描块信息")
 		var blackHeight order.BlackHeight
 		err := ol.db.Model(order.BlackHeight{}).Where("event_type = ?", "Transfer").First(&blackHeight).Error
@@ -165,6 +165,7 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			fmt.Printf("接收方地址：%s\n", to.Hex())
 			receiptRecords.Amount = amountDecimal
 			fmt.Printf("交易金额：%s\n", amountDecimal.String())
+
 			records = append(records, receiptRecords)
 		}
 		if len(records) < 1 {
