@@ -276,6 +276,7 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 		for {
 			err := ol.db.Model(order.Order{}).Where("id = ?", orderId).First(&orderData).Error
 			if err != nil {
+				time.Sleep(time.Second * 5)
 				continue
 			}
 			if orderData.Status == order.Cancelled || orderData.Status == order.Paid {
