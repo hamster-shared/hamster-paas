@@ -230,5 +230,6 @@ func AccountBalance(address string) (string, error) {
 	balanceDecimal := new(big.Float).SetInt(balance)
 	exp := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
 	balanceDecimal.Quo(balanceDecimal, new(big.Float).SetInt(exp))
+	client.Close()
 	return balanceDecimal.Text('f', 2), nil
 }
