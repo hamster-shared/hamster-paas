@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -54,7 +55,6 @@ func (ol *OrderListeningService) StartOrderListening() {
 	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
 	EntryID, err := c.AddFunc("*/5 * * * * *", func() {
-		fmt.Println(time.Now(), "支付中订单扫描")
 		var orderList []order.Order
 		err := ol.db.Model(order.Order{}).Where("status = ?", order.PaymentPending).Order("order_time asc").Find(&orderList).Error
 		if err != nil {
@@ -62,7 +62,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 			return
 		}
 		if len(orderList) < 1 {
-			logger.Info("Orders that are not in payment")
+			logger.Info("There are no orders in payment")
 			return
 		}
 		for _, orderInfo := range orderList {
@@ -73,22 +73,66 @@ func (ol *OrderListeningService) StartOrderListening() {
 				logger.Infof("Failed to query the ReceiptRecords: %s", err)
 				return
 			}
+			begin := ol.db.Begin()
 			if len(receiptRecords) >= 1 {
-				//更新订单-成功
 				orderInfo.Status = order.Paid
 				orderInfo.PayTx = receiptRecords[0].PayTx
 				//
+				var orderNode order.OrderNode
+				err := begin.Model(order.OrderNode{}).Where("order_id = ? and user_id = ?", orderInfo.OrderId, orderInfo.UserId).Find(&orderNode).Error
+				if err != nil {
+					logger.Infof("Failed to query OrderNode: %s", err)
+					begin.Callback()
+					return
+				}
+				RPCNode := node.RPCNode{
+					Name:          orderNode.NodeName,
+					UserId:        orderNode.UserId,
+					ChainProtocol: node.ChainProtocol(orderNode.Protocol),
+					Status:        node.Initializing,
+					PublicIp:      "",
+					Region:        orderNode.Region,
+					LaunchTime:    orderInfo.OrderTime,
+					Resource:      orderNode.Resource,
+					ChainVersion:  "",
+					NextPaymentDate: sql.NullTime{
+						Time:  orderInfo.OrderTime.Time.AddDate(0, 1, 0),
+						Valid: true,
+					},
+					PaymentPerMonth:   decimal.Decimal{},
+					RemainingSyncTime: "",
+					CurrentHeight:     0,
+					BlockTime:         "",
+					HttpEndpoint:      "",
+					WebsocketEndpoint: "",
+					Created: sql.NullTime{
+						Time:  time.Now(),
+						Valid: true,
+					},
+				}
+				err = begin.Model(node.RPCNode{}).Create(&RPCNode).Error
+				if err != nil {
+					logger.Infof("Failed to Create OrderNode: %s", err)
+					begin.Callback()
+					return
+				}
 			} else {
-				//
 				if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
 					orderInfo.Status = order.Cancelled
 				}
 			}
-			ol.db.Model(order.Order{}).Updates(&orderInfo)
+			err = begin.Model(order.Order{}).Updates(&orderInfo).Error
+			if err != nil {
+				logger.Infof("Failed to Updates Order: %s", err)
+				begin.Callback()
+				return
+			} else {
+				begin.Commit()
+			}
 		}
 	})
 	if err != nil {
-		logger.Errorf("order cron start failed, EntryID: %s, err: %s", EntryID, err)
+		logger.Errorf("StartOrderListening start failed, EntryID: %s, err: %s", EntryID, err)
 	}
 	c.Start()
 }
@@ -96,8 +140,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 func (ol *OrderListeningService) StartScanBlockInformation() {
 	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
-	EntryID, err := c.AddFunc("*/15 * 9 * * *", func() {
-		fmt.Println(time.Now(), "开始扫描块信息")
+	EntryID, err := c.AddFunc("*/15 * * * * *", func() {
 		var blackHeight order.BlackHeight
 		err := ol.db.Model(order.BlackHeight{}).Where("event_type = ?", "Transfer").First(&blackHeight).Error
 		if err != nil {
@@ -138,6 +181,7 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			FromBlock: big.NewInt(blackHeight.BlackHeight),
 			ToBlock:   big.NewInt(int64(currentBlockHeight)),
 		}
+		logger.Infof("Scan transaction events from %d to %d\n", blackHeight.BlackHeight, currentBlockHeight)
 		logs, err := ol.client.FilterLogs(context.Background(), query)
 		if err != nil {
 			logger.Errorf("Failed to FilterLogs: %s", err)
@@ -199,7 +243,7 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 		begin.Commit()
 	})
 	if err != nil {
-		logger.Errorf("order cron start failed, EntryID: %s, err: %s", EntryID, err)
+		logger.Errorf("StartScanBlockInformation start failed, EntryID: %s, err: %s", EntryID, err)
 	}
 	c.Start()
 }
