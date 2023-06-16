@@ -15,6 +15,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
+	"hamster-paas/pkg/models/node"
 	"hamster-paas/pkg/models/order"
 	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/utils/logger"
@@ -22,6 +23,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -138,8 +140,16 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 		}
 		logs, err := ol.client.FilterLogs(context.Background(), query)
 		if err != nil {
-			log.Fatal(err)
+			logger.Errorf("Failed to FilterLogs: %s", err)
+			return
 		}
+		var addresses []string
+		err = ol.db.Model(node.UserChargeAccount{}).Pluck("address", &addresses).Error
+		if err != nil {
+			logger.Errorf("Failed to query address in db: %s", err)
+			return
+		}
+		addressString := strings.Join(addresses, "\n")
 
 		var records []order.ReceiptRecords
 		// 处理事件日志
@@ -165,8 +175,9 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			fmt.Printf("接收方地址：%s\n", to.Hex())
 			receiptRecords.Amount = amountDecimal
 			fmt.Printf("交易金额：%s\n", amountDecimal.String())
-
-			records = append(records, receiptRecords)
+			if strings.Contains(addressString, receiptRecords.ReceiveAddress) {
+				records = append(records, receiptRecords)
+			}
 		}
 		if len(records) < 1 {
 			return
