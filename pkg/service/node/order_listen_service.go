@@ -68,7 +68,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 			var receiptRecords []order.ReceiptRecords
 			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and pay_address = ? and receive_address = ? and pay_time > ? and pay_time < ?", orderInfo.Amount, orderInfo.PayAddress, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
 			if err != nil {
-				logger.Infof("Failed to query the ReceiptRecords: %s", err)
+				logger.Errorf("Failed to query the ReceiptRecords: %s", err)
 				return
 			}
 			begin := ol.db.Begin()
@@ -79,7 +79,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 				var orderNode order.OrderNode
 				err := begin.Model(order.OrderNode{}).Where("order_id = ? and user_id = ?", orderInfo.OrderId, orderInfo.UserId).Find(&orderNode).Error
 				if err != nil {
-					logger.Infof("Failed to query OrderNode: %s", err)
+					logger.Errorf("Failed to query OrderNode: %s", err)
 					begin.Callback()
 					return
 				}
@@ -110,7 +110,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 				}
 				err = begin.Model(node.RPCNode{}).Create(&RPCNode).Error
 				if err != nil {
-					logger.Infof("Failed to Create OrderNode: %s", err)
+					logger.Errorf("Failed to Create OrderNode: %s", err)
 					begin.Callback()
 					return
 				}
@@ -119,9 +119,9 @@ func (ol *OrderListeningService) StartOrderListening() {
 					orderInfo.Status = order.Cancelled
 				}
 			}
-			err = begin.Model(order.Order{}).Updates(&orderInfo).Error
+			err = begin.Model(&orderInfo).Updates(&orderInfo).Error
 			if err != nil {
-				logger.Infof("Failed to Updates Order: %s", err)
+				logger.Errorf("Failed to Updates Order: %s", err)
 				begin.Callback()
 				return
 			} else {
@@ -271,7 +271,7 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 	})
 
 	server.OnEvent("/", "order_status", func(s socketIo.Conn, orderId string) {
-		logger.Infof("orderId:", orderId)
+		logger.Infof("orderId: %d\n", orderId)
 		var orderData order.Order
 		for {
 			err := ol.db.Model(order.Order{}).Where("id = ?", orderId).First(&orderData).Error
@@ -290,7 +290,7 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 	})
 
 	server.OnError("/", func(s socketIo.Conn, err error) {
-		logger.Errorf("socket meet error:", err)
+		logger.Errorf("socket meet error: %v\n", err)
 	})
 
 	server.OnDisconnect("/", func(s socketIo.Conn, reason string) {
