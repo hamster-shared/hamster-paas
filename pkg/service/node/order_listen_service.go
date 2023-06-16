@@ -18,7 +18,6 @@ import (
 	"gorm.io/gorm"
 	"hamster-paas/pkg/models/node"
 	"hamster-paas/pkg/models/order"
-	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/utils/logger"
 	"log"
 	"math/big"
@@ -35,12 +34,11 @@ type OrderListeningService struct {
 }
 
 func NewOrderListeningService(erc20ContractAddress string, db *gorm.DB) *OrderListeningService {
-	client, err := ethclient.Dial(eth.NetMap[eth.SEPOLIA_TESTNET])
+	client, err := ethclient.Dial(os.Getenv("NODE_URL"))
 	if err != nil {
-		logger.Errorf("connect Sepolia node failed: %s", err)
-		panic("application get client failed")
+		logger.Errorf("connect NODE_URL failed: %s", err)
+		panic("application get NODE_URL client failed")
 	}
-	logger.Info("connected Sepolia node")
 	return &OrderListeningService{
 		db:                   db,
 		erc20ContractAddress: common.HexToAddress(erc20ContractAddress),
@@ -223,7 +221,9 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 				records = append(records, receiptRecords)
 			}
 		}
+		blackHeight.BlackHeight = int64(currentBlockHeight + 1)
 		if len(records) < 1 {
+			err = ol.db.Model(&blackHeight).Updates(&blackHeight).Error
 			return
 		}
 		begin := ol.db.Begin()
@@ -233,7 +233,7 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			begin.Callback()
 			return
 		}
-		blackHeight.BlackHeight = int64(currentBlockHeight)
+
 		err = begin.Model(order.BlackHeight{}).Updates(&blackHeight).Error
 		if err != nil {
 			logger.Errorf("Failed to Updates blackHeight to db: %s", err)
