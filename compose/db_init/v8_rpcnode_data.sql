@@ -69,7 +69,7 @@ create table t_cl_order_node (
 create table t_cl_black_height(
     id int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     black_height bigint not null DEFAULT 1 comment '扫描到块高',
-    type varchar(50) not null DEFAULT 'Transfer' comment '扫描到块高'
+    event_type varchar(50) not null DEFAULT 'Transfer' comment '扫描到块高'
 );
 
 

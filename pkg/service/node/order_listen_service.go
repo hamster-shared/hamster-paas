@@ -66,7 +66,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 		for _, orderInfo := range orderList {
 			//查询获取订单中地址
 			var receiptRecords []order.ReceiptRecords
-			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and pay_address = ? and receive_address = ? and pay_time > ? and pay_time < ?", orderInfo.Amount, orderInfo.PayAddress, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("order_time asc").Find(&receiptRecords).Error
+			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and pay_address = ? and receive_address = ? and pay_time > ? and pay_time < ?", orderInfo.Amount, orderInfo.PayAddress, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
 			if err != nil {
 				logger.Infof("Failed to query the ReceiptRecords: %s", err)
 				return
