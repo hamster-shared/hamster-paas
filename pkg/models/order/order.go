@@ -69,4 +69,5 @@ type ReceiptRecords struct {
 	ReceiveAddress string          `json:"receiveAddress"`
 	PayTx          string          `json:"payTx"`
 	PayTime        time.Time       `json:"payTime"`
+	PayTimeUTC     time.Time       `json:"payTimeUTC"`
 }

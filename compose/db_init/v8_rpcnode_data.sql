@@ -49,7 +49,7 @@ create table t_cl_order(
     pay_address varchar(50) comment '支付地址',
     receive_address varchar(50) comment '收款地址',
     address_init_balance decimal(10,2) comment '下单时地址余额',
-    pay_tx varchar(64) comment '交易事务号',
+    pay_tx varchar(200) comment '交易事务号',
     index (order_id),
     index (user_id)
 );
@@ -80,5 +80,6 @@ create table t_cl_receipt_records(
     receive_address varchar(50) comment '收款地址',
     amount decimal(10,2) comment '总价',
     pay_tx varchar(200) comment '交易事务号',
-    pay_time timestamp not null comment '交易时间'
+    pay_time timestamp not null comment '交易时间',
+    pay_time_UTC timestamp not null comment '交易时间-UTC'
 );
