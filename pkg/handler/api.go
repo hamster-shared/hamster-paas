@@ -27,15 +27,15 @@ func (h *HttpServer) StartHttpServer() error {
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
 	//socket
-
 	go func() {
 		if err := h.socketIoServer.Serve(); err != nil {
 			logger.Errorf("socketIo listen error: %s\n", err)
 		}
 	}()
 	defer h.socketIoServer.Close()
-	r.GET("/socket.io/*any", gin.WrapH(h.socketIoServer))
-	r.POST("/socket.io/*any", gin.WrapH(h.socketIoServer))
+	socketApi := r.Group("/socket.io")
+	socketApi.GET("/*any", gin.WrapH(h.socketIoServer))
+	socketApi.POST("/*any", gin.WrapH(h.socketIoServer))
 
 	rpcApi := r.Group("/api/rpc")
 	rpcApi.Use(h.handlerServer.Authorize())

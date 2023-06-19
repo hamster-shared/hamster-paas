@@ -254,6 +254,8 @@ var allowOriginFunc = func(r *http.Request) bool {
 
 func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 	server := socketIo.NewServer(&engineio.Options{
+		PingTimeout:  time.Second * 5,
+		PingInterval: time.Second * 2,
 		Transports: []transport.Transport{
 			&polling.Transport{
 				CheckOrigin: allowOriginFunc,
@@ -271,7 +273,7 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 	})
 
 	server.OnEvent("/", "order_status", func(s socketIo.Conn, orderId string) {
-		logger.Infof("orderId: %d\n", orderId)
+		logger.Infof("orderId: %s\n", orderId)
 		var orderData order.Order
 		for {
 			err := ol.db.Model(order.Order{}).Where("id = ?", orderId).First(&orderData).Error
