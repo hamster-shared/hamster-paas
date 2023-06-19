@@ -272,8 +272,8 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 		return nil
 	})
 
-	server.OnEvent("/", "order_status", func(s socketIo.Conn, orderId string) {
-		logger.Infof("orderId: %s\n", orderId)
+	server.OnEvent("/", "order_status", func(s socketIo.Conn, orderId int) {
+		logger.Infof("orderId: %d\n", orderId)
 		var orderData order.Order
 		for {
 			err := ol.db.Model(order.Order{}).Where("id = ?", orderId).First(&orderData).Error
