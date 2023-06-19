@@ -145,7 +145,7 @@ func (o *OrderService) OrderList(startDateStr, endDateStr, query string, userId,
 	if query != "" {
 		tx = tx.Where("order_id like ?", "%"+query+"%")
 	}
-	err := tx.Offset((page - 1) * size).Limit(size).Find(&orderList).Offset(-1).Limit(-1).Count(&total).Error
+	err := tx.Order("order_time DESC").Offset((page - 1) * size).Limit(size).Find(&orderList).Offset(-1).Limit(-1).Count(&total).Error
 	if err != nil {
 		logger.Errorf("query order list failed: %", err)
 		return pageData, nil
@@ -230,5 +230,6 @@ func AccountBalance(address string) (string, error) {
 	balanceDecimal := new(big.Float).SetInt(balance)
 	exp := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
 	balanceDecimal.Quo(balanceDecimal, new(big.Float).SetInt(exp))
+	client.Close()
 	return balanceDecimal.Text('f', 2), nil
 }
