@@ -66,7 +66,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 		for _, orderInfo := range orderList {
 			//查询获取订单中地址
 			var receiptRecords []order.ReceiptRecords
-			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and pay_address = ? and receive_address = ? and pay_time > ? and pay_time < ?", orderInfo.Amount, orderInfo.PayAddress, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
+			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and pay_address = ? and receive_address = ? and pay_time_UTC > ? and pay_time_UTC < ?", orderInfo.Amount, orderInfo.PayAddress, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
 			if err != nil {
 				logger.Errorf("Failed to query the ReceiptRecords: %s", err)
 				return
@@ -202,6 +202,7 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			if err == nil {
 				timestamp := time.Unix(int64(block.Time()), 0)
 				receiptRecords.PayTime = timestamp
+				receiptRecords.PayTimeUTC = timestamp.UTC()
 				fmt.Printf("交易时间：%s\n", timestamp.String())
 			}
 
@@ -254,8 +255,6 @@ var allowOriginFunc = func(r *http.Request) bool {
 
 func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 	server := socketIo.NewServer(&engineio.Options{
-		PingTimeout:  time.Second * 5,
-		PingInterval: time.Second * 2,
 		Transports: []transport.Transport{
 			&polling.Transport{
 				CheckOrigin: allowOriginFunc,
