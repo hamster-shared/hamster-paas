@@ -234,7 +234,7 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			return
 		}
 
-		err = begin.Model(order.BlackHeight{}).Updates(&blackHeight).Error
+		err = begin.Model(&blackHeight).Updates(&blackHeight).Error
 		if err != nil {
 			logger.Errorf("Failed to Updates blackHeight to db: %s", err)
 			begin.Callback()
