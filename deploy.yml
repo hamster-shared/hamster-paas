@@ -98,6 +98,11 @@ spec:
                 configMapKeyRef:
                   name: hamster-aline
                   key: token_address
+            - name: VERIFY_IDENTITY
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-aline
+                  key: VERIFY_IDENTITY
           resources: {}
           ports:
             - containerPort: 9898
