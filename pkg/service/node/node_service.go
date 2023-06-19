@@ -108,21 +108,23 @@ func (n *NodeService) NodeDetail(nodeId int) (node.NodeDetail, error) {
 	return detailData, nil
 }
 
-func (n *NodeService) SaveNode(userId int, nodeData node.SaveNodeParam) error {
+func (n *NodeService) UpdateNode(id uint, nodeData node.UpdateNodeParam) error {
 	var node modelsNode.RPCNode
-	err := n.db.Where("name=? and user_id=?", nodeData.Name, userId).First(&node).Error
+	err := n.db.Where("id? and user_id=?", id).First(&node).Error
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			copier.Copy(&node, &nodeData)
-			err = n.db.Create(&node).Error
-			if err != nil {
-				return err
-			}
-			return nil
-		}
+		return fmt.Errorf("node id: %d is aready exists", id)
+	}
+	node.PublicIp = nodeData.PublicIp
+	node.ChainVersion = string(nodeData.ChainVersion)
+	node.Status = nodeData.Status
+	node.RemainingSyncTime = nodeData.RemainingSyncTime
+	node.HttpEndpoint = nodeData.HttpEndpoint
+	node.WebsocketEndpoint = nodeData.WebsocketEndpoint
+	err = n.db.Model(&node).Updates(&node).Error
+	if err != nil {
 		return err
 	}
-	return fmt.Errorf("node name: %s is aready exists", nodeData.Name)
+	return nil
 }
 
 func QueryNodeStatus(rpcUrl, chainProtocol string) (modelsNode.RPCNodeStatus, error) {

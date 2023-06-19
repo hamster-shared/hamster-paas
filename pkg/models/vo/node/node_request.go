@@ -17,13 +17,14 @@ type NodeLaunchParam struct {
 	PaymentPerMonth decimal.Decimal `json:"paymentPerMonth"`
 }
 
-type SaveNodeParam struct {
-	Name            string                   `json:"name"`
-	UserId          uint                     `json:"userId"`
-	Chain           modelsNode.ChainProtocol `json:"chain"`
-	Status          modelsNode.RPCNodeStatus `json:"status"`
-	Region          string                   `json:"region"`
-	Resource        string                   `json:"resource"`
-	NextPaymentDate sql.NullTime             `json:"nextPaymentDate"`
-	PaymentPerMonth decimal.Decimal          `json:"paymentPerMonth"`
+type UpdateNodeParam struct {
+	ID                uint                     `json:"id"`
+	Name              string                   `json:"name"`
+	PublicIp          string                   `json:"publicIp"`
+	ChainVersion      modelsNode.ChainProtocol `json:"chainVersion"`
+	Status            modelsNode.RPCNodeStatus `json:"status"`
+	RemainingSyncTime string                   `json:"remainingSyncTime"`
+	HttpEndpoint      string                   `json:"httpEndpoint"`
+	WebsocketEndpoint string                   `json:"websocketEndpoint"`
+	VerifyIdentity    string                   `json:"verifyIdentity"`
 }

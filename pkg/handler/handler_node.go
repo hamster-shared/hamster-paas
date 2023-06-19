@@ -5,6 +5,7 @@ import (
 	"hamster-paas/pkg/models/vo/node"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
+	"os"
 	"strconv"
 )
 
@@ -68,6 +69,33 @@ func (h *HandlerServer) nodeDetail(gin *gin.Context) {
 		return
 	}
 	Success(data, gin)
+}
+
+func (h *HandlerServer) updateNode(gin *gin.Context) {
+	_, ok := gin.Get("user")
+	if !ok {
+		logger.Errorf("context do not have user")
+		Fail("do not have token", gin)
+		return
+	}
+
+	saveNodeParam := node.UpdateNodeParam{}
+	err := gin.BindJSON(&saveNodeParam)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	if saveNodeParam.VerifyIdentity == os.Getenv("NODE_URL") {
+		Fail("You cannot update data", gin)
+		return
+	}
+
+	err = h.nodeService.UpdateNode(saveNodeParam.ID, saveNodeParam)
+	if err != nil {
+		Fail(err.Error(), gin)
+		return
+	}
+	Success(saveNodeParam, gin)
 }
 
 func (h *HandlerServer) launchOrder(gin *gin.Context) {
