@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -66,53 +67,79 @@ func (ol *OrderListeningService) StartOrderListening() {
 		for _, orderInfo := range orderList {
 			//查询获取订单中地址
 			var receiptRecords []order.ReceiptRecords
-			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and pay_address = ? and receive_address = ? and pay_time_UTC > ? and pay_time_UTC < ?", orderInfo.Amount, orderInfo.PayAddress, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
+			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and receive_address = ? and pay_time_UTC > ? and pay_time_UTC < ? and order_id is null", orderInfo.Amount, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
 			if err != nil {
 				logger.Errorf("Failed to query the ReceiptRecords: %s", err)
 				return
 			}
 			begin := ol.db.Begin()
-			if len(receiptRecords) >= 1 {
-				orderInfo.Status = order.Paid
-				orderInfo.PayTx = receiptRecords[0].PayTx
-				//
-				var orderNode order.OrderNode
-				err := begin.Model(order.OrderNode{}).Where("order_id = ? and user_id = ?", orderInfo.OrderId, orderInfo.UserId).Find(&orderNode).Error
-				if err != nil {
-					logger.Errorf("Failed to query OrderNode: %s", err)
-					begin.Callback()
-					return
-				}
-				RPCNode := node.RPCNode{
-					Name:          orderNode.NodeName,
-					UserId:        orderNode.UserId,
-					ChainProtocol: node.ChainProtocol(orderNode.Protocol),
-					Status:        node.Initializing,
-					PublicIp:      "",
-					Region:        orderNode.Region,
-					LaunchTime:    orderInfo.OrderTime,
-					Resource:      orderNode.Resource,
-					ChainVersion:  "",
-					NextPaymentDate: sql.NullTime{
-						Time:  orderInfo.OrderTime.Time.AddDate(0, 1, 0),
-						Valid: true,
-					},
-					PaymentPerMonth:   decimal.Decimal{},
-					RemainingSyncTime: "",
-					CurrentHeight:     0,
-					BlockTime:         "",
-					HttpEndpoint:      "",
-					WebsocketEndpoint: "",
-					Created: sql.NullTime{
-						Time:  time.Now(),
-						Valid: true,
-					},
-				}
-				err = begin.Model(node.RPCNode{}).Create(&RPCNode).Error
-				if err != nil {
-					logger.Errorf("Failed to Create OrderNode: %s", err)
-					begin.Callback()
-					return
+			data, err := AccountBalance(orderInfo.ReceiveAddress)
+			if err != nil {
+				logger.Errorf("get balance failed: %s", err)
+				continue
+			}
+			balance, err := decimal.NewFromString(data)
+			if err != nil {
+				logger.Errorf("balance to decimal failed: %s", err)
+				continue
+			}
+			cmp := balance.Cmp(orderInfo.AddressInitBalance.Add(orderInfo.Amount))
+			if len(receiptRecords) >= 1 && cmp == 0 {
+				var orderDb order.Order
+				err := ol.db.Model(&order.Order{}).Where("pay_tx = ?", receiptRecords[0].PayTx).First(&orderDb).Error
+				if !errors.Is(gorm.ErrRecordNotFound, err) {
+					if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
+						orderInfo.Status = order.Cancelled
+					}
+				} else {
+					orderInfo.Status = order.Paid
+					orderInfo.PayTx = receiptRecords[0].PayTx
+					orderInfo.PayAddress = receiptRecords[0].PayAddress
+					//
+					var orderNode order.OrderNode
+					err = begin.Model(order.OrderNode{}).Where("order_id = ? and user_id = ?", orderInfo.OrderId, orderInfo.UserId).Find(&orderNode).Error
+					if err != nil {
+						logger.Errorf("Failed to query OrderNode: %s", err)
+						begin.Callback()
+						return
+					}
+					err := begin.Model(order.ReceiptRecords{}).Where("id = ?", receiptRecords[0].Id).Update("order_id", orderInfo.Id).Error
+					if err != nil {
+						logger.Errorf("Failed to update ReceiptRecords: %s", err)
+						begin.Callback()
+						return
+					}
+					RPCNode := node.RPCNode{
+						Name:          orderNode.NodeName,
+						UserId:        orderNode.UserId,
+						ChainProtocol: node.ChainProtocol(orderNode.Protocol),
+						Status:        node.Initializing,
+						PublicIp:      "",
+						Region:        orderNode.Region,
+						LaunchTime:    orderInfo.OrderTime,
+						Resource:      orderNode.Resource,
+						ChainVersion:  "",
+						NextPaymentDate: sql.NullTime{
+							Time:  orderInfo.OrderTime.Time.AddDate(0, 1, 0),
+							Valid: true,
+						},
+						PaymentPerMonth:   decimal.Decimal{},
+						RemainingSyncTime: "",
+						CurrentHeight:     0,
+						BlockTime:         "",
+						HttpEndpoint:      "",
+						WebsocketEndpoint: "",
+						Created: sql.NullTime{
+							Time:  time.Now(),
+							Valid: true,
+						},
+					}
+					err = begin.Model(node.RPCNode{}).Create(&RPCNode).Error
+					if err != nil {
+						logger.Errorf("Failed to Create OrderNode: %s", err)
+						begin.Callback()
+						return
+					}
 				}
 			} else {
 				if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
@@ -155,18 +182,6 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 		if int64(currentBlockHeight) <= blackHeight.BlackHeight {
 			return
 		}
-		//fmt.Println("当前块高度:", currentBlockHeight)
-		//block, err := ol.client.BlockByNumber(context.Background(), currentBlockHeight)
-		//if err != nil {
-		//	log.Fatal(err)
-		//}
-		//
-		//for _, tx := range block.Transactions() {
-		//	fmt.Printf("block.Transactions 交易哈希：%s\n", tx.Hash().Hex())
-		//	//fmt.Printf("block.Transactions 发送方地址：%s\n", tx.from.Load())
-		//	fmt.Printf("block.Transactions 接收方地址：%s\n", tx.To().Hex())
-		//	fmt.Printf("block.Transactions 交易金额：%s\n", tx.Value().String())
-		//}
 
 		//扫描事件块
 		query := ethereum.FilterQuery{
@@ -202,8 +217,13 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			if err == nil {
 				timestamp := time.Unix(int64(block.Time()), 0)
 				receiptRecords.PayTime = timestamp
-				receiptRecords.PayTimeUTC = timestamp.UTC()
+				receiptRecords.PayTimeUTC = timestamp.Add(-8 * time.Hour)
 				fmt.Printf("交易时间：%s\n", timestamp.String())
+			}
+			headerByHash, err := ol.client.HeaderByHash(context.Background(), log.BlockHash)
+			if err == nil {
+				receiptRecords.BlackHeight = headerByHash.Number.Int64()
+				fmt.Println("Block Number:", headerByHash.Number.Int64())
 			}
 
 			from := common.BytesToAddress(log.Topics[1].Bytes())
@@ -212,6 +232,12 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			amountDecimal := decimal.NewFromBigInt(amount, 0).Div(decimal.NewFromInt(1e6))
 			receiptRecords.PayTx = log.TxHash.Hex()
 			fmt.Printf("交易哈希：%s\n", log.TxHash.Hex())
+			var dbReceiptRecords order.ReceiptRecords
+			err = ol.db.Model(&order.ReceiptRecords{}).Where("pay_tx = ?", receiptRecords.PayTx).First(&dbReceiptRecords).Error
+			if !errors.Is(gorm.ErrRecordNotFound, err) {
+				logger.Errorf("pay_tx %s already exists in the db! err is %s\n", receiptRecords.PayTx, err)
+				continue
+			}
 			receiptRecords.PayAddress = from.Hex()
 			fmt.Printf("发送方地址：%s\n", from.Hex())
 			receiptRecords.ReceiveAddress = to.Hex()
