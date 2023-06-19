@@ -67,7 +67,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 		for _, orderInfo := range orderList {
 			//查询获取订单中地址
 			var receiptRecords []order.ReceiptRecords
-			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and receive_address = ? and pay_time_UTC > ? and pay_time_UTC < ? and order_id is null", orderInfo.Amount, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
+			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and receive_address = ? and pay_time_UTC > ? and pay_time_UTC < ? and order_id = 0", orderInfo.Amount, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
 			if err != nil {
 				logger.Errorf("Failed to query the ReceiptRecords: %s", err)
 				return
@@ -97,7 +97,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 					orderInfo.PayAddress = receiptRecords[0].PayAddress
 					//
 					var orderNode order.OrderNode
-					err = begin.Model(order.OrderNode{}).Where("order_id = ? and user_id = ?", orderInfo.OrderId, orderInfo.UserId).Find(&orderNode).Error
+					err = begin.Model(order.OrderNode{}).Where("order_id = ? and user_id = ?", orderInfo.Id, orderInfo.UserId).Find(&orderNode).Error
 					if err != nil {
 						logger.Errorf("Failed to query OrderNode: %s", err)
 						begin.Callback()
@@ -139,6 +139,8 @@ func (ol *OrderListeningService) StartOrderListening() {
 						logger.Errorf("Failed to Create OrderNode: %s", err)
 						begin.Callback()
 						return
+					} else {
+						//utils.SendEmailForNodeCreate(RPCNode)
 					}
 				}
 			} else {
