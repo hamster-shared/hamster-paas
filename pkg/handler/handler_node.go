@@ -85,7 +85,7 @@ func (h *HandlerServer) updateNode(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	if saveNodeParam.VerifyIdentity == os.Getenv("NODE_URL") {
+	if saveNodeParam.VerifyIdentity == os.Getenv("VERIFY_IDENTITY") {
 		Fail("You cannot update data", gin)
 		return
 	}
