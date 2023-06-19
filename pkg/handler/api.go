@@ -93,6 +93,7 @@ func (h *HttpServer) StartHttpServer() error {
 	nodeApi.GET("/list", h.handlerServer.nodeList)
 	nodeApi.GET("/statistics-info", h.handlerServer.nodeStatisticsInfo)
 	nodeApi.GET("/:id", h.handlerServer.nodeDetail)
+	nodeApi.POST("/order/update", h.handlerServer.updateNode)
 	nodeApi.POST("/order/launch", h.handlerServer.launchOrder)
 	nodeApi.GET("/order/list", h.handlerServer.orderList)
 	nodeApi.GET("/order/:id", h.handlerServer.payOrderDetail)

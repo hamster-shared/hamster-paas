@@ -278,16 +278,20 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 		for {
 			err := ol.db.Model(order.Order{}).Where("id = ?", orderId).First(&orderData).Error
 			if err != nil {
-				time.Sleep(time.Second * 5)
+				logger.Errorf("orderId: %d query fail, err is : %s\n", orderId, err)
+				time.Sleep(time.Second * 3)
 				continue
 			}
 			if orderData.Status == order.Cancelled || orderData.Status == order.Paid {
+				logger.Infof("orderId: %d query end\n", orderId)
 				break
 			}
 			if orderData.Status == order.PaymentPending {
-				time.Sleep(time.Second * 5)
+				logger.Infof("orderId: %d query continue\n", orderId)
+				time.Sleep(time.Second * 3)
 			}
 		}
+		logger.Infof("orderId: %d Sending results to the client---> %d\n", orderId, orderData.Status)
 		s.Emit("order_result", orderData.Status)
 	})
 
