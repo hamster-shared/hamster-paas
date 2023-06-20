@@ -19,6 +19,7 @@ import (
 	"gorm.io/gorm"
 	"hamster-paas/pkg/models/node"
 	"hamster-paas/pkg/models/order"
+	"hamster-paas/pkg/utils"
 	"hamster-paas/pkg/utils/logger"
 	"log"
 	"math/big"
@@ -88,6 +89,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 				var orderDb order.Order
 				err := ol.db.Model(&order.Order{}).Where("pay_tx = ?", receiptRecords[0].PayTx).First(&orderDb).Error
 				if !errors.Is(gorm.ErrRecordNotFound, err) {
+					fmt.Printf("db time is %s，serve time.now() is %s \n", orderInfo.OrderTime.Time, time.Now())
 					if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
 						orderInfo.Status = order.Cancelled
 					}
@@ -140,10 +142,11 @@ func (ol *OrderListeningService) StartOrderListening() {
 						begin.Callback()
 						return
 					} else {
-						//utils.SendEmailForNodeCreate(RPCNode)
+						utils.SendEmailForNodeCreate(RPCNode)
 					}
 				}
 			} else {
+				fmt.Printf("db time is %s，serve time.now() is %s \n", orderInfo.OrderTime.Time, time.Now())
 				if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
 					orderInfo.Status = order.Cancelled
 				}
@@ -283,6 +286,8 @@ var allowOriginFunc = func(r *http.Request) bool {
 
 func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 	server := socketIo.NewServer(&engineio.Options{
+		PingTimeout:  time.Hour,
+		PingInterval: time.Second * 2,
 		Transports: []transport.Transport{
 			&polling.Transport{
 				CheckOrigin: allowOriginFunc,
