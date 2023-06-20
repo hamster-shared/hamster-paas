@@ -89,8 +89,9 @@ func (ol *OrderListeningService) StartOrderListening() {
 				var orderDb order.Order
 				err := ol.db.Model(&order.Order{}).Where("pay_tx = ?", receiptRecords[0].PayTx).First(&orderDb).Error
 				if !errors.Is(gorm.ErrRecordNotFound, err) {
-					fmt.Printf("db time is %s，serve time.now() is %s \n", orderInfo.OrderTime.Time, time.Now())
+					fmt.Printf("---11111 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 					if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
+						fmt.Printf("---222222 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 						orderInfo.Status = order.Cancelled
 					}
 				} else {
@@ -146,8 +147,9 @@ func (ol *OrderListeningService) StartOrderListening() {
 					}
 				}
 			} else {
-				fmt.Printf("db time is %s，serve time.now() is %s \n", orderInfo.OrderTime.Time, time.Now())
+				fmt.Printf("---33333 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 				if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
+					fmt.Printf("---44444 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 					orderInfo.Status = order.Cancelled
 				}
 			}
