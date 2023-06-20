@@ -68,7 +68,7 @@ type ReceiptRecords struct {
 	PayAddress     string          `json:"payAddress"`
 	ReceiveAddress string          `json:"receiveAddress"`
 	PayTx          string          `json:"payTx"`
-	OrderId        string          `json:"orderId"`
+	OrderId        uint            `json:"orderId"`
 	PayTime        time.Time       `json:"payTime"`
 	PayTimeUTC     time.Time       `json:"payTimeUTC"`
 }
