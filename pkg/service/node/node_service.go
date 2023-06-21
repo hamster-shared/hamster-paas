@@ -35,7 +35,7 @@ func (n *NodeService) NodeStatisticsInfo(userId int) (node.NodeStatisticsVo, err
 		Status int
 		Count  int
 	}{}
-	err := n.db.Model(modelsNode.RPCNode{}).Select("status, count(*) as count").Where("user_id = ? and status in (?,?)", userId, modelsNode.Synced, modelsNode.Halted).
+	err := n.db.Model(modelsNode.RPCNode{}).Select("status, count(*) as count").Where("user_id = ?", userId).
 		Group("status").
 		Scan(&results).
 		Error
@@ -50,8 +50,8 @@ func (n *NodeService) NodeStatisticsInfo(userId int) (node.NodeStatisticsVo, err
 			} else {
 				statisticsInfo.Halted = result.Count
 			}
+			statisticsInfo.Nodes = statisticsInfo.Nodes + int64(result.Count)
 		}
-		statisticsInfo.Nodes = int64(statisticsInfo.Synced + statisticsInfo.Halted)
 	}
 	return statisticsInfo, nil
 }
