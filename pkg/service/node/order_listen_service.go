@@ -85,7 +85,17 @@ func (ol *OrderListeningService) StartOrderListening() {
 				logger.Errorf("balance to decimal failed: %s", err)
 				continue
 			}
-			cmp := balance.Cmp(orderInfo.AddressInitBalance.Add(orderInfo.Amount))
+			addressInitBalance, err := decimal.NewFromString(orderInfo.AddressInitBalance.String)
+			if err != nil {
+				logger.Errorf("addressInitBalance to decimal failed: %s", err)
+				continue
+			}
+			amount, err := decimal.NewFromString(orderInfo.Amount.String)
+			if err != nil {
+				logger.Errorf("amount to decimal failed: %s", err)
+				continue
+			}
+			cmp := balance.Cmp(addressInitBalance.Add(amount))
 			if len(receiptRecords) >= 1 && cmp == 0 {
 				var orderDb order.Order
 				err := ol.db.Model(&order.Order{}).Where("pay_tx = ?", receiptRecords[0].PayTx).First(&orderDb).Error
@@ -125,7 +135,10 @@ func (ol *OrderListeningService) StartOrderListening() {
 							Time:  orderInfo.OrderTime.Time.AddDate(0, 1, 0),
 							Valid: true,
 						},
-						PaymentPerMonth:   decimal.Decimal{},
+						PaymentPerMonth: sql.NullString{
+							String: "0.00",
+							Valid:  true,
+						},
 						RemainingSyncTime: "",
 						CurrentHeight:     0,
 						BlockTime:         "",

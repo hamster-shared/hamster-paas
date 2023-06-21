@@ -2,7 +2,6 @@ package node
 
 import (
 	"database/sql"
-	"github.com/shopspring/decimal"
 	modelsNode "hamster-paas/pkg/models/node"
 )
 
@@ -44,10 +43,20 @@ type NodeDetail struct {
 	Resource          string                   `json:"resource"`
 	ChainVersion      string                   `json:"chainVersion"`
 	NextPaymentDate   sql.NullTime             `json:"nextPaymentDate"`
-	PaymentPerMonth   decimal.Decimal          `json:"paymentPerMonth"`
+	PaymentPerMonth   string                   `json:"paymentPerMonth"`
 	RemainingSyncTime string                   `json:"remainingSyncTime"`
 	CurrentHeight     uint                     `json:"currentHeight"`
 	BlockTime         string                   `json:"blockTime"`
 	HttpEndpoint      string                   `json:"httpEndpoint"`
 	WebsocketEndpoint string                   `json:"websocketEndpoint"`
+}
+
+type RpcNodeResourceStandardVo struct {
+	Id            uint                     `json:"id"`
+	ChainProtocol modelsNode.ChainProtocol `json:"chainProtocol"`
+	CPU           string                   `json:"cpu"`
+	Memory        string                   `json:"memory"`
+	Disk          string                   `json:"disk"`
+	Region        string                   `json:"region"`
+	CostPerMonth  string                   `json:"costPerMonth"`
 }

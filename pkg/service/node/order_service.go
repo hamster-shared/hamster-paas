@@ -85,12 +85,18 @@ func (o *OrderService) LaunchOrder(userId int, launchData node.LaunchOrderParam)
 		Time:  time.Now(),
 		Valid: true,
 	}
-	orderData.AddressInitBalance = balance
+	orderData.AddressInitBalance = sql.NullString{
+		String: balance.String(),
+		Valid:  true,
+	}
 	orderData.OrderType = order.NodeService
 	orderData.UserId = uint(userId)
 	orderData.Status = order.PaymentPending
 	orderData.Chain = modelsNode.ChainProtocol(launchData.Protocol)
-	orderData.Amount = launchData.Amount
+	orderData.Amount = sql.NullString{
+		String: launchData.Amount.String(),
+		Valid:  true,
+	}
 	orderData.BuyTime = launchData.BuyTime
 	orderData.ResourceType = launchData.ResourceType
 	orderData.ReceiveAddress = changeAccount.Address

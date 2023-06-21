@@ -2,7 +2,6 @@ package node
 
 import (
 	"database/sql"
-	"github.com/shopspring/decimal"
 	"hamster-paas/pkg/models/node"
 	"hamster-paas/pkg/models/order"
 )
@@ -15,7 +14,7 @@ type OrderVo struct {
 	ResourceType string             `json:"resourceType"`
 	Status       order.OrderStatus  `json:"status"`
 	Chain        node.ChainProtocol `json:"chain"`
-	Amount       decimal.Decimal    `json:"amount"`
+	Amount       string             `json:"amount"`
 	BuyTime      int                `json:"buyTime"`
 }
 

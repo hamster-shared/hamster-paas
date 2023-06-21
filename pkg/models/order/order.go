@@ -34,11 +34,11 @@ type Order struct {
 	ResourceType       string             `json:"resourceType"`
 	Status             OrderStatus        `json:"status"`
 	Chain              node.ChainProtocol `json:"chain"`
-	Amount             decimal.Decimal    `json:"amount"`
+	Amount             sql.NullString     `gorm:"type:decimal(10,2)" json:"amount"`
 	PayAddress         string             `json:"payAddress"`
 	ReceiveAddress     string             `json:"receiveAddress"`
 	PayTx              string             `json:"payTx"`
-	AddressInitBalance decimal.Decimal    `json:"addressInitBalance"`
+	AddressInitBalance sql.NullString     `gorm:"type:decimal(10,2)" json:"addressInitBalance"`
 	BuyTime            int                `json:"buyTime"`
 }
 

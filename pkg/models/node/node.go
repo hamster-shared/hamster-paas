@@ -2,7 +2,6 @@ package node
 
 import (
 	"database/sql"
-	"github.com/shopspring/decimal"
 )
 
 type UserNode struct {
@@ -58,7 +57,7 @@ type RPCNode struct {
 	// 下一次支付时间
 	NextPaymentDate sql.NullTime `json:"nextPaymentDate"`
 	//每月支付金额
-	PaymentPerMonth decimal.Decimal `json:"paymentPerMonth"`
+	PaymentPerMonth sql.NullString `gorm:"type:decimal(10,2)" json:"paymentPerMonth"`
 	// 同步时间
 	RemainingSyncTime string `json:"remainingSyncTime"`
 	// 当前区块高度
@@ -73,13 +72,13 @@ type RPCNode struct {
 }
 
 type RpcNodeResourceStandard struct {
-	Id            uint          `gorm:"primaryKey" json:"id"`
-	ChainProtocol ChainProtocol `json:"chainProtocol"`
-	CPU           string        `json:"cpu"`
-	Memory        string        `json:"memory"`
-	Disk          string        `json:"disk"`
-	Region        string        `json:"region"`
-	CostPerMonth  float64       `json:"costPerMonth"`
+	Id            uint           `gorm:"primaryKey" json:"id"`
+	ChainProtocol ChainProtocol  `json:"chainProtocol"`
+	CPU           string         `json:"cpu"`
+	Memory        string         `json:"memory"`
+	Disk          string         `json:"disk"`
+	Region        string         `json:"region"`
+	CostPerMonth  sql.NullString `gorm:"type:decimal(10,2)" json:"costPerMonth"`
 }
 
 type UserChargeAccount struct {
