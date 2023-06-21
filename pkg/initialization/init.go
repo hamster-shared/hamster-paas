@@ -6,6 +6,7 @@ import (
 	"hamster-paas/pkg/handler"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/service"
+	"hamster-paas/pkg/service/nginx_log_parse"
 	service2 "hamster-paas/pkg/service/node"
 	"hamster-paas/pkg/utils/logger"
 	"os"
@@ -63,8 +64,8 @@ func Init() {
 	fmt.Println("middle ware service")
 	application.SetBean("middleWareService", service.NewMiddleWareService(db))
 
-	//fmt.Println("meili search service")
-	//nginx_log_parse.InitMeiliSearch()
+	fmt.Println("meili search service")
+	nginx_log_parse.InitMeiliSearch()
 
 	fmt.Println("oracle listener service")
 	oracleListener := service.NewOracleListener(db)
