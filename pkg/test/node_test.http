@@ -40,5 +40,5 @@ PUT http://localhost:9898/api/node/order/1/cancel
 Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
 
 ### query resource standard
-GET http://localhost:9898/api/node/resource-standard/Sui
+GET http://61.172.179.6:30314/api/node/resource-standard/Ethereum
 Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN

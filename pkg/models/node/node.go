@@ -73,13 +73,13 @@ type RPCNode struct {
 }
 
 type RpcNodeResourceStandard struct {
-	Id            uint            `gorm:"primaryKey" json:"id"`
-	ChainProtocol ChainProtocol   `json:"chainProtocol"`
-	CPU           string          `json:"cpu"`
-	Memory        string          `json:"memory"`
-	Disk          string          `json:"disk"`
-	Region        string          `json:"region"`
-	CostPerMonth  decimal.Decimal `json:"costPerMonth"`
+	Id            uint          `gorm:"primaryKey" json:"id"`
+	ChainProtocol ChainProtocol `json:"chainProtocol"`
+	CPU           string        `json:"cpu"`
+	Memory        string        `json:"memory"`
+	Disk          string        `json:"disk"`
+	Region        string        `json:"region"`
+	CostPerMonth  float64       `json:"costPerMonth"`
 }
 
 type UserChargeAccount struct {
