@@ -41,8 +41,13 @@ func NewOrderService(db *gorm.DB) *OrderService {
 }
 
 func (o *OrderService) LaunchOrder(userId int, launchData node.LaunchOrderParam) (uint, error) {
+	var queryOrder order.Order
+	err := o.db.Model(order.Order{}).Where("user_id = ? and status = ?", userId, order.PaymentPending).First(&queryOrder).Error
+	if err == nil {
+		return 0, fmt.Errorf("there are unpaid orders")
+	}
 	var orderNodeData order.OrderNode
-	err := o.db.Model(order.OrderNode{}).Where("user_id = ? and node_name = ?", userId, launchData.NodeName).First(&orderNodeData).Error
+	err = o.db.Model(order.OrderNode{}).Where("user_id = ? and node_name = ?", userId, launchData.NodeName).First(&orderNodeData).Error
 	if err == nil {
 		return 0, fmt.Errorf("node name: %s is areadly exists", launchData.NodeName)
 	}
