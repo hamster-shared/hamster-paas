@@ -56,7 +56,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
 	EntryID, err := c.AddFunc("*/5 * * * * *", func() {
 		var orderList []order.Order
-		err := ol.db.Model(order.Order{}).Where("status = ?", order.PaymentPending).Order("order_time asc").Find(&orderList).Error
+		err := ol.db.Model(order.Order{}).Where("status = ?", order.PaymentPending).Order("order_time desc").Find(&orderList).Error
 		if err != nil {
 			logger.Errorf("Failed to query the order in payment: %s", err)
 			return
@@ -68,11 +68,12 @@ func (ol *OrderListeningService) StartOrderListening() {
 		for _, orderInfo := range orderList {
 			//查询获取订单中地址
 			var receiptRecords []order.ReceiptRecords
-			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and receive_address = ? and pay_time_UTC > ? and pay_time_UTC < ? and order_id = 0", orderInfo.Amount, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time asc").Find(&receiptRecords).Error
+			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and receive_address = ? and pay_time > ? and pay_time < ? and order_id = ?", orderInfo.Amount, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour), 0).Order("pay_time desc").Find(&receiptRecords).Error
 			if err != nil {
 				logger.Errorf("Failed to query the ReceiptRecords: %s", err)
 				return
 			}
+			logger.Infof("The number of transactions waiting to be bound is %d \n", len(receiptRecords))
 			begin := ol.db.Begin()
 			data, err := AccountBalance(orderInfo.ReceiveAddress)
 			if err != nil {
@@ -89,16 +90,14 @@ func (ol *OrderListeningService) StartOrderListening() {
 				var orderDb order.Order
 				err := ol.db.Model(&order.Order{}).Where("pay_tx = ?", receiptRecords[0].PayTx).First(&orderDb).Error
 				if !errors.Is(gorm.ErrRecordNotFound, err) {
-					fmt.Printf("---11111 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 					if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
-						fmt.Printf("---222222 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 						orderInfo.Status = order.Cancelled
 					}
 				} else {
 					orderInfo.Status = order.Paid
 					orderInfo.PayTx = receiptRecords[0].PayTx
 					orderInfo.PayAddress = receiptRecords[0].PayAddress
-					//
+
 					var orderNode order.OrderNode
 					err = begin.Model(order.OrderNode{}).Where("order_id = ? and user_id = ?", orderInfo.Id, orderInfo.UserId).Find(&orderNode).Error
 					if err != nil {
@@ -147,9 +146,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 					}
 				}
 			} else {
-				fmt.Printf("---33333 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 				if orderInfo.OrderTime.Time.Add(time.Hour).Before(time.Now()) {
-					fmt.Printf("---44444 orde id is %d, db time is %s，serve time.now() is %s \n", orderInfo.Id, orderInfo.OrderTime.Time.Add(time.Hour).String(), time.Now().String())
 					orderInfo.Status = order.Cancelled
 				}
 			}
@@ -172,7 +169,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 func (ol *OrderListeningService) StartScanBlockInformation() {
 	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
 		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
-	EntryID, err := c.AddFunc("*/15 * * * * *", func() {
+	EntryID, err := c.AddFunc("*/5 * * * * *", func() {
 		var blackHeight order.BlackHeight
 		err := ol.db.Model(order.BlackHeight{}).Where("event_type = ?", "Transfer").First(&blackHeight).Error
 		if err != nil {
@@ -306,27 +303,18 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 		return nil
 	})
 
-	server.OnEvent("/", "order_status", func(s socketIo.Conn, orderId int) {
-		logger.Infof("orderId: %d\n", orderId)
-		var orderData order.Order
-		for {
-			err := ol.db.Model(order.Order{}).Where("id = ?", orderId).First(&orderData).Error
-			if err != nil {
-				logger.Errorf("orderId: %d query fail, err is : %s\n", orderId, err)
-				time.Sleep(time.Second * 3)
-				continue
-			}
-			if orderData.Status == order.Cancelled || orderData.Status == order.Paid {
-				logger.Infof("orderId: %d query end\n", orderId)
-				break
-			}
-			if orderData.Status == order.PaymentPending {
-				logger.Infof("orderId: %d query continue\n", orderId)
-				time.Sleep(time.Second * 3)
-			}
-		}
-		logger.Infof("orderId: %d Sending results to the client---> %d\n", orderId, orderData.Status)
-		s.Emit("order_result", orderData.Status)
+	server.OnEvent("/page", "order_status_page", func(s socketIo.Conn, orderId int) {
+		logger.Infof("order_status_page orderId: %d\n", orderId)
+		status := ol.PollingGetOrderStatus(orderId)
+		logger.Infof("order_status_page orderId: %d Sending results to the client---> %d\n", orderId, status)
+		s.Emit("order_result", status)
+	})
+
+	server.OnEvent("/", "order_status_model", func(s socketIo.Conn, orderId int) {
+		logger.Infof("order_status_model orderId: %d\n", orderId)
+		status := ol.PollingGetOrderStatus(orderId)
+		logger.Infof("order_status_model orderId: %d Sending results to the client---> %d\n", orderId, status)
+		s.Emit("order_result", status)
 	})
 
 	server.OnError("/", func(s socketIo.Conn, err error) {
@@ -337,4 +325,25 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 		logger.Errorf("socket closed, reason is: %s", reason)
 	})
 	return server
+}
+
+func (ol *OrderListeningService) PollingGetOrderStatus(orderId int) int {
+	var orderData order.Order
+	for {
+		err := ol.db.Model(order.Order{}).Where("id = ?", orderId).First(&orderData).Error
+		if err != nil {
+			logger.Errorf("orderId: %d query fail, err is : %s\n", orderId, err)
+			time.Sleep(time.Second * 3)
+			continue
+		}
+		if orderData.Status == order.Cancelled || orderData.Status == order.Paid {
+			logger.Infof("orderId: %d query end\n", orderId)
+			break
+		}
+		if orderData.Status == order.PaymentPending {
+			logger.Infof("orderId: %d query continue\n", orderId)
+			time.Sleep(time.Second * 3)
+		}
+	}
+	return int(orderData.Status)
 }
