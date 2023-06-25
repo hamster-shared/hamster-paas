@@ -285,8 +285,6 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			logger.Errorf("Failed to add ReceiptRecords to db: %s", err)
 			begin.Callback()
 			return
-		} else {
-			begin.Commit()
 		}
 
 		err = begin.Model(&blackHeight).Updates(&blackHeight).Error
