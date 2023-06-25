@@ -2,7 +2,6 @@ package utils
 
 import (
 	"database/sql"
-	"github.com/shopspring/decimal"
 	"hamster-paas/pkg/models/node"
 	"testing"
 	"time"
@@ -25,7 +24,6 @@ func TestSendEmailForNodeCreate(t *testing.T) {
 		Resource:          "4C32GB 3000GB",
 		ChainVersion:      "",
 		NextPaymentDate:   sql.NullTime{Time: time.Now()},
-		PaymentPerMonth:   decimal.Decimal{},
 		RemainingSyncTime: "",
 		CurrentHeight:     0,
 		BlockTime:         "",

@@ -68,7 +68,7 @@ func (ol *OrderListeningService) StartOrderListening() {
 		for _, orderInfo := range orderList {
 			//查询获取订单中地址
 			var receiptRecords []order.ReceiptRecords
-			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and receive_address = ? and pay_time > ? and pay_time < ? and order_id = ?", orderInfo.Amount, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour), 0).Order("pay_time desc").Find(&receiptRecords).Error
+			err := ol.db.Model(order.ReceiptRecords{}).Where("amount = ? and receive_address = ? and pay_time > ? and pay_time < ? and order_id is null", orderInfo.Amount, orderInfo.ReceiveAddress, orderInfo.OrderTime.Time, orderInfo.OrderTime.Time.Add(time.Hour)).Order("pay_time desc").Find(&receiptRecords).Error
 			if err != nil {
 				logger.Errorf("Failed to query the ReceiptRecords: %s", err)
 				return
@@ -225,7 +225,7 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 		}
 		addressString := strings.Join(addresses, "\n")
 
-		var records []order.ReceiptRecords
+		records := []map[string]interface{}{}
 		// 处理事件日志
 		for _, log := range logs {
 			var receiptRecords order.ReceiptRecords
@@ -262,7 +262,16 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			receiptRecords.Amount = amountDecimal
 			fmt.Printf("交易金额：%s\n", amountDecimal.String())
 			if strings.Contains(addressString, receiptRecords.ReceiveAddress) {
-				records = append(records, receiptRecords)
+				data := map[string]interface{}{
+					"black_height":    receiptRecords.BlackHeight,
+					"pay_address":     receiptRecords.PayAddress,
+					"receive_address": receiptRecords.ReceiveAddress,
+					"amount":          receiptRecords.Amount,
+					"pay_tx":          receiptRecords.PayTx,
+					"pay_time":        receiptRecords.PayTime,
+					"pay_time_utc":    receiptRecords.PayTimeUTC,
+				}
+				records = append(records, data)
 			}
 		}
 		blackHeight.BlackHeight = int64(currentBlockHeight + 1)
@@ -271,11 +280,13 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			return
 		}
 		begin := ol.db.Begin()
-		err = begin.Model(order.ReceiptRecords{}).Create(&records).Error
+		err = begin.Model(&order.ReceiptRecords{}).Create(&records).Error
 		if err != nil {
 			logger.Errorf("Failed to add ReceiptRecords to db: %s", err)
 			begin.Callback()
 			return
+		} else {
+			begin.Commit()
 		}
 
 		err = begin.Model(&blackHeight).Updates(&blackHeight).Error
@@ -283,8 +294,9 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 			logger.Errorf("Failed to Updates blackHeight to db: %s", err)
 			begin.Callback()
 			return
+		} else {
+			begin.Commit()
 		}
-		begin.Commit()
 	})
 	if err != nil {
 		logger.Errorf("StartScanBlockInformation start failed, EntryID: %s, err: %s", EntryID, err)

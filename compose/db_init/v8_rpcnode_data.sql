@@ -80,7 +80,7 @@ create table t_cl_receipt_records(
     receive_address varchar(50) comment '收款地址',
     amount decimal(10,2) comment '总价',
     pay_tx varchar(200) unique comment '交易事务号',
-    order_id int unique default 0 comment 't_cl_order表里的id，不是order_id',
+    order_id int unique default null comment 't_cl_order表里的id，不是order_id',
     pay_time timestamp not null comment '交易时间',
     pay_time_UTC timestamp not null comment '交易时间-UTC'
 );
