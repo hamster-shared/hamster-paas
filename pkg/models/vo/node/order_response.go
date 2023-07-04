@@ -16,6 +16,7 @@ type OrderVo struct {
 	Chain        node.ChainProtocol `json:"chain"`
 	Amount       string             `json:"amount"`
 	BuyTime      int                `json:"buyTime"`
+	NodeName     string             `json:"nodeName"`
 }
 
 type OrderPage struct {

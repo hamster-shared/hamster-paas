@@ -105,6 +105,7 @@ func (o *OrderService) LaunchOrder(userId int, launchData node.LaunchOrderParam)
 	orderData.BuyTime = launchData.BuyTime
 	orderData.ResourceType = launchData.ResourceType
 	orderData.ReceiveAddress = changeAccount.Address
+	orderData.NodeName = launchData.NodeName
 	err = o.db.Transaction(func(tx *gorm.DB) error {
 		err = tx.Save(&orderData).Error
 		if err != nil {

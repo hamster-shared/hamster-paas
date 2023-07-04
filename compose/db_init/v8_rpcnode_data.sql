@@ -50,6 +50,7 @@ create table t_cl_order(
     receive_address varchar(50) comment '收款地址',
     address_init_balance decimal(10,2) comment '下单时地址余额',
     pay_tx varchar(200) comment '交易事务号',
+    node_name  varchar(50) comment 'node name',
     index (order_id),
     index (user_id)
 );

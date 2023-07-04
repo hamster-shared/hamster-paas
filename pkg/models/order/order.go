@@ -40,6 +40,7 @@ type Order struct {
 	PayTx              string             `json:"payTx"`
 	AddressInitBalance sql.NullString     `gorm:"type:decimal(10,2)" json:"addressInitBalance"`
 	BuyTime            int                `json:"buyTime"`
+	NodeName           string             `json:"nodeName"`
 }
 
 type OrderNode struct {
