@@ -340,6 +340,13 @@ func (ol *OrderListeningService) GetOrderWebSocket() *socketIo.Server {
 		s.Emit("order_result", status)
 	})
 
+	server.OnEvent("/list", "order_status_list", func(s socketIo.Conn, orderId int) {
+		logger.Infof("order_status_list orderId: %d\n", orderId)
+		status := ol.PollingGetOrderStatus(orderId)
+		logger.Infof("order_status_list orderId: %d Sending results to the client---> %d\n", orderId, status)
+		s.Emit("order_result", status)
+	})
+
 	server.OnError("/", func(s socketIo.Conn, err error) {
 		logger.Errorf("socket meet error: %v\n", err)
 	})
