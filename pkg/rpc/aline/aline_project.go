@@ -42,6 +42,10 @@ func (p *ProjectService) GetValidContract(page, size int, projectId string, netw
 	var alineValidContractPage vo.AlineValidContractPage
 	var alineValidContractList []models.ContractDeploy
 	var alineValidContractVoList []vo.AlineValidContractVo
+	split := strings.Split(network, "/")
+	if len(split) > 1 {
+		network = split[1]
+	}
 	tx := p.db.Model(models.ContractDeploy{}).Where("project_id = ? AND network = ?", projectId, network)
 	result := tx.Order("create_time DESC").Offset((page - 1) * size).Limit(size).Find(&alineValidContractList).Offset(-1).Limit(-1).Count(&total)
 	if result.Error != nil {
