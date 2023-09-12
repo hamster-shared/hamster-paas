@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
+	"strings"
 )
 
 type ProjectService struct {
@@ -22,6 +23,10 @@ func (p *ProjectService) GetProjectByUserId(userId uint, network string) []*vo.A
 	var projectListRet []*vo.AlineProjectIDAndName
 	p.db.Model(models.Project{}).Where("user_id = ? AND label_display = ?", userId, "Chainlink").Find(&projectList)
 	// TODO 仅显示拥有对应chain network的合约的project id
+	split := strings.Split(network, "/")
+	if len(split) > 1 {
+		network = split[1]
+	}
 	for _, v := range projectList {
 		var c int64
 		p.db.Model(models.ContractDeploy{}).Where("project_id = ? AND network = ?", v.Id, network).Count(&c)
