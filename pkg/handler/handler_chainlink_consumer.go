@@ -73,12 +73,7 @@ func (h *HandlerServer) getHamsterConsumerList(c *gin.Context) {
 		Fail("invalid params: chain an network", c)
 		return
 	}
-	network, err := models.GetAlineNetwork(chainParam, networkParam)
-	if err != nil {
-		logger.Error(fmt.Sprintf("get Hamster Consumer List failed: %s", err.Error()))
-		Fail(fmt.Sprintf("invalid chain and network: %s", err.Error()), c)
-		return
-	}
+	network := models.GetAlineNetwork(chainParam, networkParam)
 	// 通过project id 拿到对应的 consumer 信息
 	projectService, err := application.GetBean[*aline.ProjectService]("projectService")
 	if err != nil {

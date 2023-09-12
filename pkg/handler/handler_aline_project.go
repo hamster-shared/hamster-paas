@@ -20,11 +20,8 @@ func (h *HandlerServer) getProjectList(c *gin.Context) {
 		Fail("param invalid", c)
 		return
 	}
-	network, err := models.GetAlineNetwork(chain, network)
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
+	network = models.GetAlineNetwork(chain, network)
+
 	projectService, err := application.GetBean[*aline.ProjectService]("projectService")
 	if err != nil {
 		Fail("get project service error", c)

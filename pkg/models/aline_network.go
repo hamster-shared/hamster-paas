@@ -1,33 +1,32 @@
 package models
 
 import (
-	"fmt"
 	"strings"
 )
 
-func GetAlineNetwork(chain string, network string) (string, error) {
+func GetAlineNetwork(chain string, network string) string {
 	chainNetwork := chain + " " + network
 	switch strings.ToLower(chainNetwork) {
 	case "ethereum mainnet":
-		return "Ethereum/Mainnet", nil
+		return "Ethereum/Mainnet"
 	case "ethereum goerli testnet":
-		return "Ethereum/Goerli", nil
+		return "Ethereum/Goerli"
 	case "ethereum sepolia testnet":
-		return "Ethereum/Sepolia", nil
+		return "Ethereum/Sepolia"
 	case "ethereum hamster testnet":
-		return "Ethereum/Hamster", nil
+		return "Ethereum/Hamster"
 	case "polygon mainnet":
-		return "Polygon/Mainnet", nil
+		return "Polygon/Mainnet"
 	case "polygon mumbai testnet":
-		return "Polygon/Mumbai", nil
+		return "Polygon/Mumbai"
 	case "bsc mainnet":
-		return "Bsc/Mainnet", nil
+		return "Bsc/Mainnet"
 	case "bsc testnet":
-		return "Bsc/Testnet", nil
+		return "Bsc/Testnet"
 	case "hamster moonbeam testnet":
-		return "Ethereum/Hamster", nil
+		return "Ethereum/Hamster"
 	default:
-		return "", fmt.Errorf("chain and network invalid: %v, %v", chain, network)
+		return network
 	}
 }
 
@@ -50,7 +49,7 @@ func AlineNetworkToChainkLinkNetwork(alineNetwork string) string {
 	case "Bsc/Testnet":
 		return "Bsc Testnet"
 	default:
-		return "Network Unknown"
+		return alineNetwork
 	}
 }
 
