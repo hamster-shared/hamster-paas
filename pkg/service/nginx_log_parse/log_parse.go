@@ -22,7 +22,11 @@ func InitMeiliSearch() {
 			logger.Errorf("init meili search error: %s, meili search host: %s, nginx log path: %s", err, os.Getenv("MEILI_SEARCH"), os.Getenv("NGINX_LOG_PATH"))
 			time.Sleep(5 * time.Second)
 			if i == 9 {
-				panic(err)
+				//panic(err)
+				client := meilisearch.NewClient(meilisearch.ClientConfig{
+					Host: os.Getenv("MEILI_SEARCH"),
+				})
+				application.SetBean("meiliSearch", client)
 			}
 		} else {
 			application.SetBean("meiliSearch", p.client)
