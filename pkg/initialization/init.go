@@ -7,6 +7,7 @@ import (
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/service"
 	"hamster-paas/pkg/service/nginx_log_parse"
+	service2 "hamster-paas/pkg/service/node"
 	"hamster-paas/pkg/utils/logger"
 	"os"
 
@@ -71,9 +72,16 @@ func Init() {
 	oracleListener.StartListen()
 	application.SetBean("oracleListener", oracleListener)
 
+	application.SetBean("nodeService", service2.NewNodeService(db))
+	application.SetBean("orderService", service2.NewOrderService(db))
+	application.SetBean("resourceStandardService", service2.NewResourceStandardService(db))
+	listeningService := service2.NewOrderListeningService(os.Getenv("TOKEN_ADDRESS"), db)
+	listeningService.StartOrderListening()
+	listeningService.StartScanBlockInformation()
+
 	fmt.Println("handler server")
 	httpHandler := handler.NewHandlerServer()
-	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT")).StartHttpServer()
+	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT"), listeningService.GetOrderWebSocket()).StartHttpServer()
 	if err != nil {
 		panic(err)
 	}

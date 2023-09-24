@@ -2,21 +2,23 @@ package handler
 
 import (
 	"fmt"
+	"github.com/gin-gonic/gin"
+	socketIo "github.com/googollee/go-socket.io"
 	"hamster-paas/pkg/utils/logger"
 	"os"
-
-	"github.com/gin-gonic/gin"
 )
 
 type HttpServer struct {
-	handlerServer HandlerServer
-	port          string
+	handlerServer  HandlerServer
+	port           string
+	socketIoServer *socketIo.Server
 }
 
-func NewHttpService(handlerServer HandlerServer, port string) *HttpServer {
+func NewHttpService(handlerServer HandlerServer, port string, socketIoServer *socketIo.Server) *HttpServer {
 	return &HttpServer{
-		handlerServer: handlerServer,
-		port:          port,
+		handlerServer:  handlerServer,
+		port:           port,
+		socketIoServer: socketIoServer,
 	}
 }
 
@@ -24,6 +26,16 @@ func (h *HttpServer) StartHttpServer() error {
 	logger.Infof("start api server on port %s", h.port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
+	//socket
+	go func() {
+		if err := h.socketIoServer.Serve(); err != nil {
+			logger.Errorf("socketIo listen error: %s\n", err)
+		}
+	}()
+	defer h.socketIoServer.Close()
+	socketApi := r.Group("/socket.io")
+	socketApi.GET("/*any", gin.WrapH(h.socketIoServer))
+	socketApi.POST("/*any", gin.WrapH(h.socketIoServer))
 
 	rpcApi := r.Group("/api/rpc")
 	rpcApi.Use(h.handlerServer.Authorize())
@@ -75,5 +87,17 @@ func (h *HttpServer) StartHttpServer() error {
 	chainLinkApi.GET("/subscription/:id/deposits", h.handlerServer.depositList)
 	chainLinkApi.GET("/dashboard/all", h.handlerServer.dashboardAll)
 
+	//node api
+	nodeApi := r.Group("/api/node")
+	nodeApi.Use(h.handlerServer.Authorize())
+	nodeApi.GET("/list", h.handlerServer.nodeList)
+	nodeApi.GET("/statistics-info", h.handlerServer.nodeStatisticsInfo)
+	nodeApi.GET("/:id", h.handlerServer.nodeDetail)
+	nodeApi.POST("/order/update", h.handlerServer.updateNode)
+	nodeApi.POST("/order/launch", h.handlerServer.launchOrder)
+	nodeApi.GET("/order/list", h.handlerServer.orderList)
+	nodeApi.GET("/order/:id", h.handlerServer.payOrderDetail)
+	nodeApi.PUT("/order/:id/cancel", h.handlerServer.cancelOrder)
+	nodeApi.GET("/resource-standard/:protocol", h.handlerServer.queryResourceStandard)
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

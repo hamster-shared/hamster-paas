@@ -1,0 +1,45 @@
+### node list
+GET http://localhost:9898/api/node/list?page=1&size=10
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
+
+### node statistics info
+GET http://localhost:9898/api/node/statistics-info
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
+
+### node detail
+GET http://localhost:9898/api/node/1
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
+
+### launch node
+POST http://localhost:9898/api/node/order/launch
+Content-Type: application/json
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
+
+{
+  "protocol": "Ethereum",
+  "region": "US East",
+  "resourceType": "Ethereum | US East | 4C32GB 3000GB",
+  "nodeResource": "4C32GB 3000GB",
+  "buyTime": 1,
+  "nodeName": "node-test-eleven",
+  "amount": 530.00
+}
+
+### order list
+GET http://localhost:9898/api/node/order/list?page=1&size=10
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
+X-Start: 2023-06-01
+X-End: 2023-06-26
+
+### order detail
+GET http://localhost:9898/api/node/order/1
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
+
+### cancel order
+PUT http://localhost:9898/api/node/order/1/cancel
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN
+
+### query resource standard
+#GET http://61.172.179.6:30314/api/node/resource-standard/Ethereum
+GET http://localhost:9898/api/node/resource-standard/Ethereum
+Access-Token: HZhJloi4k18J/kH40XRIVb61RXAQ0A1EfVAChpkPQlvl/iSJhYCFgGnhJgd93IIN

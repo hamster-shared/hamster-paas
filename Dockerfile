@@ -18,6 +18,7 @@ WORKDIR /app
 COPY --from=builder /root/server/hamster-paas .
 
 VOLUME /var/log/nginx
+
 RUN apt-get update && apt-get install -y ca-certificates
 
 EXPOSE 9898

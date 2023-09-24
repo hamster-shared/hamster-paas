@@ -361,5 +361,5 @@ CREATE TABLE IF NOT EXISTS t_cl_oracle_request_event (
     _index int NOT NULL,
     removed tinyint(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

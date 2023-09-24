@@ -1,0 +1,12 @@
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmaXCw62BcjT74vgCcGNdd9mbm3KojW1KPLBGQ3JwRjkBd' where image = 'https://chain-logo.api.hamsternet.io/ethereum.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmNUH9yu18LT1M6HQEpz6RU8yZYGr95qcFKrs4xm6KqHkN' where image = 'https://chain-logo.api.hamsternet.io/sui.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmQfkngAChGHkdiGMxQVeHmU3p9BqnZxaeRSdWzZtXF3Pf' where image = 'https://chain-logo.api.hamsternet.io/avalanche.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/Qmb1HSgYwHCfh8cs9E4ZDuAAbbK8jtoYDvP9zvbSwNTnxP' where image = 'https://chain-logo.api.hamsternet.io/optimism.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmShL7fg1qfh5FjqMQStpyJYyaLu6Kcm6kHdsZeUdRgyUn' where image = 'https://chain-logo.api.hamsternet.io/near.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/Qmbkk9a4QVdryRriKAbBbQRq2nbVE9tdWbFPWCBMNHno4q' where image = 'https://chain-logo.api.hamsternet.io/aptos.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmWp6wTBbRxxM8xnjHebdAJw7HCNHafzmv5dZoZb1vfRM8' where image = 'https://chain-logo.api.hamsternet.io/starknet.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmZQbRqxkw1gMeZ7beviU4jBmpT6xvxnRra7nnsnG6fNmJ' where image = 'https://chain-logo.api.hamsternet.io/polygon.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmXgBwkCLx6oTwkGgpEJFd43pqKjUPsNx7xRrq8NDPd1dC' where image = 'https://chain-logo.api.hamsternet.io/hamster.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmYaFxaZC8qNPFMArc21gTvmw6hU3ipmH6SvVFdNbFgkUr' where image = 'https://chain-logo.api.hamsternet.io/ton.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmVFE5fEFDDwjjXBoTSJtxPxwdMKp9ygjLUvgK9CXNbRaV' where image = 'https://chain-logo.api.hamsternet.io/arbitrum.svg';
+update t_cl_rpc_chain set image = 'https://g.alpha.hamsternet.io/ipfs/QmQapkNxQiffmr5H9JZs4JcnuXd8Y1zaCdQkNYHRwgMeQz' where image = 'https://chain-logo.api.hamsternet.io/irisnet.svg';
