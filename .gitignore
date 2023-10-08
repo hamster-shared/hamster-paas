@@ -4,3 +4,7 @@
 *.log
 build/
 docker_push.sh
+
+id_rsa
+id_rsa.pub
+zan.http
