@@ -1,0 +1,565 @@
+definitions:
+  handler.Result:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  vo.ExchangeAccessTokenVo:
+    properties:
+      authCode:
+        description: authCode 交换accessToken的授权码
+        type: string
+    type: object
+  vo.PageResp-zan_ApiKeyDigestInfo:
+    properties:
+      data:
+        description: 条⽬列表
+        items:
+          $ref: '#/definitions/zan.ApiKeyDigestInfo'
+        type: array
+      page:
+        description: 当前页
+        type: integer
+      pageCount:
+        description: 总页数
+        type: integer
+      pageSize:
+        description: 每页条目数
+        type: integer
+      total:
+        description: 总条⽬数
+        type: integer
+    type: object
+  zan.ApiKeyBase:
+    properties:
+      apiKeyId:
+        description: API KEY ID
+        type: string
+    type: object
+  zan.ApiKeyCreateReq:
+    properties:
+      name:
+        description: API Key 名字
+        type: string
+    type: object
+  zan.ApiKeyDetailInfo:
+    properties:
+      apiKeyId:
+        description: API KEY ID
+        type: string
+      createdTime:
+        description: 创建时间
+        type: string
+      ecosystemDetailInfos:
+        description: API KEY的⽣态访问信息
+        items:
+          $ref: '#/definitions/zan.ApiKeyEcosystemDetail'
+        type: array
+    type: object
+  zan.ApiKeyDigestInfo:
+    properties:
+      apiKeyId:
+        description: API KEY ID
+        type: string
+      created_time:
+        description: 创建时间
+        type: string
+      name:
+        description: API Key 名字
+        type: string
+    type: object
+  zan.ApiKeyEcosystemDetail:
+    properties:
+      ecosystemCode:
+        description: ⽣态编码
+        type: string
+      ecosystemIcon:
+        description: ⽣态icon地址
+        type: string
+      ecosystemName:
+        description: ⽣态名
+        type: string
+      networkDetailInfoList:
+        description: 链⽹络信息
+        items:
+          $ref: '#/definitions/zan.NetworkDetailInfo'
+        type: array
+    type: object
+  zan.EcosystemDigestInfo:
+    properties:
+      code:
+        description: ⽣态编码
+        type: string
+      icon:
+        description: ⽣态icon地址
+        type: string
+      name:
+        description: ⽣态名
+        type: string
+      networks:
+        description: 链⽹络摘要信息
+        items:
+          type: string
+        type: array
+    type: object
+  zan.NetworkDetailInfo:
+    properties:
+      code:
+        description: ⽹络编码
+        type: string
+      httpsUrl:
+        description: ⽹络https请求地址
+        type: string
+      name:
+        description: ⽹络名称
+        type: string
+      wssUrl:
+        description: ⽹络wss请求地址
+        type: string
+    type: object
+  zan.StatCreditCostItem:
+    properties:
+      dataTime:
+        description: 数据时间时间戳
+        type: integer
+      totalCredit:
+        description: credit消耗量
+        type: integer
+    type: object
+  zan.StatCreditCostOrigin:
+    properties:
+      dataTime:
+        description: 数据时间时间戳
+        type: integer
+      httpsNum:
+        description: http请求数量
+        type: integer
+      originIp:
+        description: 请求来源Ip
+        type: string
+      totalNum:
+        description: 调⽤总数
+        type: integer
+      wssNum:
+        description: wss请求数量
+        type: integer
+    type: object
+  zan.StatMethodCountItem:
+    properties:
+      dataTime:
+        description: 数据时间时间戳
+        type: integer
+      method:
+        description: rpc 请求的⽅法
+        type: string
+      num:
+        description: 调用次数
+        type: integer
+    type: object
+  zan.StatMethodRequestActivityDetail:
+    properties:
+      failedNum:
+        description: 失败次数
+        type: integer
+      method:
+        description: rpc 请求的⽅法
+        type: string
+      totalNum:
+        description: 成功次数
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: 提供zan相关接口
+  title: hamster paas API 接口文档
+  version: 0.0.1
+paths:
+  /api/v2/zan/account/access_token:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        用户在zan平台授权hamster访问后，zan平台通过跳转方式返回给前端authCode, 此时需要调用后端接口与zan平台交换成可以访问的access_token
+        前端需要从url中解析这个authCode，并调用此接口交换
+        用户第一次交换成功后，后续不需要再此交换，此token由后台保存
+      parameters:
+      - description: 请求交换token参数
+        in: body
+        name: exchangeAccessTokenVo
+        required: true
+        schema:
+          $ref: '#/definitions/vo.ExchangeAccessTokenVo'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Result'
+      security:
+      - ApiKeyAuth: []
+      summary: 交换zan的access_token
+      tags:
+      - zan
+  /api/v2/zan/account/auth_url:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        获取授权链接接⼝
+        返回结果中的data 是前端需要跳转到zan平台进行认证的url
+        zan平台认证完成后，会跳转回前端，如
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Result'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取授权链接接⼝
+      tags:
+      - zan
+  /api/v2/zan/account/authed:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        判断用户是否已经进行了zan授权，如果未授权，需要进行授权流程
+        授权流程
+        1. 调用 获取授权链接接⼝ /api/v2/zan/auth_url
+        2. 前端获取到zan平台跳转的url ，进行跳转
+        3. 用户在zan平台进行登陆和授权行为
+        4. zan平台将浏览器url跳回到hamster平台，地址为：
+        5. 前端通过url解析出authCode参数，调用 交换zan的access_token 接口 /api/v2/zan/exchange/access_token
+        6. 调用其他zan平台相关需要授权的接口，如创建ApiKEY
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: desc
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 用户是否已经进行了zan授权
+      tags:
+      - zan
+  /api/v2/zan/node-service/api-keys:
+    post:
+      consumes:
+      - application/json
+      description: 为⽤户创建API KEY
+      parameters:
+      - description: 创建api key
+        in: body
+        name: apiKeyCreateReq
+        required: true
+        schema:
+          $ref: '#/definitions/zan.ApiKeyCreateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  $ref: '#/definitions/zan.ApiKeyBase'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 创建API KEY接⼝
+      tags:
+      - zan
+  /api/v2/zan/node-service/api-keys/detail:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝查询特定API KEY的详情
+      parameters:
+      - description: apiKeyId
+        in: query
+        name: apiKeyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  $ref: '#/definitions/zan.ApiKeyDetailInfo'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: API KEY详情接口
+      tags:
+      - zan
+  /api/v2/zan/node-service/api-keys/list:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝分⻚查询⽤户的API KEY列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        required: true
+        type: integer
+      - default: 10
+        description: 每⻚数量
+        in: query
+        name: size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  $ref: '#/definitions/vo.PageResp-zan_ApiKeyDigestInfo'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: API KEY分⻚查询接⼝
+      tags:
+      - zan
+  /api/v2/zan/node-service/api-keys/stats/credit-cost:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝查询当前API KEY在过去24⼩时credit消耗量统计数据
+      parameters:
+      - description: apiKeyId
+        in: query
+        name: apiKeyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/zan.StatCreditCostItem'
+                  type: array
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: API KEY credit cost统计查询接⼝
+      tags:
+      - zan
+  /api/v2/zan/node-service/api-keys/stats/requests:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝查询当前API KEY过去⼀段时间不同⽣态下的不同⽅法的接⼝调⽤统计数据
+      parameters:
+      - description: apiKeyId
+        in: query
+        name: apiKeyId
+        required: true
+        type: string
+      - description: 时间间隔
+        enum:
+        - STAT_15_MIN
+        - STAT_1_HOUR
+        - STAT_24_HOUR
+        - STAT_7_DAY
+        - STAT_1_MONTH
+        in: query
+        name: timeInterval
+        required: true
+        type: string
+      - description: ⽣态, 此值为链⽣态摘要信息查询接⼝返回的生态编码
+        in: query
+        name: ecosystem
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/zan.StatMethodCountItem'
+                  type: array
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: API Key request统计查询接⼝
+      tags:
+      - zan
+  /api/v2/zan/node-service/api-keys/stats/requests-activity:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝查询当前API KEY过去⼀段时间不同⽣态下不同⽅法的接⼝调⽤成功次数统计数据
+      parameters:
+      - description: apiKeyId
+        in: query
+        name: apiKeyId
+        required: true
+        type: string
+      - description: 时间间隔
+        enum:
+        - STAT_15_MIN
+        - STAT_1_HOUR
+        - STAT_24_HOUR
+        - STAT_7_DAY
+        - STAT_1_MONTH
+        in: query
+        name: timeInterval
+        required: true
+        type: string
+      - description: ⽣态, 此值为链⽣态摘要信息查询接⼝返回的生态编码
+        in: query
+        name: ecosystem
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/zan.StatMethodRequestActivityDetail'
+                  type: array
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: API KEY requests activity统计查询接⼝
+      tags:
+      - zan
+  /api/v2/zan/node-service/api-keys/stats/requests-origin:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝查询当前API KEY过去⼀段时间不同请求来源的统计数据
+      parameters:
+      - description: apiKeyId
+        in: query
+        name: apiKeyId
+        required: true
+        type: string
+      - description: 时间间隔
+        enum:
+        - STAT_15_MIN
+        - STAT_1_HOUR
+        - STAT_24_HOUR
+        - STAT_7_DAY
+        - STAT_1_MONTH
+        in: query
+        name: timeInterval
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/zan.StatCreditCostOrigin'
+                  type: array
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: API KEY request Origin统计查询接⼝
+      tags:
+      - zan
+  /api/v2/zan/node-service/ecosystems/digest:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝查询特定API KEY的详情。
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/zan.EcosystemDigestInfo'
+                  type: array
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 链⽣态摘要信息查询接⼝
+      tags:
+      - zan
+  /api/v2/zan/node-service/plan:
+    get:
+      consumes:
+      - application/json
+      description: 调⽤⽅可通过该接⼝查询当前⽤户的节点服务套餐情况
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.Result'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/zan.EcosystemDigestInfo'
+                  type: array
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: 套餐信息查询接⼝
+      tags:
+      - zan
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Access-Token
+    type: apiKey
+swagger: "2.0"
