@@ -103,6 +103,23 @@ spec:
                 configMapKeyRef:
                   name: hamster-aline
                   key: VERIFY_IDENTITY
+            - name: ZAN_API_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-paas
+                  key: ZAN_API_ENDPOINT
+            - name: ZAN_DEFAULT_ACCESS_TOKEN
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-paas
+                  key: ZAN_DEFAULT_ACCESS_TOKEN
+            - name: ZAN_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-paas
+                  key: ZAN_CLIENT_ID
+            - name: ZAN_PRIVATE_KEY_PATH
+              value: "/app/cert/rsa_private_key_pkcs8.pem"
           resources: {}
           ports:
             - containerPort: 9898
@@ -111,6 +128,8 @@ spec:
           volumeMounts:
             - mountPath: /var/log/nginx
               name: hamster-paas-nginx-log
+            - mountPath: /app/cert
+              name: zan-private-key
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -120,6 +139,13 @@ spec:
         - name: hamster-paas-nginx-log
           persistentVolumeClaim:
             claimName: hamster-paas-nginx-pvc
+        - name: zan-private-key
+          configMap:
+            defaultMode: 420
+            items:
+              - key: rsa_private_key_pkcs8.pem
+                path: rsa_private_key_pkcs8.pem
+            name: hamster-paas
 ---
 apiVersion: v1
 kind: Service

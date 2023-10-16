@@ -5,8 +5,8 @@ COPY . .
 
 # swagger
 ENV GOPROXY https://goproxy.cn,direct
-#RUN go install github.com/swaggo/swag/cmd/swag@latest
-#RUN swag init
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN swag init
 
 RUN go build .
 
@@ -22,4 +22,4 @@ VOLUME /var/log/nginx
 RUN apt-get update && apt-get install -y ca-certificates
 
 EXPOSE 9898
-ENTRYPOINT ["./hamster-paas"]
+CMD ["/app/hamster-paas"]

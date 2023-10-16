@@ -79,7 +79,13 @@ func Init() {
 	listeningService.StartOrderListening()
 	listeningService.StartScanBlockInformation()
 
-	zanClient := zan.NewZanClient("http://webtcapi.unchartedw3s.com", "478f53734d284889a6a0fbfc648cc061", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
+	zanApiEndpoint := os.Getenv("ZAN_API_ENDPOINT")
+	zanDefaultAccessToken := os.Getenv("ZAN_DEFAULT_ACCESS_TOKEN")
+	zanClientId := os.Getenv("ZAN_CLIENT_ID")
+	zanPrivateKeyPATH := os.Getenv("ZAN_PRIVATE_KEY_PATH")
+
+	//zanClient := zan.NewZanClient("http://webtcapi.unchartedw3s.com", "478f53734d284889a6a0fbfc648cc061", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
+	zanClient := zan.NewZanClient(zanApiEndpoint, zanDefaultAccessToken, zanClientId, zanPrivateKeyPATH)
 	zanService := service.NewZanService(zanClient, db)
 	application.SetBean("zanService", zanService)
 	fmt.Println("handler server")

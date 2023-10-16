@@ -52,7 +52,7 @@ func (s *ZanService) ExchangeAccessToken(user aline.User, authCode string) error
 	} else {
 		zanUser.AccessToken = resp.Data.AccessToken
 	}
-	err = s.db.Model(zanUser).Save(zanUser).Error
+	err = s.db.Model(zanUser).Save(&zanUser).Error
 	return err
 }
 
