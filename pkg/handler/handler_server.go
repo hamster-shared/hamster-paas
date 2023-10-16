@@ -20,6 +20,7 @@ type HandlerServer struct {
 	nodeService                  service2.NodeService
 	orderService                 service2.OrderService
 	resourceStandardService      service2.ResourceStandardService
+	zanService                   service.ZanService
 }
 
 func NewHandlerServer() *HandlerServer {
@@ -94,6 +95,14 @@ func NewHandlerServer() *HandlerServer {
 		panic(fmt.Sprintf("application get resource stanard service failed: %s", err.Error()))
 	}
 	handlerServer.resourceStandardService = *resourceStandardService
+
+	zanService, err := application.GetBean[*service.ZanService]("zanService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get zan service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get zan service failed: %s", err.Error()))
+	}
+
+	handlerServer.zanService = *zanService
 
 	return &handlerServer
 }

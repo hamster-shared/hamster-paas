@@ -6,8 +6,8 @@ import (
 	"hamster-paas/pkg/handler"
 	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/service"
-	"hamster-paas/pkg/service/nginx_log_parse"
 	service2 "hamster-paas/pkg/service/node"
+	"hamster-paas/pkg/service/zan"
 	"hamster-paas/pkg/utils/logger"
 	"os"
 
@@ -65,7 +65,7 @@ func Init() {
 	application.SetBean("middleWareService", service.NewMiddleWareService(db))
 
 	fmt.Println("meili search service")
-	nginx_log_parse.InitMeiliSearch()
+	//nginx_log_parse.InitMeiliSearch()
 
 	fmt.Println("oracle listener service")
 	oracleListener := service.NewOracleListener(db)
@@ -79,6 +79,9 @@ func Init() {
 	listeningService.StartOrderListening()
 	listeningService.StartScanBlockInformation()
 
+	zanClient := zan.NewZanClient("http://webtcapi.unchartedw3s.com", "478f53734d284889a6a0fbfc648cc061", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
+	zanService := service.NewZanService(zanClient, db)
+	application.SetBean("zanService", zanService)
 	fmt.Println("handler server")
 	httpHandler := handler.NewHandlerServer()
 	err = handler.NewHttpService(*httpHandler, os.Getenv("PORT"), listeningService.GetOrderWebSocket()).StartHttpServer()

@@ -13,11 +13,6 @@ import (
 	"time"
 )
 
-// * @description Create consumer by subscription.
-// * @param consumer_address string.
-// @param transaction_tx string.
-// @param status string.
-// @return.
 func (h *HandlerServer) createConsumer(c *gin.Context) {
 	userAny, ok := c.Get("user")
 	if !ok {

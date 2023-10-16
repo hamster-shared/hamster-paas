@@ -27,7 +27,9 @@ func NewChainLinkConsumerService(db *gorm.DB) *ChainLinkConsumerService {
 }
 
 // CreateConsumer
-// @param consumer中的subscription id指的是subscription表主键id
+//
+//	consumer中的subscription id指的是subscription表主键id
+//
 // TODO: 需要监听链更改状态
 func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subscriptionService ChainLinkSubscriptionService, poolService PoolService) (int64, error) {
 	// 确认subscription存在

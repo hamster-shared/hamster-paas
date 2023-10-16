@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	socketIo "github.com/googollee/go-socket.io"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"hamster-paas/docs"
 	"hamster-paas/pkg/utils/logger"
 	"os"
 )
@@ -26,6 +29,8 @@ func (h *HttpServer) StartHttpServer() error {
 	logger.Infof("start api server on port %s", h.port)
 	gin.SetMode(os.Getenv("GIN_MODE"))
 	r := gin.New()
+	docs.SwaggerInfo.BasePath = "/"
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	//socket
 	go func() {
 		if err := h.socketIoServer.Serve(); err != nil {
@@ -99,5 +104,20 @@ func (h *HttpServer) StartHttpServer() error {
 	nodeApi.GET("/order/:id", h.handlerServer.payOrderDetail)
 	nodeApi.PUT("/order/:id/cancel", h.handlerServer.cancelOrder)
 	nodeApi.GET("/resource-standard/:protocol", h.handlerServer.queryResourceStandard)
+
+	zanApi := r.Group("/api/v2/zan")
+	zanApi.Use(h.handlerServer.Authorize())
+	zanApi.GET("/account/authed", h.handlerServer.ZanAuthed)
+	zanApi.GET("/account/auth_url", h.handlerServer.ZanGetAuthUrl)
+	zanApi.POST("/account/access_token", h.handlerServer.ZanExchangeAccessToken)
+	zanApi.POST("/node-service/api-keys", h.handlerServer.ZanCreateApiKey)
+	zanApi.GET("/node-service/api-keys/list", h.handlerServer.ZanApiKeyPage)
+	zanApi.GET("/node-service/api-keys/detail", h.handlerServer.ZanApiKeyDetail)
+	zanApi.GET("/node-service/api-keys/stats/credit-cost", h.handlerServer.ZanApiKeyCreditCost)
+	zanApi.GET("/node-service/api-keys/stats/requests", h.handlerServer.ZanApiKeyRequestStats)
+	zanApi.GET("/node-service/api-keys/stats/requests-activity", h.handlerServer.ZanApiKeyRequestActivityStats)
+	zanApi.GET("/node-service/api-keys/stats/request-origin", h.handlerServer.ZanApiKeyRequestOriginStats)
+	zanApi.GET("/node-service/ecosystems/digest", h.handlerServer.ZanEcosystemsDigest)
+	zanApi.GET("/node-service/plan", h.handlerServer.ZanPlan)
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

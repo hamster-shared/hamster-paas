@@ -8,3 +8,5 @@ docker_push.sh
 id_rsa
 id_rsa.pub
 zan.http
+/rsa_private_key_pkcs8.pem
+/rsa_public_key.pem
