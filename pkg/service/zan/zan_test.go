@@ -60,7 +60,7 @@ func TestApiKeyCost(t *testing.T) {
 
 func TestApiKeyRequestStats(t *testing.T) {
 	client := GetClient()
-	response, err := client.ApiKeyRequestActivity("f3d67401-d054-40f8-a332-be17e48a07e8", "STAT_1_MONTH", "ethereum", client.baseAccessToken)
+	response, err := client.ApiKeyRequestActivityStats("f3d67401-d054-40f8-a332-be17e48a07e8", "STAT_1_MONTH", "ethereum", client.baseAccessToken)
 	if err == nil {
 		fmt.Println(response)
 	}
