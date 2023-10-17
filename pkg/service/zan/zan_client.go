@@ -92,12 +92,12 @@ func (c *ZanClient) ApiKeyCreate(name string, accessToken string) (BaseResponse[
 }
 
 // ApiKeyList 2.2 API KEY分⻚查询接⼝
-func (c *ZanClient) ApiKeyList(page int, size int, accessToken string) (BaseResponse[[]ApiKeyDigestInfo], error) {
+func (c *ZanClient) ApiKeyList(page int, size int, accessToken string) (BaseResponse[PageResponse[ApiKeyDigestInfo]], error) {
 	params := map[string]string{
 		"page": strconv.Itoa(page),
 		"size": strconv.Itoa(size),
 	}
-	response, err := DoGet[[]ApiKeyDigestInfo](c, accessToken, "/openapi/v1/node-service/api-keys/list", params)
+	response, err := DoGet[PageResponse[ApiKeyDigestInfo]](c, accessToken, "/openapi/v1/node-service/api-keys/list", params)
 
 	return response, err
 }

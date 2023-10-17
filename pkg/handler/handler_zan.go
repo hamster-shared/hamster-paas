@@ -205,7 +205,15 @@ func (h *HandlerServer) ZanApiKeyPage(c *gin.Context) {
 		return
 	}
 
-	Success(vo.NewPageResp(page, size, resp), c)
+	pageResponse := vo.PageResp[zan.ApiKeyDigestInfo]{
+		Total:     resp.Total,
+		PageCount: resp.PageCount,
+		Page:      resp.PageNum,
+		PageSize:  resp.PageSize,
+		Data:      resp.Data,
+	}
+
+	Success(pageResponse, c)
 }
 
 // ZanApiKeyDetail godoc

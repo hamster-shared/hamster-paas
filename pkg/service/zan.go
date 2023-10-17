@@ -22,7 +22,7 @@ func NewZanService(cli *zan.ZanClient, db *gorm.DB) *ZanService {
 
 func (s *ZanService) GetUserAuthed(user aline.User) bool {
 	var zanUser models.ZanUser
-	err := s.db.Model(models.ZanUser{}).Where("user_id =", user.Id).First(&zanUser).Error
+	err := s.db.Model(models.ZanUser{}).Where("user_id = ?", user.Id).First(&zanUser).Error
 	if err != nil {
 		return false
 	}
@@ -79,14 +79,14 @@ func (s *ZanService) CreateApiKey(u aline.User, req zan.ApiKeyCreateReq) (*zan.A
 	return &created.Data, nil
 }
 
-func (s *ZanService) ApiKeyList(u aline.User, page int, size int) ([]zan.ApiKeyDigestInfo, error) {
+func (s *ZanService) ApiKeyList(u aline.User, page int, size int) (zan.PageResponse[zan.ApiKeyDigestInfo], error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
-		return nil, err
+		return zan.PageResponse[zan.ApiKeyDigestInfo]{}, err
 	}
 	resp, err := s.cli.ApiKeyList(page, size, token)
 	if err != nil {
-		return nil, err
+		return zan.PageResponse[zan.ApiKeyDigestInfo]{}, err
 	}
 	return resp.Data, nil
 }

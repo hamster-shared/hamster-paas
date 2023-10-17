@@ -7,6 +7,14 @@ type BaseResponse[T interface{}] struct {
 	Success bool    `json:"success"`
 }
 
+type PageResponse[T interface{}] struct {
+	Data      []T   `json:"data"`
+	PageCount int   `json:"pageCount"`
+	PageNum   int   `json:"pageNum"`
+	PageSize  int   `json:"pageSize"`
+	Total     int64 `json:"total"`
+}
+
 type AuthUrl struct {
 	AuthUrl string `json:"authUrl"`
 }
