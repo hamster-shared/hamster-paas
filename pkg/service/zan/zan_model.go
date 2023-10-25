@@ -37,7 +37,7 @@ type ApiKeyBase struct {
 type ApiKeyDigestInfo struct {
 	ApiKeyBase
 	// 创建时间
-	CreatedTime string `json:"created_time"`
+	CreatedTime string `json:"createdTime"`
 	// API Key 名字
 	Name string `json:"name"`
 }
@@ -112,11 +112,11 @@ type StatCreditCostOrigin struct {
 
 type EcosystemDigestInfo struct {
 	// ⽣态编码
-	Code string `json:"code"`
+	EcosystemCode string `json:"ecosystemCode"`
 	// ⽣态名
-	Name string `json:"name"`
+	EcosystemName string `json:"ecosystemName"`
 	// ⽣态icon地址
-	Icon string `json:"icon"`
+	EcosystemIcon string `json:"ecosystemIcon"`
 	// 链⽹络摘要信息
 	Networks []string `json:"networks"`
 }

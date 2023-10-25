@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -50,4 +52,23 @@ func TestGetUser(t *testing.T) {
 		fmt.Println(false)
 	}
 	fmt.Println(zanUser.AccessToken != "")
+}
+
+func TestCost(t *testing.T) {
+	client, err := ethclient.Dial("http://webtcapi.unchartedw3s.com/node/v1/eth/goerli/f49675d8c5574292ba40adb2a475e770")
+	if err != nil {
+		panic(err)
+	}
+	ctx := context.Background()
+
+	for i := 0; i < 10; i++ {
+		number, err := client.BlockNumber(ctx)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Println(number)
+		time.Sleep(time.Second * 10)
+	}
+
 }

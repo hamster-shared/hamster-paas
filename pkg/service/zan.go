@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"gorm.io/gorm"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
@@ -75,8 +76,12 @@ func (s *ZanService) CreateApiKey(u aline.User, req zan.ApiKeyCreateReq) (*zan.A
 	if err != nil {
 		return nil, err
 	}
+	if created.Success {
+		return &created.Data, nil
+	} else {
+		return nil, errors.New(*created.Message)
+	}
 
-	return &created.Data, nil
 }
 
 func (s *ZanService) ApiKeyList(u aline.User, page int, size int) (zan.PageResponse[zan.ApiKeyDigestInfo], error) {

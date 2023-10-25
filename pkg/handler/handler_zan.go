@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/samber/lo"
 	"hamster-paas/pkg/models/vo"
@@ -201,6 +202,7 @@ func (h *HandlerServer) ZanApiKeyPage(c *gin.Context) {
 	resp, err := h.zanService.ApiKeyList(u, page, size)
 
 	if err != nil {
+		fmt.Println(err)
 		Fail(err.Error(), c)
 		return
 	}
