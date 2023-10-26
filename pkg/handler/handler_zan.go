@@ -315,8 +315,8 @@ func (h *HandlerServer) ZanApiKeyRequestStats(c *gin.Context) {
 		Fail("timeInterval is not in [STAT_15_MIN,STAT_1_HOUR,STAT_24_HOUR,STAT_7_DAY,STAT_1_MONTH]", c)
 		return
 	}
-	ecosystem := c.GetString("ecosystem")
-	if ecosystem == "" {
+	ecosystem, ok := c.GetQuery("ecosystem")
+	if !ok {
 		Fail("param ecosystem is required", c)
 		return
 	}
@@ -361,8 +361,8 @@ func (h *HandlerServer) ZanApiKeyRequestActivityStats(c *gin.Context) {
 		Fail("timeInterval is not in [STAT_15_MIN,STAT_1_HOUR,STAT_24_HOUR,STAT_7_DAY,STAT_1_MONTH]", c)
 		return
 	}
-	ecosystem := c.GetString("ecosystem")
-	if ecosystem == "" {
+	ecosystem, ok := c.GetQuery("ecosystem")
+	if !ok {
 		Fail("param ecosystem is required", c)
 		return
 	}
@@ -416,6 +416,8 @@ func (h *HandlerServer) ZanApiKeyRequestOriginStats(c *gin.Context) {
 	Success(resp, c)
 }
 
+var zanEcosystemsDigestCache []zan.EcosystemDigestInfo
+
 // ZanEcosystemsDigest godoc
 // @Security ApiKeyAuth
 // @Summary 链⽣态摘要信息查询接⼝
@@ -427,24 +429,23 @@ func (h *HandlerServer) ZanApiKeyRequestOriginStats(c *gin.Context) {
 // @Success 200 {object} Result{data=[]zan.EcosystemDigestInfo}
 // @Router /api/v2/zan/node-service/ecosystems/digest [get]
 func (h *HandlerServer) ZanEcosystemsDigest(c *gin.Context) {
-	user, ok := c.Get("user")
+	_, ok := c.Get("user")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
-	u, ok := user.(aline.User)
-	if !ok {
-		Fail("cannot get user info", c)
-		return
+
+	if len(zanEcosystemsDigestCache) == 0 {
+		resp, err := h.zanService.EcosystemsDigest()
+		if err != nil {
+			Fail(err.Error(), c)
+			return
+		}
+
+		zanEcosystemsDigestCache = resp
 	}
 
-	resp, err := h.zanService.EcosystemsDigest(u)
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-
-	Success(resp, c)
+	Success(zanEcosystemsDigestCache, c)
 }
 
 // ZanPlan godoc

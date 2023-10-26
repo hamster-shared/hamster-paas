@@ -160,10 +160,10 @@ func (c *ZanClient) ApiKeyRequestOriginStats(apiKeyId string, timeInterval strin
 }
 
 // EcosystemsDigest 2.8 链⽣态摘要信息查询接
-func (c *ZanClient) EcosystemsDigest(accessToken string) (BaseResponse[[]EcosystemDigestInfo], error) {
+func (c *ZanClient) EcosystemsDigest() (BaseResponse[[]EcosystemDigestInfo], error) {
 	params := map[string]string{}
 
-	response, err := DoGet[[]EcosystemDigestInfo](c, accessToken, "/openapi/v1/node-service/ecosystems/digest", params)
+	response, err := DoGet[[]EcosystemDigestInfo](c, c.baseAccessToken, "/openapi/v1/node-service/ecosystems/digest", params)
 	return response, err
 }
 

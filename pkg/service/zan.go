@@ -156,12 +156,8 @@ func (s *ZanService) ApiKeyRequestOriginStats(u aline.User, apiKeyId string, tim
 	return resp.Data, nil
 }
 
-func (s *ZanService) EcosystemsDigest(u aline.User) ([]zan.EcosystemDigestInfo, error) {
-	token, err := s.GetUserAccessToken(u)
-	if err != nil {
-		return []zan.EcosystemDigestInfo{}, err
-	}
-	resp, err := s.cli.EcosystemsDigest(token)
+func (s *ZanService) EcosystemsDigest() ([]zan.EcosystemDigestInfo, error) {
+	resp, err := s.cli.EcosystemsDigest()
 	if err != nil {
 		return []zan.EcosystemDigestInfo{}, err
 	}
