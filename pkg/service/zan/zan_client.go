@@ -155,7 +155,7 @@ func (c *ZanClient) ApiKeyRequestOriginStats(apiKeyId string, timeInterval strin
 		"timeInterval": timeInterval,
 	}
 
-	response, err := DoGet[[]StatCreditCostOrigin](c, accessToken, "/openapi/v1/node-service/api-keys/stats/request-origin", params)
+	response, err := DoGet[[]StatCreditCostOrigin](c, accessToken, "/openapi/v1/node-service/api-keys/stats/requests-origin", params)
 	return response, err
 }
 

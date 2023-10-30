@@ -68,7 +68,7 @@ func TestApiKeyRequestStats(t *testing.T) {
 
 func TestEcosystemsDigest(t *testing.T) {
 	client := GetClient()
-	response, err := client.EcosystemsDigest(client.baseAccessToken)
+	response, err := client.EcosystemsDigest()
 	if err == nil {
 		fmt.Println(response)
 	}

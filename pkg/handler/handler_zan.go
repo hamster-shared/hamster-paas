@@ -376,7 +376,7 @@ func (h *HandlerServer) ZanApiKeyRequestActivityStats(c *gin.Context) {
 	Success(resp, c)
 }
 
-// ZanApiKeyRequestOriginStats godoc
+// ZanApiKeyRequestsOriginStats godoc
 // @Security ApiKeyAuth
 // @Summary API KEY request Origin统计查询接⼝
 // @Schemes
@@ -388,7 +388,7 @@ func (h *HandlerServer) ZanApiKeyRequestActivityStats(c *gin.Context) {
 // @Produce json
 // @Success 200 {object} Result{data=[]zan.StatCreditCostOrigin}
 // @Router /api/v2/zan/node-service/api-keys/stats/requests-origin [get]
-func (h *HandlerServer) ZanApiKeyRequestOriginStats(c *gin.Context) {
+func (h *HandlerServer) ZanApiKeyRequestsOriginStats(c *gin.Context) {
 	user, ok := c.Get("user")
 	if !ok {
 		Fail("do not have token", c)

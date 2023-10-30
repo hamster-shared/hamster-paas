@@ -726,7 +726,7 @@ const docTemplate = `{
                     "description": "API KEY ID",
                     "type": "string"
                 },
-                "created_time": {
+                "createdTime": {
                     "description": "创建时间",
                     "type": "string"
                 },
@@ -763,15 +763,15 @@ const docTemplate = `{
         "zan.EcosystemDigestInfo": {
             "type": "object",
             "properties": {
-                "code": {
+                "ecosystemCode": {
                     "description": "⽣态编码",
                     "type": "string"
                 },
-                "icon": {
+                "ecosystemIcon": {
                     "description": "⽣态icon地址",
                     "type": "string"
                 },
-                "name": {
+                "ecosystemName": {
                     "description": "⽣态名",
                     "type": "string"
                 },
