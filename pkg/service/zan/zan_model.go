@@ -110,6 +110,15 @@ type StatCreditCostOrigin struct {
 	WssNum int64 `json:"wssNum"`
 }
 
+type StatMethodRequestActivityFailedDetailGwInfo struct {
+	// 状态错误码
+	Status string
+	// http请求数
+	HttpsNum int
+	// wss 请求数
+	WssNum int
+}
+
 type EcosystemDigestInfo struct {
 	// ⽣态编码
 	EcosystemCode string `json:"ecosystemCode"`

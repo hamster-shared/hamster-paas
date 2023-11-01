@@ -175,3 +175,15 @@ func (s *ZanService) UserPlan(u aline.User) (zan.PlanDetailInfo, error) {
 	}
 	return resp.Data, nil
 }
+
+func (s *ZanService) ApiKeyRequestActivityStatsFail(u aline.User, apiKeyId string, timeInterval string, ecosystem string, method string) ([]zan.StatMethodRequestActivityFailedDetailGwInfo, error) {
+	token, err := s.GetUserAccessToken(u)
+	if err != nil {
+		return []zan.StatMethodRequestActivityFailedDetailGwInfo{}, err
+	}
+	resp, err := s.cli.ApiKeyRequestActivityStatsFail(token, apiKeyId, timeInterval, ecosystem, method)
+	if err != nil {
+		return []zan.StatMethodRequestActivityFailedDetailGwInfo{}, err
+	}
+	return resp.Data, nil
+}

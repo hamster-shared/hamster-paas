@@ -478,6 +478,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v2/zan/node-service/api-keys/stats/requests-activity/failed": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "调用方可通过该接口查询当前API KEY过去一段时间不同生态下某个方法的接口调用失败次数统计数据",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "zan"
+                ],
+                "summary": "API KEY requests activity failed 统计查询接口",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "apiKeyId",
+                        "name": "apiKeyId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "STAT_15_MIN",
+                            "STAT_1_HOUR",
+                            "STAT_24_HOUR",
+                            "STAT_7_DAY",
+                            "STAT_1_MONTH"
+                        ],
+                        "type": "string",
+                        "description": "时间间隔",
+                        "name": "timeInterval",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "⽣态, 此值为链⽣态摘要信息查询接⼝返回的生态编码",
+                        "name": "ecosystem",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "方法",
+                        "name": "method",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/handler.Result"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/zan.StatMethodRequestActivityFailedDetailGwInfo"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/v2/zan/node-service/api-keys/stats/requests-origin": {
             "get": {
                 "security": [
@@ -873,6 +953,23 @@ const docTemplate = `{
                 },
                 "totalNum": {
                     "description": "成功次数",
+                    "type": "integer"
+                }
+            }
+        },
+        "zan.StatMethodRequestActivityFailedDetailGwInfo": {
+            "type": "object",
+            "properties": {
+                "httpsNum": {
+                    "description": "http请求数",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "状态错误码",
+                    "type": "string"
+                },
+                "wssNum": {
+                    "description": "wss 请求数",
                     "type": "integer"
                 }
             }

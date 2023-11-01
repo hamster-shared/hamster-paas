@@ -376,6 +376,59 @@ func (h *HandlerServer) ZanApiKeyRequestActivityStats(c *gin.Context) {
 	Success(resp, c)
 }
 
+// ZanApiKeyRequestActivityStatsFailed godoc
+// @Security ApiKeyAuth
+// @Summary  API KEY requests activity failed 统计查询接口
+// @Schemes
+// @Description 调用方可通过该接口查询当前API KEY过去一段时间不同生态下某个方法的接口调用失败次数统计数据
+// @Param apiKeyId query string true "apiKeyId"
+// @Param timeInterval query string true "时间间隔"  Enums(STAT_15_MIN,STAT_1_HOUR,STAT_24_HOUR,STAT_7_DAY,STAT_1_MONTH)
+// @Param ecosystem query string true "⽣态, 此值为链⽣态摘要信息查询接⼝返回的生态编码"
+// @Param method query string true "方法"
+// @Tags zan
+// @Accept json
+// @Produce json
+// @Success 200 {object} Result{data=[]zan.StatMethodRequestActivityFailedDetailGwInfo}
+// @Router /api/v2/zan/node-service/api-keys/stats/requests-activity/failed [get]
+func (h *HandlerServer) ZanApiKeyRequestActivityStatsFailed(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+
+	apiKeyId := c.DefaultQuery("apiKeyId", "")
+	u, ok := user.(aline.User)
+	if !ok {
+		Fail("cannot get user info", c)
+		return
+	}
+	timeInterval := c.DefaultQuery("timeInterval", "STAT_15_MIN")
+	if !lo.Contains[string](TimeIntervalLimit, timeInterval) {
+		Fail("timeInterval is not in [STAT_15_MIN,STAT_1_HOUR,STAT_24_HOUR,STAT_7_DAY,STAT_1_MONTH]", c)
+		return
+	}
+	ecosystem, ok := c.GetQuery("ecosystem")
+	if !ok {
+		Fail("param ecosystem is required", c)
+		return
+	}
+
+	method, ok := c.GetQuery("method")
+	if !ok {
+		Fail("param ecosystem is required", c)
+		return
+	}
+
+	resp, err := h.zanService.ApiKeyRequestActivityStatsFail(u, apiKeyId, timeInterval, ecosystem, method)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+
+	Success(resp, c)
+}
+
 // ZanApiKeyRequestsOriginStats godoc
 // @Security ApiKeyAuth
 // @Summary API KEY request Origin统计查询接⼝

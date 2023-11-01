@@ -175,6 +175,19 @@ func (c *ZanClient) Plan(accessToken string) (BaseResponse[PlanDetailInfo], erro
 	return response, err
 }
 
+// 2.10 API KEY requests activity failed 统计查询接口
+func (c *ZanClient) ApiKeyRequestActivityStatsFail(accessToken string, apiKeyId string, timeInterval string, ecosystem string, method string) (BaseResponse[[]StatMethodRequestActivityFailedDetailGwInfo], error) {
+	params := map[string]string{
+		"apiKeyId":     apiKeyId,
+		"timeInterval": timeInterval,
+		"ecosystem":    ecosystem,
+		"method":       method,
+	}
+
+	response, err := DoGet[[]StatMethodRequestActivityFailedDetailGwInfo](c, accessToken, "/openapi/v1/node-service/api-keys/stats/requests-activity/failed", params)
+	return response, err
+}
+
 func (c *ZanClient) getParamsSignature(timestamp int64, params map[string][]string) string {
 	unsignedPayload := fmt.Sprintf("%d|", timestamp)
 	if len(params) > 0 {

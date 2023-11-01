@@ -116,6 +116,7 @@ func (h *HttpServer) StartHttpServer() error {
 	zanApi.GET("/node-service/api-keys/stats/credit-cost", h.handlerServer.ZanApiKeyCreditCost)
 	zanApi.GET("/node-service/api-keys/stats/requests", h.handlerServer.ZanApiKeyRequestStats)
 	zanApi.GET("/node-service/api-keys/stats/requests-activity", h.handlerServer.ZanApiKeyRequestActivityStats)
+	zanApi.GET("/node-service/api-keys/stats/requests-activity/failed", h.handlerServer.ZanApiKeyRequestActivityStatsFailed)
 	zanApi.GET("/node-service/api-keys/stats/requests-origin", h.handlerServer.ZanApiKeyRequestsOriginStats)
 	zanApi.GET("/node-service/ecosystems/digest", h.handlerServer.ZanEcosystemsDigest)
 	zanApi.GET("/node-service/plan", h.handlerServer.ZanPlan)
