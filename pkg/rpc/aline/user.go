@@ -40,3 +40,9 @@ func (u *UserService) GetUserById(id int64) (User, error) {
 	}
 	return user, nil
 }
+
+func (u *UserService) GetUserWalletById(id int) (UserWallet, error) {
+	var userWallet UserWallet
+	err := u.db.Model(UserWallet{}).Where("id = ?", id).First(&userWallet).Error
+	return userWallet, err
+}

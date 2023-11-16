@@ -12,3 +12,11 @@ type User struct {
 	UserEmail  string    `json:"userEmail"`
 	CreateTime time.Time `gorm:"column:create_time;default:current_timestamp" json:"create_time"`
 }
+
+type UserWallet struct {
+	Id         uint      `gorm:"primaryKey" json:"id"`
+	Address    string    `gorm:"address" json:"address"`
+	CreateTime time.Time `gorm:"column:create_time;default:current_timestamp" json:"create_time"`
+	UserId     uint      `gorm:"user_id" json:"userId"`
+	FirstState int       `json:"firstState"`
+}
