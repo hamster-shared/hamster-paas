@@ -78,6 +78,6 @@ Content-Type: application/json
 Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
 
 ### query consumers list
-GET http://localhost:9898/api/chainlink/subscription/1/consumers?page=1&size=10
+GET http://localhost:9898/api/middleware/is-active/rpc
 Content-Type: application/json
-Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDAyMDA2NDcsImxvZ2luVHlwZSI6MSwidXNlcklkIjozMzY2NzA5fQ.OOeVmsbDKNB1IxCykFVF9q48BpALRlxL48NWkrf-iMw
