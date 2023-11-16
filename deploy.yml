@@ -120,6 +120,11 @@ spec:
                   key: ZAN_CLIENT_ID
             - name: ZAN_PRIVATE_KEY_PATH
               value: "/app/cert/rsa_private_key_pkcs8.pem"
+            - name: JWT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: hamster-aline
+                  key: JWT_SECRET
           resources: {}
           ports:
             - containerPort: 9898
