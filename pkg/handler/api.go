@@ -48,6 +48,7 @@ func (h *HttpServer) StartHttpServer() error {
 	rpcApi.GET("/networks/:chain", h.handlerServer.rpcGetNetworks)
 	rpcApi.GET("/overview/:network", h.handlerServer.rpcOverview)
 	rpcApi.GET("/mynetwork", h.handlerServer.rpcGetMyNetwork)
+	rpcApi.GET("/subscribe", h.handlerServer.rpcGetSubscribe)
 	rpcApi.GET("/chain/:chain", h.handlerServer.rpcChainDetail)
 	rpcApi.GET("/request-log/:appKey", h.handlerServer.rpcRequestLog)
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/aline"
+	"hamster-paas/pkg/service/zan"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
 	"strings"
@@ -12,12 +13,14 @@ import (
 )
 
 type RpcService struct {
-	db *gorm.DB
+	db        *gorm.DB
+	zanClient *zan.ZanClient
 }
 
-func NewRpcService(db *gorm.DB) *RpcService {
+func NewRpcService(db *gorm.DB, zanClient *zan.ZanClient) *RpcService {
 	return &RpcService{
-		db: db,
+		db:        db,
+		zanClient: zanClient,
 	}
 }
 
@@ -96,6 +99,19 @@ func (s *RpcService) GetMyNetwork(user aline.User, p *models.Pagination) ([]*mod
 		return nil, p, err
 	}
 	return a.GetAppsWithPagination(p)
+}
+
+func (s *RpcService) GetZanSubscribe(userId uint) (string, error) {
+	var zanUser models.ZanUser
+	err := s.db.Model(&models.ZanUser{}).Where("user_id = ?", userId).First(&zanUser).Error
+	if err != nil {
+		return "", err
+	}
+	plan, err := s.zanClient.Plan(zanUser.AccessToken)
+	if err != nil {
+		return "", err
+	}
+	return plan.Data.PlanName, nil
 }
 
 func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChainDetail, error) {

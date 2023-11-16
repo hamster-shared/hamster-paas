@@ -34,6 +34,13 @@ func Init() {
 	if err != nil {
 		panic("application get db failed")
 	}
+	zanApiEndpoint := os.Getenv("ZAN_API_ENDPOINT")
+	zanDefaultAccessToken := os.Getenv("ZAN_DEFAULT_ACCESS_TOKEN")
+	zanClientId := os.Getenv("ZAN_CLIENT_ID")
+	zanPrivateKeyPATH := os.Getenv("ZAN_PRIVATE_KEY_PATH")
+	//zanClient := zan.NewZanClient("http://webtcapi.unchartedw3s.com", "478f53734d284889a6a0fbfc648cc061", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
+	zanClient := zan.NewZanClient(zanApiEndpoint, zanDefaultAccessToken, zanClientId, zanPrivateKeyPATH)
+
 	fmt.Println("chainlink request service")
 	chainLinkRequestService := service.NewChainLinkRequestService(db)
 	application.SetBean[*service.ChainLinkRequestService]("chainLinkRequestService", chainLinkRequestService)
@@ -60,10 +67,10 @@ func Init() {
 	application.SetBean[*service.LongLinkPoolService]("longLinkPoolService", longLinkPoolService)
 
 	fmt.Println("rpc service")
-	application.SetBean("rpcService", service.NewRpcService(db))
+	application.SetBean("rpcService", service.NewRpcService(db, zanClient))
 
 	fmt.Println("middle ware service")
-	application.SetBean("middleWareService", service.NewMiddleWareService(db))
+	application.SetBean("middleWareService", service.NewMiddleWareService(db, zanClient))
 
 	fmt.Println("meili search service")
 	nginx_log_parse.InitMeiliSearch()
@@ -80,13 +87,6 @@ func Init() {
 	listeningService.StartOrderListening()
 	listeningService.StartScanBlockInformation()
 
-	zanApiEndpoint := os.Getenv("ZAN_API_ENDPOINT")
-	zanDefaultAccessToken := os.Getenv("ZAN_DEFAULT_ACCESS_TOKEN")
-	zanClientId := os.Getenv("ZAN_CLIENT_ID")
-	zanPrivateKeyPATH := os.Getenv("ZAN_PRIVATE_KEY_PATH")
-
-	//zanClient := zan.NewZanClient("http://webtcapi.unchartedw3s.com", "478f53734d284889a6a0fbfc648cc061", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
-	zanClient := zan.NewZanClient(zanApiEndpoint, zanDefaultAccessToken, zanClientId, zanPrivateKeyPATH)
 	zanService := service.NewZanService(zanClient, db)
 	application.SetBean("zanService", zanService)
 	fmt.Println("handler server")

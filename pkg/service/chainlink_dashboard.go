@@ -48,7 +48,7 @@ func (c *ChainLinkDashboardService) GetDashboardOracle(user aline.User) {
 }
 
 func (c *ChainLinkDashboardService) GetDashboardRpc(user aline.User) []models.RpcChain {
-	s := NewRpcService(c.db)
+	s := NewRpcService(c.db, nil)
 	chains, err := s.GetChains()
 	if err != nil {
 		logger.Errorf("GetDashboardRpc error: %s", err)

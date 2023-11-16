@@ -56,6 +56,21 @@ func (h *HandlerServer) rpcGetMyNetwork(c *gin.Context) {
 	SuccessWithPagination(appResp, *p, c)
 }
 
+func (h *HandlerServer) rpcGetSubscribe(c *gin.Context) {
+	user, ok := c.Get("user")
+	if !ok {
+		Fail("do not have token", c)
+		return
+	}
+
+	planName, err := h.rpcService.GetZanSubscribe(user.(aline.User).Id)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	Success(planName, c)
+}
+
 func (h *HandlerServer) rpcGetChains(c *gin.Context) {
 	user, ok := c.Get("user")
 	if !ok {
