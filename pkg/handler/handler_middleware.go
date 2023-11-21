@@ -2,19 +2,34 @@ package handler
 
 import (
 	"fmt"
+	"hamster-paas/pkg/consts"
+	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/rpc/aline"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h *HandlerServer) middlewareRpc(c *gin.Context) {
-	user, ok := c.Get("user")
-	if !ok {
-		Fail("do not have token", c)
+	userAny, exit := c.Get("user")
+	if !exit {
+		Failed(http.StatusUnauthorized, "access not authorized", c)
 		return
 	}
-	result, err := h.middleWareService.MiddleWareRpc(fmt.Sprintf("%d", user.(aline.User).Id))
+	loginType, exit := c.Get("loginType")
+	if !exit {
+		Failed(http.StatusUnauthorized, "access not authorized", c)
+		return
+	}
+	var err error
+	var result []vo.MiddleWareRpcZan
+	if loginType == consts.GitHub {
+		result, err = h.middleWareService.MiddleWareRpc(fmt.Sprintf("%d", userAny.(aline.User).Id))
+	} else if loginType == consts.Metamask {
+		result, err = h.middleWareService.MiddleWareRpc(fmt.Sprintf("%d", userAny.(aline.UserWallet).UserId))
+	}
+
 	if err != nil {
 		Fail(err.Error(), c)
 		return
