@@ -30,12 +30,12 @@ var TimeIntervalLimit = []string{"STAT_15_MIN", "STAT_1_HOUR", "STAT_24_HOUR", "
 // @Success 200 {object} Result{data=bool} "desc"
 // @Router /api/v2/zan/account/authed [get]
 func (h *HandlerServer) ZanAuthed(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return
@@ -59,7 +59,7 @@ func (h *HandlerServer) ZanAuthed(c *gin.Context) {
 // @Success 200 {object} Result
 // @Router /api/v2/zan/account/auth_url [get]
 func (h *HandlerServer) ZanGetAuthUrl(c *gin.Context) {
-	_, ok := c.Get("user")
+	_, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
@@ -89,7 +89,7 @@ func (h *HandlerServer) ZanGetAuthUrl(c *gin.Context) {
 // @Success 200 {object} Result
 // @Router /api/v2/zan/account/access_token [post]
 func (h *HandlerServer) ZanExchangeAccessToken(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
@@ -103,7 +103,7 @@ func (h *HandlerServer) ZanExchangeAccessToken(c *gin.Context) {
 		return
 	}
 
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 
 	if !ok {
 		Fail("cannot get user info", c)
@@ -131,7 +131,7 @@ func (h *HandlerServer) ZanExchangeAccessToken(c *gin.Context) {
 // @Success 200 {object} Result{data=zan.ApiKeyBase}
 // @Router /api/v2/zan/node-service/api-keys [post]
 func (h *HandlerServer) ZanCreateApiKey(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
@@ -145,7 +145,7 @@ func (h *HandlerServer) ZanCreateApiKey(c *gin.Context) {
 		return
 	}
 
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 
 	if !ok {
 		Fail("cannot get user info", c)
@@ -174,7 +174,7 @@ func (h *HandlerServer) ZanCreateApiKey(c *gin.Context) {
 // @Success 200 {object} Result{data=vo.PageResp[zan.ApiKeyDigestInfo]}
 // @Router /api/v2/zan/node-service/api-keys/list [get]
 func (h *HandlerServer) ZanApiKeyPage(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
@@ -193,7 +193,7 @@ func (h *HandlerServer) ZanApiKeyPage(c *gin.Context) {
 		Fail("param size is not int", c)
 		return
 	}
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 
 	if !ok {
 		Fail("cannot get user info", c)
@@ -230,14 +230,14 @@ func (h *HandlerServer) ZanApiKeyPage(c *gin.Context) {
 // @Success 200 {object} Result{data=zan.ApiKeyDetailInfo}
 // @Router /api/v2/zan/node-service/api-keys/detail [get]
 func (h *HandlerServer) ZanApiKeyDetail(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 
 	apiKeyId := c.DefaultQuery("apiKeyId", "")
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return
@@ -263,14 +263,14 @@ func (h *HandlerServer) ZanApiKeyDetail(c *gin.Context) {
 // @Success 200 {object} Result{data=[]zan.StatCreditCostItem}
 // @Router /api/v2/zan/node-service/api-keys/stats/credit-cost [get]
 func (h *HandlerServer) ZanApiKeyCreditCost(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 
 	apiKeyId := c.DefaultQuery("apiKeyId", "")
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return
@@ -298,14 +298,14 @@ func (h *HandlerServer) ZanApiKeyCreditCost(c *gin.Context) {
 // @Success 200 {object} Result{data=[]zan.StatMethodCountItem}
 // @Router /api/v2/zan/node-service/api-keys/stats/requests [get]
 func (h *HandlerServer) ZanApiKeyRequestStats(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 
 	apiKeyId := c.DefaultQuery("apiKeyId", "")
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return
@@ -344,14 +344,14 @@ func (h *HandlerServer) ZanApiKeyRequestStats(c *gin.Context) {
 // @Success 200 {object} Result{data=[]zan.StatMethodRequestActivityDetail}
 // @Router /api/v2/zan/node-service/api-keys/stats/requests-activity [get]
 func (h *HandlerServer) ZanApiKeyRequestActivityStats(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 
 	apiKeyId := c.DefaultQuery("apiKeyId", "")
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return
@@ -391,14 +391,14 @@ func (h *HandlerServer) ZanApiKeyRequestActivityStats(c *gin.Context) {
 // @Success 200 {object} Result{data=[]zan.StatMethodRequestActivityFailedDetailGwInfo}
 // @Router /api/v2/zan/node-service/api-keys/stats/requests-activity/failed [get]
 func (h *HandlerServer) ZanApiKeyRequestActivityStatsFailed(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 
 	apiKeyId := c.DefaultQuery("apiKeyId", "")
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return
@@ -442,14 +442,14 @@ func (h *HandlerServer) ZanApiKeyRequestActivityStatsFailed(c *gin.Context) {
 // @Success 200 {object} Result{data=[]zan.StatCreditCostOrigin}
 // @Router /api/v2/zan/node-service/api-keys/stats/requests-origin [get]
 func (h *HandlerServer) ZanApiKeyRequestsOriginStats(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 
 	apiKeyId := c.DefaultQuery("apiKeyId", "")
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return
@@ -482,7 +482,7 @@ var zanEcosystemsDigestCache []zan.EcosystemDigestInfo
 // @Success 200 {object} Result{data=[]zan.EcosystemDigestInfo}
 // @Router /api/v2/zan/node-service/ecosystems/digest [get]
 func (h *HandlerServer) ZanEcosystemsDigest(c *gin.Context) {
-	_, ok := c.Get("user")
+	_, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
@@ -512,12 +512,12 @@ func (h *HandlerServer) ZanEcosystemsDigest(c *gin.Context) {
 // @Success 200 {object} Result{data=[]zan.EcosystemDigestInfo}
 // @Router /api/v2/zan/node-service/plan [get]
 func (h *HandlerServer) ZanPlan(c *gin.Context) {
-	user, ok := c.Get("user")
+	user, ok := c.Get("userPrincipal")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
-	u, ok := user.(aline.User)
+	u, ok := user.(aline.UserPrincipal)
 	if !ok {
 		Fail("cannot get user info", c)
 		return

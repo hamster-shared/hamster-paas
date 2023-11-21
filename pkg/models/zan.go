@@ -4,7 +4,7 @@ import "time"
 
 type ZanUser struct {
 	ID          uint      `json:"id"`
-	UserId      uint      `json:"user_id"`
+	UserId      string    `json:"user_id"`
 	AccessToken string    `json:"access_token"`
 	Created     time.Time `json:"created"`
 }

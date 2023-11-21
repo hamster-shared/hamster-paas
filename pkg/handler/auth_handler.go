@@ -14,6 +14,8 @@ import (
 
 func (h *HandlerServer) Authorize() gin.HandlerFunc {
 	return func(gin *gin.Context) {
+
+		var userPrincipal aline.UserPrincipal
 		jwtToken := gin.GetHeader("Authorization")
 		log.Println(jwtToken)
 		if jwtToken == "" {
@@ -64,6 +66,8 @@ func (h *HandlerServer) Authorize() gin.HandlerFunc {
 			}
 			githubToken = user.Token
 			gin.Set("user", user)
+			userPrincipal = &user
+			gin.Set("userPrincipal", userPrincipal)
 		}
 		if loginType == consts.Metamask {
 			log.Println(userId)
@@ -75,6 +79,8 @@ func (h *HandlerServer) Authorize() gin.HandlerFunc {
 				return
 			}
 			gin.Set("user", userWallet)
+			userPrincipal = &userWallet
+			gin.Set("userPrincipal", userPrincipal)
 		}
 		gin.Set("token", githubToken)
 		gin.Next()

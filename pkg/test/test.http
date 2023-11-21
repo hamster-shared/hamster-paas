@@ -81,3 +81,10 @@ Access-Token: ZHLIsR7EZjgwkE7z0Pco/pp1db7YfjJ/NUg/4YKTXD0FYXhHLiicYiQzL4yoJ2J/
 GET http://localhost:9898/api/middleware/is-active/rpc
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDAyMDA2NDcsImxvZ2luVHlwZSI6MSwidXNlcklkIjozMzY2NzA5fQ.OOeVmsbDKNB1IxCykFVF9q48BpALRlxL48NWkrf-iMw
+
+
+
+### authed
+GET http://localhost:9898/api/v2/zan/account/authed
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDA2MzY4OTksImxvZ2luVHlwZSI6MiwidXNlcklkIjozfQ.RrWXLFy4eUi5EFQyVBX5j-KUDTGUxGsB59tO1Ft6v5M

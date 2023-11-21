@@ -21,9 +21,9 @@ func NewZanService(cli *zan.ZanClient, db *gorm.DB) *ZanService {
 	}
 }
 
-func (s *ZanService) GetUserAuthed(user aline.User) bool {
+func (s *ZanService) GetUserAuthed(user aline.UserPrincipal) bool {
 	var zanUser models.ZanUser
-	err := s.db.Model(models.ZanUser{}).Where("user_id = ?", user.Id).First(&zanUser).Error
+	err := s.db.Model(models.ZanUser{}).Where("user_id = ?", user.GetUserId()).First(&zanUser).Error
 	if err != nil {
 		return false
 	}
@@ -38,16 +38,16 @@ func (s *ZanService) GetAuthUrl() (string, error) {
 	return url.Data.AuthUrl, err
 }
 
-func (s *ZanService) ExchangeAccessToken(user aline.User, authCode string) error {
+func (s *ZanService) ExchangeAccessToken(user aline.UserPrincipal, authCode string) error {
 	resp, err := s.cli.AccessToken(authCode)
 	if err != nil {
 		return err
 	}
 
 	var zanUser models.ZanUser
-	err = s.db.Model(models.ZanUser{}).Where("user_id = ?", user.Id).First(&zanUser).Error
+	err = s.db.Model(models.ZanUser{}).Where("user_id = ?", user.GetUserId()).First(&zanUser).Error
 	if err != nil {
-		zanUser.UserId = user.Id
+		zanUser.UserId = user.GetUserId()
 		zanUser.AccessToken = resp.Data.AccessToken
 		zanUser.Created = time.Now()
 	} else {
@@ -57,16 +57,16 @@ func (s *ZanService) ExchangeAccessToken(user aline.User, authCode string) error
 	return err
 }
 
-func (s *ZanService) GetUserAccessToken(u aline.User) (string, error) {
+func (s *ZanService) GetUserAccessToken(u aline.UserPrincipal) (string, error) {
 	var zanUser models.ZanUser
-	err := s.db.Model(models.ZanUser{}).Where("user_id = ?", u.Id).First(&zanUser).Error
+	err := s.db.Model(models.ZanUser{}).Where("user_id = ?", u.GetUserId()).First(&zanUser).Error
 	if err != nil {
 		return "", err
 	}
 	return zanUser.AccessToken, nil
 }
 
-func (s *ZanService) CreateApiKey(u aline.User, req zan.ApiKeyCreateReq) (*zan.ApiKeyBase, error) {
+func (s *ZanService) CreateApiKey(u aline.UserPrincipal, req zan.ApiKeyCreateReq) (*zan.ApiKeyBase, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (s *ZanService) CreateApiKey(u aline.User, req zan.ApiKeyCreateReq) (*zan.A
 
 }
 
-func (s *ZanService) ApiKeyList(u aline.User, page int, size int) (zan.PageResponse[zan.ApiKeyDigestInfo], error) {
+func (s *ZanService) ApiKeyList(u aline.UserPrincipal, page int, size int) (zan.PageResponse[zan.ApiKeyDigestInfo], error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return zan.PageResponse[zan.ApiKeyDigestInfo]{}, err
@@ -96,7 +96,7 @@ func (s *ZanService) ApiKeyList(u aline.User, page int, size int) (zan.PageRespo
 	return resp.Data, nil
 }
 
-func (s *ZanService) ApiKeyDetail(u aline.User, apiKeyId string) (zan.ApiKeyDetailInfo, error) {
+func (s *ZanService) ApiKeyDetail(u aline.UserPrincipal, apiKeyId string) (zan.ApiKeyDetailInfo, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return zan.ApiKeyDetailInfo{}, err
@@ -108,7 +108,7 @@ func (s *ZanService) ApiKeyDetail(u aline.User, apiKeyId string) (zan.ApiKeyDeta
 	return resp.Data, nil
 }
 
-func (s *ZanService) ApiKeyCreditCost(u aline.User, apiKeyId string) ([]zan.StatCreditCostItem, error) {
+func (s *ZanService) ApiKeyCreditCost(u aline.UserPrincipal, apiKeyId string) ([]zan.StatCreditCostItem, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return []zan.StatCreditCostItem{}, err
@@ -120,7 +120,7 @@ func (s *ZanService) ApiKeyCreditCost(u aline.User, apiKeyId string) ([]zan.Stat
 	return resp.Data, nil
 }
 
-func (s *ZanService) ApiKeyRequestStats(u aline.User, apiKeyId string, timeInterval string, ecosystem string) ([]zan.StatMethodCountItem, error) {
+func (s *ZanService) ApiKeyRequestStats(u aline.UserPrincipal, apiKeyId string, timeInterval string, ecosystem string) ([]zan.StatMethodCountItem, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return []zan.StatMethodCountItem{}, err
@@ -132,7 +132,7 @@ func (s *ZanService) ApiKeyRequestStats(u aline.User, apiKeyId string, timeInter
 	return resp.Data, nil
 }
 
-func (s *ZanService) ApiKeyRequestActivityStats(u aline.User, apiKeyId string, timeInterval string, ecosystem string) ([]zan.StatMethodRequestActivityDetail, error) {
+func (s *ZanService) ApiKeyRequestActivityStats(u aline.UserPrincipal, apiKeyId string, timeInterval string, ecosystem string) ([]zan.StatMethodRequestActivityDetail, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return []zan.StatMethodRequestActivityDetail{}, err
@@ -144,7 +144,7 @@ func (s *ZanService) ApiKeyRequestActivityStats(u aline.User, apiKeyId string, t
 	return resp.Data, nil
 }
 
-func (s *ZanService) ApiKeyRequestOriginStats(u aline.User, apiKeyId string, timeInterval string) ([]zan.StatCreditCostOrigin, error) {
+func (s *ZanService) ApiKeyRequestOriginStats(u aline.UserPrincipal, apiKeyId string, timeInterval string) ([]zan.StatCreditCostOrigin, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return []zan.StatCreditCostOrigin{}, err
@@ -164,7 +164,7 @@ func (s *ZanService) EcosystemsDigest() ([]zan.EcosystemDigestInfo, error) {
 	return resp.Data, nil
 }
 
-func (s *ZanService) UserPlan(u aline.User) (zan.PlanDetailInfo, error) {
+func (s *ZanService) UserPlan(u aline.UserPrincipal) (zan.PlanDetailInfo, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return zan.PlanDetailInfo{}, err
@@ -176,7 +176,7 @@ func (s *ZanService) UserPlan(u aline.User) (zan.PlanDetailInfo, error) {
 	return resp.Data, nil
 }
 
-func (s *ZanService) ApiKeyRequestActivityStatsFail(u aline.User, apiKeyId string, timeInterval string, ecosystem string, method string) ([]zan.StatMethodRequestActivityFailedDetailGwInfo, error) {
+func (s *ZanService) ApiKeyRequestActivityStatsFail(u aline.UserPrincipal, apiKeyId string, timeInterval string, ecosystem string, method string) ([]zan.StatMethodRequestActivityFailedDetailGwInfo, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
 		return []zan.StatMethodRequestActivityFailedDetailGwInfo{}, err
