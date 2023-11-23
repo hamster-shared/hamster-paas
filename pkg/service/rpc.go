@@ -114,7 +114,7 @@ func (s *RpcService) GetZanSubscribe(userId uint) (string, error) {
 	return plan.Data.PlanName, nil
 }
 
-func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChainDetail, error) {
+func (s *RpcService) ChainDetail(userId uint, chain string) (*models.RpcChainDetail, error) {
 	chainType, err := models.ParseChainType(chain)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (s *RpcService) ChainDetail(user aline.User, chain string) (*models.RpcChai
 	var chainApps []*models.RpcChainApp
 	for _, chain := range chains {
 		networkType, _ := models.ParseNetworkType(chain.Network)
-		a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
+		a, err := models.GetRpcAccount(fmt.Sprintf("%d", userId))
 		if err != nil {
 			logger.Errorf("GetRpcAccount error: %s", err)
 			return nil, err
@@ -187,15 +187,15 @@ type ServiceIsActiveResponse struct {
 	ChildList   any    `json:"childList"`
 }
 
-func (s *RpcService) IsActive(user aline.User, serviceType string) ServiceIsActiveResponse {
+func (s *RpcService) IsActive(userId int, serviceType string) ServiceIsActiveResponse {
 	t := strings.ToLower(serviceType)
 	if t != string(models.ServiceTypeRpc) && t != string(models.ServiceTypeOracle) {
 		return ServiceIsActiveResponse{ServiceType: serviceType, IsActive: false}
 	}
 	if t == string(models.ServiceTypeRpc) {
-		return s.getActiveRpcServiceResponse(fmt.Sprintf("%d", user.Id))
+		return s.getActiveRpcServiceResponse(fmt.Sprintf("%d", userId))
 	} else {
-		return s.getActiveOracleServiceResponse(fmt.Sprintf("%d", user.Id))
+		return s.getActiveOracleServiceResponse(fmt.Sprintf("%d", userId))
 	}
 }
 
@@ -222,16 +222,16 @@ func (s *RpcService) getActiveOracleServiceResponse(userID string) ServiceIsActi
 	return ServiceIsActiveResponse{ServiceType: string(models.ServiceTypeOracle), IsActive: us.IsActive, ChildList: []string{"HamsLink"}}
 }
 
-func (s *RpcService) ActiveService(user aline.User, serviceType, chain, network string) (string, error) {
+func (s *RpcService) ActiveService(userId uint, serviceType, chain, network string) (string, error) {
 	t := strings.ToLower(serviceType)
 	if t != string(models.ServiceTypeRpc) && t != string(models.ServiceTypeOracle) {
 		return "", fmt.Errorf("service type error, only support rpc and oracle")
 	}
 	var us models.UserService
-	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", user.Id, t).First(&us).Error
+	err := s.db.Model(&models.UserService{}).Where("user_id = ? and service_type = ?", userId, t).First(&us).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			us.UserId = int64(user.Id)
+			us.UserId = int64(userId)
 			us.ServiceType = models.ServiceType(t)
 			us.IsActive = true
 			err = s.db.Model(&models.UserService{}).Create(&us).Error
@@ -241,13 +241,13 @@ func (s *RpcService) ActiveService(user aline.User, serviceType, chain, network 
 		}
 	}
 	if t == "rpc" {
-		return s.ActiveServiceRpc(user, chain, network)
+		return s.ActiveServiceRpc(userId, chain, network)
 	}
 	return "ok", nil
 }
 
-func (s *RpcService) ActiveServiceRpc(user aline.User, chain, network string) (string, error) {
-	account, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
+func (s *RpcService) ActiveServiceRpc(userId uint, chain, network string) (string, error) {
+	account, err := models.GetRpcAccount(fmt.Sprintf("%d", userId))
 	if err != nil {
 		return "", err
 	}

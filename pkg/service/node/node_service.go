@@ -29,7 +29,7 @@ func NewNodeService(db *gorm.DB) *NodeService {
 }
 
 // node statistic
-func (n *NodeService) NodeStatisticsInfo(userId int) (node.NodeStatisticsVo, error) {
+func (n *NodeService) NodeStatisticsInfo(userId uint) (node.NodeStatisticsVo, error) {
 	var statisticsInfo node.NodeStatisticsVo
 	results := []struct {
 		Status int
@@ -57,7 +57,7 @@ func (n *NodeService) NodeStatisticsInfo(userId int) (node.NodeStatisticsVo, err
 }
 
 // node list
-func (n *NodeService) NodeList(userId, page, size int) (node.NodePage, error) {
+func (n *NodeService) NodeList(userId uint, page, size int) (node.NodePage, error) {
 	var nodes []modelsNode.RPCNode
 	var data []node.NodeVo
 	var total int64

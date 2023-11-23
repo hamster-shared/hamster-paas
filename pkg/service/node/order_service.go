@@ -40,7 +40,7 @@ func NewOrderService(db *gorm.DB) *OrderService {
 	}
 }
 
-func (o *OrderService) LaunchOrder(userId int, launchData node.LaunchOrderParam) (uint, error) {
+func (o *OrderService) LaunchOrder(userId uint, launchData node.LaunchOrderParam) (uint, error) {
 	var queryOrder order.Order
 	err := o.db.Model(order.Order{}).Where("user_id = ? and status = ?", userId, order.PaymentPending).First(&queryOrder).Error
 	if err == nil {
@@ -61,7 +61,7 @@ func (o *OrderService) LaunchOrder(userId int, launchData node.LaunchOrderParam)
 				logger.Errorf("generate address failed: %s", err)
 				return 0, err
 			}
-			changeAccount.UserId = userId
+			changeAccount.UserId = int(userId)
 			changeAccount.Seed = privateKey
 			changeAccount.Address = address
 			err = o.db.Create(&changeAccount).Error

@@ -24,14 +24,13 @@ func (h *HandlerServer) nodeList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, ok := gin.Get("user")
+	userId, ok := gin.Get("userId")
 	if !ok {
 		logger.Errorf("context do not have user")
 		Fail("do not have token", gin)
 		return
 	}
-	user := userAny.(aline.User)
-	data, err := h.nodeService.NodeList(int(user.Id), page, size)
+	data, err := h.nodeService.NodeList(userId.(uint), page, size)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return
@@ -40,14 +39,13 @@ func (h *HandlerServer) nodeList(gin *gin.Context) {
 }
 
 func (h *HandlerServer) nodeStatisticsInfo(gin *gin.Context) {
-	userAny, ok := gin.Get("user")
+	userId, ok := gin.Get("userId")
 	if !ok {
 		logger.Errorf("context do not have user")
 		Fail("do not have token", gin)
 		return
 	}
-	user := userAny.(aline.User)
-	data, err := h.nodeService.NodeStatisticsInfo(int(user.Id))
+	data, err := h.nodeService.NodeStatisticsInfo(userId.(uint))
 	if err != nil {
 		Fail(err.Error(), gin)
 		return
@@ -99,20 +97,19 @@ func (h *HandlerServer) updateNode(gin *gin.Context) {
 }
 
 func (h *HandlerServer) launchOrder(gin *gin.Context) {
-	userAny, ok := gin.Get("user")
+	userId, ok := gin.Get("userId")
 	if !ok {
 		logger.Errorf("context do not have user")
 		Fail("do not have token", gin)
 		return
 	}
-	user := userAny.(aline.User)
 	launchData := node.LaunchOrderParam{}
 	err := gin.BindJSON(&launchData)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return
 	}
-	data, err := h.orderService.LaunchOrder(int(user.Id), launchData)
+	data, err := h.orderService.LaunchOrder(userId.(uint), launchData)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return

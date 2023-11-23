@@ -2,9 +2,7 @@ package handler
 
 import (
 	"fmt"
-	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/rpc/aline"
 	"net/http"
 	"strings"
 
@@ -12,24 +10,14 @@ import (
 )
 
 func (h *HandlerServer) middlewareRpc(c *gin.Context) {
-	userAny, exit := c.Get("user")
-	if !exit {
-		Failed(http.StatusUnauthorized, "access not authorized", c)
-		return
-	}
-	loginType, exit := c.Get("loginType")
+	userId, exit := c.Get("userId")
 	if !exit {
 		Failed(http.StatusUnauthorized, "access not authorized", c)
 		return
 	}
 	var err error
 	var result []vo.MiddleWareRpcZan
-	if loginType == consts.GitHub {
-		result, err = h.middleWareService.MiddleWareRpc(fmt.Sprintf("%d", userAny.(aline.User).Id))
-	} else if loginType == consts.Metamask {
-		result, err = h.middleWareService.MiddleWareRpc(fmt.Sprintf("%d", userAny.(aline.UserWallet).UserId))
-	}
-
+	result, err = h.middleWareService.MiddleWareRpc(fmt.Sprintf("%d", userId.(uint)))
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -38,18 +26,18 @@ func (h *HandlerServer) middlewareRpc(c *gin.Context) {
 }
 
 func (h *HandlerServer) serviceIsActive(c *gin.Context) {
-	user, ok := c.Get("user")
+	userId, ok := c.Get("userId")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 	serviceName := c.Param("serviceName")
-	response := h.rpcService.IsActive(user.(aline.User), serviceName)
+	response := h.rpcService.IsActive(int(userId.(uint)), serviceName)
 	Success(response, c)
 }
 
 func (h *HandlerServer) activeService(c *gin.Context) {
-	user, ok := c.Get("user")
+	userId, ok := c.Get("userId")
 	if !ok {
 		Fail("do not have token", c)
 		return
@@ -67,7 +55,7 @@ func (h *HandlerServer) activeService(c *gin.Context) {
 			return
 		}
 	}
-	msg, err := h.rpcService.ActiveService(user.(aline.User), serviceName, apiRequest.Chain, apiRequest.Network)
+	msg, err := h.rpcService.ActiveService(userId.(uint), serviceName, apiRequest.Chain, apiRequest.Network)
 	if err != nil {
 		Fail(err.Error(), c)
 		return

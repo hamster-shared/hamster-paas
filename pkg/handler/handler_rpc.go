@@ -57,13 +57,13 @@ func (h *HandlerServer) rpcGetMyNetwork(c *gin.Context) {
 }
 
 func (h *HandlerServer) rpcGetSubscribe(c *gin.Context) {
-	user, ok := c.Get("user")
+	userId, ok := c.Get("userId")
 	if !ok {
 		Fail("do not have token", c)
 		return
 	}
 
-	planName, err := h.rpcService.GetZanSubscribe(user.(aline.User).Id)
+	planName, err := h.rpcService.GetZanSubscribe(userId.(uint))
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -100,7 +100,7 @@ func (h *HandlerServer) rpcGetNetworks(c *gin.Context) {
 }
 
 func (h *HandlerServer) rpcChainDetail(c *gin.Context) {
-	user, ok := c.Get("user")
+	userId, ok := c.Get("userId")
 	if !ok {
 		Fail("do not have token", c)
 		return
@@ -110,7 +110,7 @@ func (h *HandlerServer) rpcChainDetail(c *gin.Context) {
 		Fail("invalid params", c)
 		return
 	}
-	chainDetail, err := h.rpcService.ChainDetail(user.(aline.User), chain)
+	chainDetail, err := h.rpcService.ChainDetail(userId.(uint), chain)
 	if err != nil {
 		Fail(err.Error(), c)
 		return

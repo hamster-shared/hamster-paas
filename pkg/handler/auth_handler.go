@@ -66,6 +66,7 @@ func (h *HandlerServer) Authorize() gin.HandlerFunc {
 			}
 			githubToken = user.Token
 			gin.Set("user", user)
+			gin.Set("userId", user.Id)
 			userPrincipal = &user
 			gin.Set("userPrincipal", userPrincipal)
 		}
@@ -79,6 +80,7 @@ func (h *HandlerServer) Authorize() gin.HandlerFunc {
 				return
 			}
 			gin.Set("user", userWallet)
+			gin.Set("userId", userWallet.UserId)
 			userPrincipal = &userWallet
 			gin.Set("userPrincipal", userPrincipal)
 		}
