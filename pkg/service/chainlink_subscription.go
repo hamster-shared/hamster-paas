@@ -84,7 +84,7 @@ func (s *ChainLinkSubscriptionService) GetSubscriptionById(id int) (*models.Subs
 }
 
 // SubscriptionList  query subscription list
-func (s *ChainLinkSubscriptionService) SubscriptionList(chain, network string, page, size int, userId int64) (*vo.ChainLinkSubscriptionPage, error) {
+func (s *ChainLinkSubscriptionService) SubscriptionList(chain, network string, page, size int, userId uint) (*vo.ChainLinkSubscriptionPage, error) {
 	var total int64
 	var chainLinkSubscriptionPage vo.ChainLinkSubscriptionPage
 	var chainLinkSubscriptionList []models.Subscription
@@ -117,7 +117,7 @@ func (s *ChainLinkSubscriptionService) SubscriptionDetail(id int64) (vo.ChainLin
 	return vo, nil
 }
 
-func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.ChainLinkValidSubscriptionVo, error) {
+func (s *ChainLinkSubscriptionService) GetValidSubscription(userId uint) ([]vo.ChainLinkValidSubscriptionVo, error) {
 	var list []models.Subscription
 	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND status = ?", userId, consts.SUCCESS).Find(&list).Error
 	if err != nil {
@@ -141,7 +141,7 @@ func (s *ChainLinkSubscriptionService) GetValidSubscription(userId int64) ([]vo.
 	return vo_list, nil
 }
 
-func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLinkSubscriptionUpdateParam, userId uint64) error {
+func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLinkSubscriptionUpdateParam, userId uint) error {
 	//获取 id 对应的记录
 	var subscription models.Subscription
 	err := s.db.Model(models.Subscription{}).Where("id = ?", param.Id).First(&subscription).Error
@@ -153,7 +153,7 @@ func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLi
 		return nil
 	}
 	// 判断该 consumer 是否是符合要求
-	if subscription.TransactionTx == param.TransactionTx && subscription.UserId == userId && param.Chain == subscription.Chain && param.Network == subscription.Network {
+	if subscription.TransactionTx == param.TransactionTx && subscription.UserId == uint64(userId) && param.Chain == subscription.Chain && param.Network == subscription.Network {
 		err = s.db.Model(models.Subscription{}).Where("id = ?", param.Id).Updates(map[string]interface{}{"chain_Subscription_id": param.ChainSubscriptionId, "status": param.NewStatus}).Error
 		if err != nil {
 			return err
@@ -163,7 +163,7 @@ func (s *ChainLinkSubscriptionService) ChangeSubscriptionStatus(param vo.ChainLi
 	return errors.New(fmt.Sprintf("subscription id :%d not valid, other col not confirm", param.Id))
 }
 
-func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceAll(userId int64) (*[]SubscriptionBalance, error) {
+func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceAll(userId uint) (*[]SubscriptionBalance, error) {
 	var subscriptions []models.Subscription
 	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND status = ?", userId, consts.SUCCESS).Find(&subscriptions).Error
 	if err != nil {
@@ -206,7 +206,7 @@ func otherChainOrNetworkNotSupportedYet(subscription models.Subscription) Subscr
 	}
 }
 
-func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceById(userId int64, subscriptionId uint64) (*SubscriptionBalance, error) {
+func (s *ChainLinkSubscriptionService) GetUserSubscriptionBalanceById(userId uint, subscriptionId uint64) (*SubscriptionBalance, error) {
 	var subscription models.Subscription
 	err := s.db.Model(models.Subscription{}).Where("user_id = ? AND id = ? AND status = ?", userId, subscriptionId, consts.SUCCESS).First(&subscription).Error
 	if err != nil {

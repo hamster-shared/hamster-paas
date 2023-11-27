@@ -5,18 +5,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
 )
 
 func (h *HandlerServer) addFound(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	user := userAny.(aline.User)
 	subscriptionIdString := c.Param("id")
 	subscriptionId, err := strconv.Atoi(subscriptionIdString)
 	if err != nil {
@@ -37,7 +35,7 @@ func (h *HandlerServer) addFound(c *gin.Context) {
 		Fail("invalid incr", c)
 		return
 	}
-	primaryId, err := h.chainLinkDepositService.AddDeposit(int64(subscriptionId), Incr, foundParam.TransactionTx, int64(user.Id), h.chainLinkSubscriptionService, h.chainlinkPoolService, foundParam.Address)
+	primaryId, err := h.chainLinkDepositService.AddDeposit(int64(subscriptionId), Incr, foundParam.TransactionTx, userId.(uint), h.chainLinkSubscriptionService, h.chainlinkPoolService, foundParam.Address)
 	if err != nil {
 		logger.Error(fmt.Sprintf("addFound failed: %s", err.Error()))
 		Fail(err.Error(), c)
@@ -47,12 +45,11 @@ func (h *HandlerServer) addFound(c *gin.Context) {
 }
 
 func (h *HandlerServer) changeFoundStatus(gin *gin.Context) {
-	userAny, ok := gin.Get("user")
-	if !ok {
+	userId, exists := gin.Get("userId")
+	if !exists {
 		Fail("do not have token", gin)
 		return
 	}
-	user := userAny.(aline.User)
 	var paramJson vo.ChainLinkFoundUpdateParam
 	if err := gin.BindJSON(&paramJson); err != nil {
 		logger.Error(fmt.Sprintf("change Found Status failed: %s", err.Error()))
@@ -66,7 +63,7 @@ func (h *HandlerServer) changeFoundStatus(gin *gin.Context) {
 		return
 	}
 	paramJson.NewStatus = status
-	err = h.chainLinkDepositService.UpdateDepositStatus(uint64(user.Id), paramJson)
+	err = h.chainLinkDepositService.UpdateDepositStatus(userId.(uint), paramJson)
 	if err != nil {
 		logger.Error(fmt.Sprintf("change Found Status failed: %s", err.Error()))
 		Fail(err.Error(), gin)

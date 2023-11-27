@@ -8,12 +8,11 @@ import (
 )
 
 func (h *HandlerServer) getProjectList(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	user := userAny.(aline.User)
 	chain := c.Query("chain")
 	network := c.Query("network")
 	if chain == "" || network == "" {
@@ -27,6 +26,6 @@ func (h *HandlerServer) getProjectList(c *gin.Context) {
 		Fail("get project service error", c)
 		return
 	}
-	projectIdAndNameList := projectService.GetProjectByUserId(user.Id, network)
+	projectIdAndNameList := projectService.GetProjectByUserId(userId.(uint), network)
 	Success(projectIdAndNameList, c)
 }

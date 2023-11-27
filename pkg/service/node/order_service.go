@@ -136,7 +136,7 @@ func (o *OrderService) LaunchOrder(userId uint, launchData node.LaunchOrderParam
 }
 
 // query order list
-func (o *OrderService) OrderList(startDateStr, endDateStr, query string, userId, page, size int) (node.OrderPage, error) {
+func (o *OrderService) OrderList(startDateStr, endDateStr, query string, userId uint, page, size int) (node.OrderPage, error) {
 	var orderList []order.Order
 	var resultData []node.OrderVo
 	var pageData node.OrderPage

@@ -6,19 +6,17 @@ import (
 	"hamster-paas/pkg/consts"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
 	"time"
 )
 
 func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("get user info error", c)
 		return
 	}
-	user := userAny.(aline.User)
 	network := c.Query("network")
 	if network == "" {
 		Fail("network not valid", c)
@@ -29,7 +27,7 @@ func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
 		Fail(fmt.Sprintf("network not valid: %s", network), c)
 		return
 	}
-	ov, err := h.chainLinkSubscriptionService.GetSubscriptionOverview(user.Id, networkType.String())
+	ov, err := h.chainLinkSubscriptionService.GetSubscriptionOverview(userId.(uint), networkType.String())
 	if err != nil {
 		logger.Error(fmt.Sprintf("getSubscriptionOverview failed: %s", err.Error()))
 		Fail(err.Error(), c)
@@ -39,24 +37,22 @@ func (h *HandlerServer) getSubscriptionOverview(c *gin.Context) {
 }
 
 func (h *HandlerServer) getSINA(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	user := userAny.(aline.User)
-	sinas := h.chainLinkSubscriptionService.GetSINAByUserId(user.Id)
+	sinas := h.chainLinkSubscriptionService.GetSINAByUserId(userId.(uint))
 	Success(sinas, c)
 }
 
 // TODO: 先存db，type = Pending，异步查Tx，TX正确，修改type=Success
 func (h *HandlerServer) createSubscription(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	user := userAny.(aline.User)
 	subscriptionCreateParam := vo.ChainLinkSubscriptionCreateParam{}
 	err := c.BindJSON(&subscriptionCreateParam)
 	if err != nil {
@@ -71,7 +67,7 @@ func (h *HandlerServer) createSubscription(c *gin.Context) {
 		Chain:               subscriptionCreateParam.Chain,
 		Network:             subscriptionCreateParam.Network,
 		Consumers:           0,
-		UserId:              uint64(user.Id),
+		UserId:              uint64(userId.(uint)),
 		Admin:               subscriptionCreateParam.Admin,
 		TransactionTx:       subscriptionCreateParam.TransactionTx,
 		Status:              consts.PENDING,
@@ -115,14 +111,13 @@ func (h *HandlerServer) subscriptionList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkSubscriptionService.SubscriptionList(chain, network, page, size, int64(user.Id))
+	data, err := h.chainLinkSubscriptionService.SubscriptionList(chain, network, page, size, userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -149,14 +144,13 @@ func (h *HandlerServer) subscriptionDetail(gin *gin.Context) {
 }
 
 func (h *HandlerServer) getValidSubscription(gin *gin.Context) {
-	userAny, ok := gin.Get("user")
-	if !ok {
+	userId, exists := gin.Get("userId")
+	if !exists {
 		Fail("do not have token", gin)
 		return
 	}
-	user := userAny.(aline.User)
 
-	list, err := h.chainLinkSubscriptionService.GetValidSubscription(int64(user.Id))
+	list, err := h.chainLinkSubscriptionService.GetValidSubscription(userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("get valid subscription failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -166,13 +160,12 @@ func (h *HandlerServer) getValidSubscription(gin *gin.Context) {
 }
 
 func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("user not found"))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
 	var jsonParam vo.ChainLinkSubscriptionUpdateParam
 	err := gin.BindJSON(&jsonParam)
 	if err != nil {
@@ -201,7 +194,7 @@ func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
 	jsonParam.Chain = chain.String()
 	jsonParam.Network = network.StringWithSpace()
 	jsonParam.NewStatus = status
-	err = h.chainLinkSubscriptionService.ChangeSubscriptionStatus(jsonParam, uint64(user.Id))
+	err = h.chainLinkSubscriptionService.ChangeSubscriptionStatus(jsonParam, userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("change subscription status faild: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -212,13 +205,12 @@ func (h *HandlerServer) changeSubscriptionStatus(gin *gin.Context) {
 
 // getSubscriptionBalanceAll
 func (h *HandlerServer) getSubscriptionBalanceAll(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	user := userAny.(aline.User)
-	balance, err := h.chainLinkSubscriptionService.GetUserSubscriptionBalanceAll(int64(user.Id))
+	balance, err := h.chainLinkSubscriptionService.GetUserSubscriptionBalanceAll(userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("getSubscriptionBalanceAll failed: %s", err.Error()))
 		Fail(err.Error(), c)
@@ -229,12 +221,11 @@ func (h *HandlerServer) getSubscriptionBalanceAll(c *gin.Context) {
 
 // getSubscriptionBalanceById
 func (h *HandlerServer) getSubscriptionBalanceById(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	user := userAny.(aline.User)
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -242,7 +233,7 @@ func (h *HandlerServer) getSubscriptionBalanceById(c *gin.Context) {
 		Fail(err.Error(), c)
 		return
 	}
-	balance, err := h.chainLinkSubscriptionService.GetUserSubscriptionBalanceById(int64(user.Id), uint64(id))
+	balance, err := h.chainLinkSubscriptionService.GetUserSubscriptionBalanceById(userId.(uint), uint64(id))
 	if err != nil {
 		logger.Error(fmt.Sprintf("getSubscriptionBalanceById failed: %s", err.Error()))
 		Fail(err.Error(), c)

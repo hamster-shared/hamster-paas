@@ -58,7 +58,7 @@ func (c *ChainLinkConsumerService) CreateConsumer(consumer models.Consumer, subs
 }
 
 // ConsumerList get consumer list
-func (c *ChainLinkConsumerService) ConsumerList(subscriptionId, page, size int, userId int64) (*vo.ChainLinkConsumerPage, error) {
+func (c *ChainLinkConsumerService) ConsumerList(subscriptionId, page, size int, userId uint) (*vo.ChainLinkConsumerPage, error) {
 	var total int64
 	var chainLinkConsumerPage vo.ChainLinkConsumerPage
 	var chainLinkConsumerList []models.Consumer
@@ -76,7 +76,7 @@ func (c *ChainLinkConsumerService) ConsumerList(subscriptionId, page, size int, 
 	return &chainLinkConsumerPage, nil
 }
 
-func (c *ChainLinkConsumerService) ConsumerAddressList(subscriptionId, userId int64) ([]string, error) {
+func (c *ChainLinkConsumerService) ConsumerAddressList(subscriptionId int64, userId uint) ([]string, error) {
 	var data []string
 	res := c.db.Model(models.Consumer{}).Distinct("consumer_address").Select("consumer_address").Where("subscription_id=? and user_id=?", subscriptionId, userId).Find(&data)
 	if res.Error != nil {
@@ -109,7 +109,7 @@ func (c *ChainLinkConsumerService) DeleteConsumer(subscriptionId, consumerId int
 	return nil
 }
 
-func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsumerUpdateParam, userId uint64, subscriptionService ChainLinkSubscriptionService) error {
+func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsumerUpdateParam, userId uint, subscriptionService ChainLinkSubscriptionService) error {
 	//获取id对应的记录
 	var consumer models.Consumer
 	c.db.Model(models.Consumer{}).Where("id = ?", param.Id).First(&consumer)
@@ -118,7 +118,7 @@ func (c *ChainLinkConsumerService) ChangeConsumerStatus(param vo.ChainLinkConsum
 		return nil
 	}
 	// 判断该consumer是否是符合要求,符合要求，修改status，增加subscription的consumer数量
-	if consumer.TransactionTx == param.TransactionTx && consumer.ConsumerAddress == param.ConsumerAddress && consumer.UserId == userId && param.SubscriptionId == consumer.SubscriptionId {
+	if consumer.TransactionTx == param.TransactionTx && consumer.ConsumerAddress == param.ConsumerAddress && consumer.UserId == uint64(userId) && param.SubscriptionId == consumer.SubscriptionId {
 		c.db.Model(models.Consumer{}).Where("id = ?", param.Id).Update("status", param.NewStatus)
 		// 获取指定id的subscription
 		subscription, err := subscriptionService.GetSubscriptionById(int(param.SubscriptionId))

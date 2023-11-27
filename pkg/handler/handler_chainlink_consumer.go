@@ -14,12 +14,11 @@ import (
 )
 
 func (h *HandlerServer) createConsumer(c *gin.Context) {
-	userAny, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	user := userAny.(aline.User)
 	consumerCreateParam := vo.ChainLinkConsumerCreateParam{}
 	err := c.BindJSON(&consumerCreateParam)
 	if err != nil {
@@ -31,7 +30,7 @@ func (h *HandlerServer) createConsumer(c *gin.Context) {
 		SubscriptionId:  consumerCreateParam.SubscriptionId,
 		Created:         time.Now(),
 		ConsumerAddress: consumerCreateParam.ConsumerAddress,
-		UserId:          uint64(user.Id),
+		UserId:          uint64(userId.(uint)),
 		TransactionTx:   consumerCreateParam.TransactionTx,
 		Status:          consts.PENDING,
 	}
@@ -104,14 +103,13 @@ func (h *HandlerServer) consumerList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkConsumerService.ConsumerList(subscriptionId, page, size, int64(user.Id))
+	data, err := h.chainLinkConsumerService.ConsumerList(subscriptionId, page, size, userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("query consumer list failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -128,14 +126,13 @@ func (h *HandlerServer) consumerAddressList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkConsumerService.ConsumerAddressList(int64(subscriptionId), int64(user.Id))
+	data, err := h.chainLinkConsumerService.ConsumerAddressList(int64(subscriptionId), userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("query consumer list failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -169,13 +166,12 @@ func (h *HandlerServer) deleteConsumer(gin *gin.Context) {
 }
 
 func (h *HandlerServer) changeConsumerStatus(gin *gin.Context) {
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("user not found"))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
 	var jsonParam vo.ChainLinkConsumerUpdateParam
 	err := gin.BindJSON(&jsonParam)
 	if err != nil {
@@ -190,7 +186,7 @@ func (h *HandlerServer) changeConsumerStatus(gin *gin.Context) {
 		return
 	}
 	jsonParam.NewStatus = status
-	err = h.chainLinkConsumerService.ChangeConsumerStatus(jsonParam, uint64(user.Id), h.chainLinkSubscriptionService)
+	err = h.chainLinkConsumerService.ChangeConsumerStatus(jsonParam, userId.(uint), h.chainLinkSubscriptionService)
 	if err != nil {
 		logger.Error(fmt.Sprintf("change consumer status faild: %s", err.Error()))
 		Fail(err.Error(), gin)

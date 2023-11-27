@@ -21,16 +21,22 @@ import (
 )
 
 type ChainLinkRequestService struct {
-	db *gorm.DB
+	db      *gorm.DB
+	alineDb *gorm.DB
 }
 
 func NewChainLinkRequestService(db *gorm.DB) *ChainLinkRequestService {
+	alineDb, err := application.GetBean[*gorm.DB]("alineDb")
+	if err != nil {
+		return nil
+	}
 	return &ChainLinkRequestService{
-		db: db,
+		db:      db,
+		alineDb: alineDb,
 	}
 }
 
-func (r *ChainLinkRequestService) RequestList(page, size int, userId int64) (*vo.ChainLinkRequestPage, error) {
+func (r *ChainLinkRequestService) RequestList(page, size int, userId uint) (*vo.ChainLinkRequestPage, error) {
 	var total int64
 	var chainLinkRequestPage vo.ChainLinkRequestPage
 	var chainLinkRequestList []models.Request
@@ -119,7 +125,7 @@ func (r *ChainLinkRequestService) GetRequestTemplateScript(id int64) (vo.Request
 	return detail, nil
 }
 
-func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, size int, userId int64, requestName string) (*vo.ChainLinkExpensePage, error) {
+func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, size int, userId uint, requestName string) (*vo.ChainLinkExpensePage, error) {
 	var total int64
 	var chainLinkExpensePage vo.ChainLinkExpensePage
 	var chainLinkExpenseList []models.RequestExecute
@@ -140,11 +146,11 @@ func (r *ChainLinkRequestService) ChainLinkExpenseList(subscriptionId, page, siz
 	return &chainLinkExpensePage, nil
 }
 
-func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLinkRequestExecParam, user aline.User) (int64, error) {
+func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLinkRequestExecParam, userId uint) (int64, error) {
 	var requestExec models.RequestExecute
 	copier.Copy(&requestExec, &saveData)
 	requestExec.Created = time.Now()
-	requestExec.UserId = uint64(user.Id)
+	requestExec.UserId = uint64(userId)
 	requestExec.Status = consts.PENDING
 	err := r.db.Create(&requestExec).Error
 	if err != nil {
@@ -163,16 +169,21 @@ func (r *ChainLinkRequestService) SaveChainLinkRequestExec(saveData vo.ChainLink
 	return requestExec.Id, nil
 }
 
-func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id int64, saveData vo.ChainLinkExecParam, user aline.User) error {
+func (r *ChainLinkRequestService) UpdateChainLinkRequestById(id int64, saveData vo.ChainLinkExecParam, userId uint) error {
 	var data models.RequestExecute
-	err := r.db.Where("id=? and user_id=?", id, user.Id).First(&data).Error
+	err := r.db.Where("id=? and user_id=?", id, userId).First(&data).Error
 	if err != nil {
 		return err
 	}
 	data.Status = consts.SUCCESS
 	data.RequestId = saveData.RequestId
 	r.db.Save(&data)
-	err = r.sendEmail(saveData.RequestId, user.UserEmail, data.RequestName)
+	var alineUser aline.User
+	err = r.alineDb.Model(&aline.User{}).Where("id = ?", userId).First(&alineUser).Error
+	if err != nil {
+		return err
+	}
+	err = r.sendEmail(saveData.RequestId, alineUser.UserEmail, data.RequestName)
 	if err != nil {
 		logger.Debugf("send email failed")
 		return err
@@ -209,13 +220,13 @@ func (r *ChainLinkRequestService) sendEmail(requestId, email, requestName string
 	}
 }
 
-func (r *ChainLinkRequestService) Overview(user aline.User, networkType string) (*models.ApiResponseOverview, error) {
+func (r *ChainLinkRequestService) Overview(userId uint, networkType string) (*models.ApiResponseOverview, error) {
 	if networkType == "" {
 		networkType = "testnet"
 	}
 	// 首先获取用户的所有订阅
 	var chainSubscriptionList []models.Subscription
-	err := r.db.Model(&models.Subscription{}).Where("user_id = ? and network LIKE ?", user.Id, fmt.Sprintf("%%%s%%", networkType)).Find(&chainSubscriptionList).Error
+	err := r.db.Model(&models.Subscription{}).Where("user_id = ? and network LIKE ?", userId, fmt.Sprintf("%%%s%%", networkType)).Find(&chainSubscriptionList).Error
 	if err != nil {
 		logger.Errorf("chain link oracle request overview error: %s", err)
 		return nil, err

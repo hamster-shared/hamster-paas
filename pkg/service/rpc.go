@@ -3,7 +3,6 @@ package service
 import (
 	"fmt"
 	"hamster-paas/pkg/models"
-	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/service/zan"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
@@ -85,16 +84,16 @@ func (s *RpcService) GetNetworks(chain string) ([]string, error) {
 	return networks, nil
 }
 
-func (s *RpcService) Overview(user aline.User, network string) (*models.ApiResponseOverview, error) {
-	a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
+func (s *RpcService) Overview(userId uint, network string) (*models.ApiResponseOverview, error) {
+	a, err := models.GetRpcAccount(fmt.Sprintf("%d", userId))
 	if err != nil {
 		return nil, err
 	}
 	return a.GetOverview(network)
 }
 
-func (s *RpcService) GetMyNetwork(user aline.User, p *models.Pagination) ([]*models.ApiResponseRpcApp, *models.Pagination, error) {
-	a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
+func (s *RpcService) GetMyNetwork(userId uint, p *models.Pagination) ([]*models.ApiResponseRpcApp, *models.Pagination, error) {
+	a, err := models.GetRpcAccount(fmt.Sprintf("%d", userId))
 	if err != nil {
 		return nil, p, err
 	}
@@ -160,7 +159,7 @@ func (s *RpcService) ChainDetail(userId uint, chain string) (*models.RpcChainDet
 	return &detail, nil
 }
 
-func (s *RpcService) AppRequestLog(user aline.User, appKey, page, size string) ([]*models.RpcAppRequestLog, *models.Pagination, error) {
+func (s *RpcService) AppRequestLog(userId uint, appKey, page, size string) ([]*models.RpcAppRequestLog, *models.Pagination, error) {
 	var pageInt, sizeInt int
 	pageInt, err := strconv.Atoi(page)
 	if err != nil {
@@ -174,7 +173,7 @@ func (s *RpcService) AppRequestLog(user aline.User, appKey, page, size string) (
 		Page: pageInt,
 		Size: sizeInt,
 	}
-	a, err := models.GetRpcAccount(fmt.Sprintf("%d", user.Id))
+	a, err := models.GetRpcAccount(fmt.Sprintf("%d", userId))
 	if err != nil {
 		return nil, nil, err
 	}
