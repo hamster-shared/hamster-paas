@@ -266,7 +266,9 @@ func DoGet[T any](c *ZanClient, accessToken string, path string, params map[stri
 
 	req, _ := http.NewRequest("GET", fullUrl, nil)
 	req.Header.Set("Request-Timestamp", fmt.Sprintf("%d", timestamp))
-	req.Header.Set("X-Access-Token", fmt.Sprintf("Bearer %s", accessToken))
+	if accessToken != "" {
+		req.Header.Set("X-Access-Token", fmt.Sprintf("Bearer %s", accessToken))
+	}
 	req.Header.Set("Authorization", fmt.Sprintf("%s_%s", c.clientId, c.getParamsSignature(timestamp, signParams)))
 
 	fmt.Println("5.请求URL和Header: ")
