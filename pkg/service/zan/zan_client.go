@@ -66,7 +66,7 @@ func NewZanClient(baseUrl string, accessToken string, clientId string, privateKe
 // AuthUrl 1.1 获取授权链接接⼝
 func (c *ZanClient) AuthUrl() (BaseResponse[AuthUrl], error) {
 	params := map[string]string{}
-	response, err := DoGet[AuthUrl](c, c.baseAccessToken, "/openapi/v1/account/auth-url", params)
+	response, err := DoGet[AuthUrl](c, "", "/openapi/v1/account/auth-url", params)
 	return response, err
 }
 
@@ -76,7 +76,7 @@ func (c *ZanClient) AccessToken(authCode string) (BaseResponse[AccessToken], err
 		"authCode": authCode,
 	}
 
-	response, err := DoGet[AccessToken](c, c.baseAccessToken, "/openapi/v1/account/oauth/access-token", params)
+	response, err := DoGet[AccessToken](c, "", "/openapi/v1/account/oauth/access-token", params)
 	return response, err
 }
 

@@ -6,7 +6,7 @@ import (
 )
 
 func GetClient() *ZanClient {
-	return NewZanClient("http://webtcapi.unchartedw3s.com", "478f53734d284889a6a0fbfc648cc061", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
+	return NewZanClient("https://api.zan.top", "cee5fc4f2ca742c3a4f10581a6dc8057", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
 }
 
 func TestAuthURL(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAuthURL(t *testing.T) {
 
 func TestAccessToken(t *testing.T) {
 	client := GetClient()
-	response, err := client.AccessToken("99a3d64c4e7f4cc28a16fe5bf246ffbf")
+	response, err := client.AccessToken("13463c11f44d46b59272a56a15e9e577")
 	if err == nil {
 		fmt.Println(response)
 	}
