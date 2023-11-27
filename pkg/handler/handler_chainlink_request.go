@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
 
@@ -23,14 +22,13 @@ func (h *HandlerServer) requestList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkRequestService.RequestList(page, size, int64(user.Id))
+	data, err := h.chainLinkRequestService.RequestList(page, size, userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("get request list failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -47,17 +45,16 @@ func (h *HandlerServer) saveChainLinkRequest(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
 	data := vo.ChainLinkRequest{
 		Name:        createData.Name,
 		Script:      createData.Script,
-		UserId:      uint64(user.Id),
+		UserId:      uint64(userId.(uint)),
 		ParamsCount: createData.ParamsCount,
 	}
 	err = h.chainLinkRequestService.SaveChainLinkRequest(data)
@@ -84,17 +81,16 @@ func (h *HandlerServer) updateChainLinkRequest(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
 	data := vo.ChainLinkRequest{
 		Name:   updateData.Name,
 		Script: updateData.Script,
-		UserId: uint64(user.Id),
+		UserId: uint64(userId.(uint)),
 	}
 	err = h.chainLinkRequestService.UpdateChainLinkRequest(int64(id), data)
 	if err != nil {
@@ -153,14 +149,13 @@ func (h *HandlerServer) chainLinkExpenseList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkRequestService.ChainLinkExpenseList(subscriptionId, page, size, int64(user.Id), requestName)
+	data, err := h.chainLinkRequestService.ChainLinkExpenseList(subscriptionId, page, size, userId.(uint), requestName)
 	if err != nil {
 		logger.Error(fmt.Sprintf("query chain link expense list failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -177,14 +172,13 @@ func (h *HandlerServer) saveChainLinkRequestExec(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkRequestService.SaveChainLinkRequestExec(createData, user)
+	data, err := h.chainLinkRequestService.SaveChainLinkRequestExec(createData, userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("save request exec failed: %s", err.Error()))
 		Fail(err.Error(), gin)
@@ -224,14 +218,13 @@ func (h *HandlerServer) updateChainLinkRequestById(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("user not found: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	err = h.chainLinkRequestService.UpdateChainLinkRequestById(int64(id), updateData, user)
+	err = h.chainLinkRequestService.UpdateChainLinkRequestById(int64(id), updateData, userId.(uint))
 	if err != nil {
 		Fail(err.Error(), gin)
 		return
@@ -240,14 +233,14 @@ func (h *HandlerServer) updateChainLinkRequestById(gin *gin.Context) {
 }
 
 func (h *HandlerServer) overview(gin *gin.Context) {
-	user, ok := gin.Get("user")
-	if !ok {
+	userId, exists := gin.Get("userId")
+	if !exists {
 		Fail("do not have token", gin)
 		return
 	}
 	// 获取路径参数
 	network := gin.Param("network")
-	appResp, err := h.chainLinkRequestService.Overview(user.(aline.User), network)
+	appResp, err := h.chainLinkRequestService.Overview(userId.(uint), network)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return

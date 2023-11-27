@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 	"hamster-paas/pkg/models/vo/node"
-	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"os"
 	"strconv"
@@ -70,8 +69,8 @@ func (h *HandlerServer) nodeDetail(gin *gin.Context) {
 }
 
 func (h *HandlerServer) updateNode(gin *gin.Context) {
-	_, ok := gin.Get("user")
-	if !ok {
+	_, exists := gin.Get("userId")
+	if !exists {
 		logger.Errorf("context do not have user")
 		Fail("do not have token", gin)
 		return
@@ -135,14 +134,13 @@ func (h *HandlerServer) orderList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, ok := gin.Get("user")
-	if !ok {
+	userId, exists := gin.Get("userId")
+	if !exists {
 		logger.Errorf("context do not have user")
 		Fail("do not have token", gin)
 		return
 	}
-	user := userAny.(aline.User)
-	data, err := h.orderService.OrderList(start, end, query, int(user.Id), page, size)
+	data, err := h.orderService.OrderList(start, end, query, userId.(uint), page, size)
 	if err != nil {
 		Fail(err.Error(), gin)
 		return

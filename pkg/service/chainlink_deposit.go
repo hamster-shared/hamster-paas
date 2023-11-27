@@ -24,7 +24,7 @@ func NewChainLinkDepositService(db *gorm.DB) *ChainLinkDepositService {
 }
 
 // DepositList  query chain link deposit list by subscription id
-func (d *ChainLinkDepositService) DepositList(subscriptionId, page, size int, userId int64) (*vo.ChainLinkDepositPage, error) {
+func (d *ChainLinkDepositService) DepositList(subscriptionId, page, size int, userId uint) (*vo.ChainLinkDepositPage, error) {
 	var total int64
 	var chainLinkDepositPage vo.ChainLinkDepositPage
 	var chainLinkDepositList []models.Deposit
@@ -43,7 +43,7 @@ func (d *ChainLinkDepositService) DepositList(subscriptionId, page, size int, us
 }
 
 // AddDeposit TODO 需要异步检查
-func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64, transactionTx string, userId int64, subscriptionService ChainLinkSubscriptionService, poolService PoolService, address string) (int64, error) {
+func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64, transactionTx string, userId uint, subscriptionService ChainLinkSubscriptionService, poolService PoolService, address string) (int64, error) {
 	// 检查该id是否存在且success
 	subscription, err := subscriptionService.GetSubscriptionById(int(subscriptionId))
 	if err != nil {
@@ -74,7 +74,7 @@ func (d *ChainLinkDepositService) AddDeposit(subscriptionId int64, incr float64,
 	return deposit.Id, nil
 }
 
-func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.ChainLinkFoundUpdateParam) error {
+func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint, param vo.ChainLinkFoundUpdateParam) error {
 	//获取id对应的记录
 	var deposit models.Deposit
 	d.db.Model(models.Deposit{}).Where("id = ?", param.Id).First(&deposit)
@@ -83,7 +83,7 @@ func (d *ChainLinkDepositService) UpdateDepositStatus(userId uint64, param vo.Ch
 		return nil
 	}
 	// 判断该deposit是否是符合要求
-	if deposit.TransactionTx == param.TransactionTx && deposit.UserId == userId && param.SubscriptionId == deposit.SubscriptionId {
+	if deposit.TransactionTx == param.TransactionTx && deposit.UserId == uint64(userId) && param.SubscriptionId == deposit.SubscriptionId {
 		err := d.db.Model(models.Deposit{}).Where("id = ?", param.Id).Update("status", param.NewStatus).Error
 		if err != nil {
 			return err

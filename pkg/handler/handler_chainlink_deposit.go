@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"hamster-paas/pkg/rpc/aline"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
 )
@@ -28,14 +27,13 @@ func (h *HandlerServer) depositList(gin *gin.Context) {
 		Fail(err.Error(), gin)
 		return
 	}
-	userAny, exists := gin.Get("user")
+	userId, exists := gin.Get("userId")
 	if !exists {
 		logger.Error(fmt.Sprintf("request list failed: %s", err.Error()))
 		Fail("user information does not exist", gin)
 		return
 	}
-	user, _ := userAny.(aline.User)
-	data, err := h.chainLinkDepositService.DepositList(subscriptionId, page, size, int64(user.Id))
+	data, err := h.chainLinkDepositService.DepositList(subscriptionId, page, size, userId.(uint))
 	if err != nil {
 		logger.Error(fmt.Sprintf("query chain link deposit list failed: %s", err.Error()))
 		Fail(err.Error(), gin)

@@ -3,15 +3,14 @@ package handler
 import (
 	"fmt"
 	"hamster-paas/pkg/models"
-	"hamster-paas/pkg/rpc/aline"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func (h *HandlerServer) rpcOverview(c *gin.Context) {
-	user, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
@@ -20,7 +19,7 @@ func (h *HandlerServer) rpcOverview(c *gin.Context) {
 		Fail(fmt.Sprintf("invalid params, network: %s", network), c)
 		return
 	}
-	appResp, err := h.rpcService.Overview(user.(aline.User), network)
+	appResp, err := h.rpcService.Overview(userId.(uint), network)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -29,8 +28,8 @@ func (h *HandlerServer) rpcOverview(c *gin.Context) {
 }
 
 func (h *HandlerServer) rpcGetMyNetwork(c *gin.Context) {
-	user, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
@@ -48,7 +47,7 @@ func (h *HandlerServer) rpcGetMyNetwork(c *gin.Context) {
 		Page: pageInt,
 		Size: sizeInt,
 	}
-	appResp, p, err := h.rpcService.GetMyNetwork(user.(aline.User), p)
+	appResp, p, err := h.rpcService.GetMyNetwork(userId.(uint), p)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -72,12 +71,12 @@ func (h *HandlerServer) rpcGetSubscribe(c *gin.Context) {
 }
 
 func (h *HandlerServer) rpcGetChains(c *gin.Context) {
-	user, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
-	chains, err := h.rpcService.GetChainsWithUserID(fmt.Sprintf("%d", user.(aline.User).Id))
+	chains, err := h.rpcService.GetChainsWithUserID(fmt.Sprintf("%d", userId.(uint)))
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -119,8 +118,8 @@ func (h *HandlerServer) rpcChainDetail(c *gin.Context) {
 }
 
 func (h *HandlerServer) rpcRequestLog(c *gin.Context) {
-	user, ok := c.Get("user")
-	if !ok {
+	userId, exists := c.Get("userId")
+	if !exists {
 		Fail("do not have token", c)
 		return
 	}
@@ -138,7 +137,7 @@ func (h *HandlerServer) rpcRequestLog(c *gin.Context) {
 	if size == "" {
 		size = "10"
 	}
-	requestLog, p, err := h.rpcService.AppRequestLog(user.(aline.User), appKey, page, size)
+	requestLog, p, err := h.rpcService.AppRequestLog(userId.(uint), appKey, page, size)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
