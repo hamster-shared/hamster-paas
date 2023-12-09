@@ -129,7 +129,7 @@ func (h *HttpServer) StartHttpServer() error {
 	icpApi.GET("/account/breif", h.handlerServer.IcpAccountBreif)
 	icpApi.GET("/account/overview", h.handlerServer.IcpAccountOverview)
 
-	icpApi.GET("/account/canisters", h.handlerServer.IcpAccountBreif)
+	icpApi.GET("/account/canisters", h.handlerServer.IcpCanisterPage)
 	icpApi.GET("/canister/overview", h.handlerServer.IcpAccountBreif)
 	icpApi.GET("/canister/controllers", h.handlerServer.IcpAccountBreif)
 

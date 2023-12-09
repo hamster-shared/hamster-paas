@@ -10,6 +10,19 @@ const (
 	Stopped
 )
 
+func (s *CanisterStatus) String() string {
+	switch *s {
+	case Processing:
+		return "Processing"
+	case Running:
+		return "Running"
+	case Stopped:
+		return "Stopped"
+	default:
+		return "Unknown"
+	}
+}
+
 type IcpCanister struct {
 	Id           int            `json:"id"`
 	ProjectId    string         `json:"projectId"`

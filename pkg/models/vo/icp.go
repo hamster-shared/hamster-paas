@@ -12,7 +12,7 @@ type IcpAccountVo struct {
 	WalletIdFlag  bool `json:"walletIdFlag"`
 }
 
-type IcpCanisterBalanceVo struct {
+type UserCycleInfoVo struct {
 	UserId        int    `json:"userId"`
 	CanisterId    string `json:"canisterId"`
 	CyclesBalance string `json:"cyclesBalance"`
