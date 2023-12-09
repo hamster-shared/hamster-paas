@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/db"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/utils"
@@ -42,12 +43,69 @@ type IcpService struct {
 	network string // ic
 }
 
-func NewIcpService(db *gorm.DB, network string) *IcpService {
+func NewIcpService() *IcpService {
+	alineDb, err := application.GetBean[*gorm.DB]("alineDb")
+	if err != nil {
+		return nil
+	}
 	return &IcpService{
-		db:      db,
-		network: network,
+		db:      alineDb,
+		network: "ic",
 	}
 }
+
+func (i *IcpService) GetDfxVersion() (string, error) {
+	return i.execDfxCommand(GetVersion)
+}
+
+func (i *IcpService) GetAccountBrief(userId uint) (*vo.AccountBrief, error) {
+	var projects []db.Project
+	err := i.db.Model(db.Project{}).Where("user_id = ?", userId).Find(&projects).Error
+	if err != nil {
+		return nil, err
+	}
+	var brief vo.AccountBrief
+	var canisters []db.IcpCanister
+	for _, proj := range projects {
+		err := i.db.Model(db.IcpCanister{}).Where("project_id = ?", proj.Id).Find(&canisters).Error
+		if err != nil {
+			return nil, err
+		}
+		brief.Canisters += len(canisters)
+		for _, can := range canisters {
+			if can.Status == db.Running {
+				brief.Running += 1
+			}
+			if can.Status == db.Stopped {
+				brief.Stopped += 1
+			}
+		}
+	}
+	return &brief, nil
+}
+
+func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error) {
+	var projects []db.Project
+	err := i.db.Model(db.Project{}).Where("user_id = ?", userId).Find(&projects).Error
+	if err != nil {
+		return nil, err
+	}
+	var ov vo.AccountOverview
+	ov.Projects = len(projects)
+	var canisters []db.IcpCanister
+	for _, proj := range projects {
+		err := i.db.Model(db.IcpCanister{}).Where("project_id = ?", proj.Id).Find(&canisters).Error
+		if err != nil {
+			return nil, err
+		}
+		ov.Canisters += len(canisters)
+	}
+	ov.Cycles = "0.01"
+	ov.Icps = "0.01"
+	return &ov, nil
+}
+
+//  Old version
 
 func (i *IcpService) CreateIdentity(userId uint) (vo vo.UserIcpInfoVo, error error) {
 	var userIcp db.UserIcp
@@ -370,10 +428,6 @@ func (i *IcpService) getLedgerInfo(identityName string) (string, string, error) 
 	}
 
 	return accountId, pId, nil
-}
-
-func (i *IcpService) GetDfxVersion() (string, error) {
-	return i.execDfxCommand(GetVersion)
 }
 
 func (i *IcpService) execDfxCommand(cmd string) (string, error) {

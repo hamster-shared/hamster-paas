@@ -126,6 +126,12 @@ func (h *HttpServer) StartHttpServer() error {
 	icpApi := r.Group("/api/icp")
 	icpApi.GET("/dfx/version", h.handlerServer.DfxVersion)
 	icpApi.Use(h.handlerServer.Authorize())
+	icpApi.GET("/account/breif", h.handlerServer.IcpAccountBreif)
+	icpApi.GET("/account/overview", h.handlerServer.IcpAccountOverview)
+
+	icpApi.GET("/account/canisters", h.handlerServer.IcpAccountBreif)
+	icpApi.GET("/canister/overview", h.handlerServer.IcpAccountBreif)
+	icpApi.GET("/canister/controllers", h.handlerServer.IcpAccountBreif)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }
