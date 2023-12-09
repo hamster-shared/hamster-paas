@@ -21,6 +21,7 @@ type HandlerServer struct {
 	orderService                 service2.OrderService
 	resourceStandardService      service2.ResourceStandardService
 	zanService                   service.ZanService
+	icpService                   service.IcpService
 }
 
 func NewHandlerServer() *HandlerServer {
