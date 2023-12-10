@@ -128,10 +128,24 @@ func (h *HttpServer) StartHttpServer() error {
 	icpApi.Use(h.handlerServer.Authorize())
 	icpApi.GET("/account/breif", h.handlerServer.IcpAccountBreif)
 	icpApi.GET("/account/overview", h.handlerServer.IcpAccountOverview)
-
 	icpApi.GET("/account/canisters", h.handlerServer.IcpCanisterPage)
-	icpApi.GET("/canister/overview", h.handlerServer.IcpAccountBreif)
-	icpApi.GET("/canister/controllers", h.handlerServer.IcpAccountBreif)
+	icpApi.GET("/canister/:id/overview", h.handlerServer.IcpCanisterOverview)
+	icpApi.GET("/canister/:id/controllers", h.handlerServer.IcpControllerPage)
+	icpApi.GET("/canister/:id/consumption", h.handlerServer.IcpConsumptionPage)
+
+	icpApi.GET("/account/get-account", h.handlerServer.IcpGetAccount)
+	icpApi.GET("/account/get-account-info", h.handlerServer.IcpAccountInfo)
+	icpApi.POST("/account/create-identity", h.handlerServer.IcpCreateIdentity)
+
+	icpApi.GET("/account/get-cycles", h.handlerServer.IcpGetWalletCycles)
+	icpApi.POST("/account/buy-cycles", h.handlerServer.IcpRechargeWallet)
+	icpApi.POST("/account/add-canister", h.handlerServer.IcpAddCanister)
+	icpApi.POST("/canister/add-cycles", h.handlerServer.IcpRechargeCanister)
+	icpApi.POST("/canister/add-controller", h.handlerServer.IcpAddController)
+	icpApi.POST("/canister/del-controller", h.handlerServer.IcpDelController)
+	icpApi.POST("/canister/change-status", h.handlerServer.IcpChangeStatus) // stop, run
+	icpApi.POST("/canister/delete", h.handlerServer.IcpDeleteCanister)
+	icpApi.POST("/canister/install", h.handlerServer.IcpInstallDapp)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

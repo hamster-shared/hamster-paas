@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hamster-paas/pkg/application"
@@ -179,6 +180,51 @@ func (i *IcpService) GetCanisterPage(userId uint, page int, size int) (*vo.UserC
 
 	return &canistersPage, nil
 }
+
+// TODO
+func (i *IcpService) GetCanisterOverview(canisterId string) (*vo.CanisterOverview, error) {
+	var ov vo.CanisterOverview
+	return &ov, nil
+}
+
+// TODO
+func (i *IcpService) GetContollerPage(canisterId string, page int, size int) (*vo.ControllerPage, error) {
+	var ctlPage vo.ControllerPage
+	return &ctlPage, nil
+}
+
+// TODO
+func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (*vo.ConsumptionPage, error) {
+	var cspPage vo.ConsumptionPage
+	return &cspPage, nil
+}
+
+// TODO
+func (i *IcpService) AddCanister(userId uint, canister vo.AddCanisterParam) error {
+	return nil
+}
+
+// TODO
+func (i *IcpService) AddController(userId uint, canister vo.AddControllerParam) error {
+	return nil
+}
+
+// TODO
+func (i *IcpService) DelController(userId uint, canister vo.DelControllerParam) error {
+	return nil
+}
+
+// TODO
+func (i *IcpService) ChangeCanisterStatus(userId uint, canister vo.ChangeStatusParam) error {
+	return nil
+}
+
+// TODO
+func (i *IcpService) InstallDapp(userId uint, canister vo.InstallDappParam) error {
+	return nil
+}
+
+// api canister
 
 func (i *IcpService) newIndentity(identityName string) (err error) {
 	newIdentitySprintf := NewIdentity
@@ -475,6 +521,7 @@ func (i *IcpService) GetAccountInfo(userId uint) (vo vo.UserIcpInfoVo, error err
 }
 
 // return walletId and cycle balance (TC)
+// api get cycle balance
 func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error error) {
 	var userIcp db.UserIcp
 	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
@@ -513,6 +560,7 @@ func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error er
 	return vo, nil
 }
 
+// api buy cycles from wallet
 func (i *IcpService) RechargeWallet(userId uint) (vo vo.UserCycleInfoVo, error error) {
 	var userIcp db.UserIcp
 	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
@@ -538,7 +586,65 @@ func (i *IcpService) RechargeWallet(userId uint) (vo vo.UserCycleInfoVo, error e
 	return i.GetWalletInfo(userId)
 }
 
+// api add cycles to canister
+func (i *IcpService) RechargeCanister(userId uint, rechargeCanisterParam vo.RechargeCanisterParam) (vo vo.UserCycleInfoVo, error error) {
+	var userIcp db.UserIcp
+	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
+	if err != nil {
+		return vo, err
+	}
+	// 判断当前目录是否存在 dfx.json 文件
+	if _, err := os.Stat("dfx.json"); os.IsNotExist(err) {
+		// 不存在，则新建并写入数据 {}
+		data := map[string]interface{}{}
+		dataJSON, err := json.Marshal(data)
+		if err != nil {
+			return vo, err
+		}
+		err = os.WriteFile("dfx.json", dataJSON, 0644)
+		if err != nil {
+			return vo, err
+		}
+	}
+	amount, err := strconv.ParseFloat(rechargeCanisterParam.Amount, 64)
+	if err != nil {
+		return vo, err
+	}
+	depositCycles := amount * 1e12
+	err = i.depositCanister(userIcp.IdentityName, strconv.FormatFloat(depositCycles, 'f', -1, 64), rechargeCanisterParam.CanisterId)
+	if err != nil {
+		return vo, err
+	}
+	err = os.Remove("dfx.json")
+	if err != nil {
+		return vo, err
+	}
+	data, err := i.queryCanisterStatus(rechargeCanisterParam.CanisterId)
+	if err != nil {
+		return vo, err
+	}
+
+	var icpCanister db.IcpCanister
+	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", rechargeCanisterParam.CanisterId).First(&icpCanister).Error
+	if err != nil {
+		return vo, err
+	}
+	icpCanister.Cycles = sql.NullString{
+		String: data.Balance,
+		Valid:  true,
+	}
+	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", rechargeCanisterParam.CanisterId).Updates(&icpCanister).Error
+	if err != nil {
+		return vo, err
+	}
+	vo.UserId = int(userId)
+	vo.CanisterId = rechargeCanisterParam.CanisterId
+	vo.CyclesBalance = data.Balance + "T"
+	return vo, nil
+}
+
 // init account wallet
+// api init wallet
 func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error error) {
 	lock, err := utils.Lock()
 	if err != nil {
