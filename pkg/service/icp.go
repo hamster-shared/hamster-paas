@@ -22,24 +22,6 @@ import (
 	"gorm.io/gorm"
 )
 
-var (
-	GetVersion     = "dfx -V"
-	AccountId      = "dfx ledger account-id"
-	GetPrincipal   = "dfx identity get-principal"
-	GetWallet      = "dfx identity get-wallet --network %s"
-	NewIdentity    = "dfx identity new %s --storage-mode plaintext"
-	UseIdentity    = "dfx identity use %s"
-	DeployWallet   = "dfx identity deploy-wallet %s --network %s"
-	LedgerBalance  = "dfx ledger balance --network %s" // icp
-	WalletBalance  = "dfx wallet balance --network %s" // cycle
-	CreateCanister = "dfx ledger create-canister %s --amount %s --network %s "
-	WalletTopUp    = "dfx ledger top-up %s --amount %s --network %s"
-	DepositCycles  = "dfx canister deposit-cycles %s %s --network %s"
-	CanisterStatus = "dfx canister status %s --network %s"
-
-	TransferICP = "dfx ledger transfer %s --icp %s --memo %s --network %s"
-)
-
 type IcpService struct {
 	db      *gorm.DB
 	network string // ic
@@ -60,140 +42,215 @@ func (i *IcpService) GetDfxVersion() (string, error) {
 	return i.execDfxCommand(GetVersion)
 }
 
-// api brief
+// api/icp/account/brief
 func (i *IcpService) GetAccountBrief(userId uint) (*vo.AccountBrief, error) {
-	var projects []db.Project
-	err := i.db.Model(db.Project{}).Where("user_id = ?", userId).Find(&projects).Error
-	if err != nil {
+	var res vo.AccountBrief
+	// var projects []db.Project
+	// if err := i.dbUserProjects(userId, &projects); err != nil {
+	// 	return nil, err
+	// }
+
+	var canisters []db.IcpCanister
+	if err := i.dbUserCanisters(userId, &canisters); err != nil {
 		return nil, err
 	}
-	var brief vo.AccountBrief
-	var canisters []db.IcpCanister
-	for _, proj := range projects {
-		err := i.db.Model(db.IcpCanister{}).Where("project_id = ?", proj.Id).Find(&canisters).Error
-		if err != nil {
-			return nil, err
+
+	res.Canisters += len(canisters)
+	for _, can := range canisters {
+		if can.Status == db.Running {
+			res.Running += 1
 		}
-		brief.Canisters += len(canisters)
-		for _, can := range canisters {
-			if can.Status == db.Running {
-				brief.Running += 1
-			}
-			if can.Status == db.Stopped {
-				brief.Stopped += 1
-			}
+		if can.Status == db.Stopped {
+			res.Stopped += 1
 		}
 	}
-	return &brief, nil
+
+	return &res, nil
 }
 
-// api overview
+// api/icp/account/overview
 func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error) {
-	var projects []db.Project
-	err := i.db.Model(db.Project{}).Where("user_id = ?", userId).Find(&projects).Error
-	if err != nil {
-		return nil, err
-	}
-	var ov vo.AccountOverview
-	ov.Projects = len(projects)
+	var res vo.AccountOverview
+	// var projects []db.Project
+	// if err := i.dbUserProjects(userId, &projects); err != nil {
+	// 	return nil, err
+	// }
+	// res.Projects = len(projects)
+
 	var canisters []db.IcpCanister
-	for _, proj := range projects {
-		err = i.db.Model(db.IcpCanister{}).Where("project_id = ?", proj.Id).Find(&canisters).Error
-		if err != nil {
-			return nil, err
-		}
-		ov.Canisters += len(canisters)
+	if err := i.dbUserCanisters(userId, &canisters); err != nil {
+		return nil, err
 	}
+	res.Canisters += len(canisters)
+
+	// get icp identity
 	var userIcp db.UserIcp
-	//
-	err = i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
+	if err := i.dbUserIdentity(userId, &userIcp); err != nil {
+		return nil, err
+	}
+	identityName := userIcp.IdentityName
+
+	// icp balance
+	icps, err := i.icpBalanceWithUnit(identityName)
 	if err != nil {
 		return nil, err
 	}
-	// lock k8s
-	lock, err := utils.Lock()
+	res.Icps = icps
+
+	// cycle balance
+	cycles, err := i.cycleBalanceWithUnit(identityName)
 	if err != nil {
 		return nil, err
 	}
-	defer utils.Unlock(lock)
-	// use identity
-	err = i.useIndentity(userIcp.IdentityName)
-	if err != nil {
-		return nil, err
-	}
-	// icp and cycle balance
-	icps, err := i.icpBalanceWithUnit()
-	if err != nil {
-		return nil, err
-	}
-	cycles, err := i.cycleBalanceWithUnit()
-	if err != nil {
-		return nil, err
-	}
-	ov.Icps = icps
-	ov.Cycles = cycles
-	return &ov, nil
+	res.Cycles = cycles
+
+	return &res, nil
 }
 
-// api canister page
+// api/icp/account/canisters
 func (i *IcpService) GetCanisterPage(userId uint, page int, size int) (*vo.UserCanisterPage, error) {
-	var canistersPage vo.UserCanisterPage
-	var data []vo.UserCanisterVo
+	var res vo.UserCanisterPage
+
+	// var projects []db.Project
+	// if err := i.dbUserProjects(userId, &projects); err != nil {
+	// 	return nil, err
+	// }
+
+	// var allCanisters []db.IcpCanister
+	// var canisters []db.IcpCanister
+	// var canisterProj map[string]string = make(map[string]string)
+	// for _, proj := range projects {
+	// 	if err := i.dbProjCanisters(proj.Id.String(), &canisters); err != nil {
+	// 		return nil, err
+	// 	}
+	// 	// append all canisters
+	// 	allCanisters = append(allCanisters, canisters...)
+	// 	// set map of canisters to project name
+	// 	for _, canister := range canisters {
+	// 		canisterProj[canister.CanisterId] = proj.Name
+	// 	}
+	// }
+	// res.Total = len(allCanisters)
 
 	var projects []db.Project
 	if err := i.dbUserProjects(userId, &projects); err != nil {
 		return nil, err
 	}
-
-	var allCanisters []db.IcpCanister
-	var canisters []db.IcpCanister
-	var canisterProj map[string]string = make(map[string]string)
-	for _, proj := range projects {
-		if err := i.dbProjCanisters(proj.Id.String(), &canisters); err != nil {
-			return nil, err
-		}
-		allCanisters = append(allCanisters, canisters...)
+	var projectName map[string]string = make(map[string]string)
+	for _, project := range projects {
 		// set map of canisters to project name
-		for _, canister := range canisters {
-			canisterProj[canister.CanisterId] = proj.Name
-		}
+		projectName[project.Id.String()] = project.Name
+
 	}
-	canistersPage.Total = len(allCanisters)
+	var canisters []db.IcpCanister
+	if err := i.dbUserCanisters(userId, &canisters); err != nil {
+		return nil, err
+	}
+
 	st := (page - 1) * size
-	end := st + size
-	if end > len(allCanisters) {
-		end = len(allCanisters)
+	if st > len(canisters) {
+		return nil, errors.New("page out of range")
 	}
+	end := st + size
+	if end > len(canisters) {
+		end = len(canisters)
+	}
+
+	var data []vo.UserCanisterVo
 	var item vo.UserCanisterVo
-	for _, canister := range allCanisters[st:end] {
+	for _, canister := range canisters[st:end] {
 		item.CanisterId = canister.CanisterId
 		item.CanisterName = canister.CanisterName
 		item.Cycles = canister.Cycles.String
 		item.Status = canister.Status.String()
-		item.Project = canisterProj[canister.CanisterId]
-		item.UpdateAt = canister.UpdateTime.Time.Format("yyyy/MM/dd HH:mm:ss")
+		item.Project = projectName[canister.ProjectId]
+		item.UpdateAt = canister.UpdateTime.Time.Format("2006-01-02 15:04:05")
 		data = append(data, item)
 	}
-	canistersPage.Data = data
-	canistersPage.Page = page
-	canistersPage.PageSize = size
+	res.Total = len(canisters)
+	res.Data = data
+	res.Page = page
+	res.PageSize = size
 
-	return &canistersPage, nil
+	return &res, nil
 }
 
-// TODO
-func (i *IcpService) GetCanisterOverview(canisterId string) (*vo.CanisterOverview, error) {
-	var ov vo.CanisterOverview
-	return &ov, nil
+// api/icp/canisters/overview
+func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.CanisterOverview, error) {
+	var res vo.CanisterOverview
+	var canister db.IcpCanister
+	if err := i.dbCanisterInfo(canisterId, &canister); err != nil {
+		return nil, err
+	}
+	res.CanisterId = canisterId
+	res.CanisterName = canister.CanisterName
+
+	var project db.Project
+	if err := i.dbProjectInfo(canister.ProjectId, &project); err != nil {
+		return nil, err
+	}
+
+	res.Project = project.Name
+	// get icp identity
+	var userIcp db.UserIcp
+	if err := i.dbUserIdentity(userId, &userIcp); err != nil {
+		return nil, err
+	}
+	identityName := userIcp.IdentityName
+	status, err := i.getCanisterStatus(identityName, canisterId)
+	if err != nil {
+		return nil, err
+	}
+	res.Status = status.Status
+	res.Cycles = status.Balance
+	res.MemorySize = status.MemorySize
+	res.ModuleHash = status.ModuleHash
+	res.UpdateAt = canister.UpdateTime.Time.Format("2006-01-02 15:04:05")
+
+	return &res, nil
 }
 
-// TODO
-func (i *IcpService) GetContollerPage(canisterId string, page int, size int) (*vo.ControllerPage, error) {
-	var ctlPage vo.ControllerPage
-	return &ctlPage, nil
+func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, size int) (*vo.ControllerPage, error) {
+	var res vo.ControllerPage
+	var userIcp db.UserIcp
+	if err := i.dbUserIdentity(userId, &userIcp); err != nil {
+		return nil, err
+	}
+	identityName := userIcp.IdentityName
+	status, err := i.getCanisterStatus(identityName, canisterId)
+	if err != nil {
+		return nil, err
+	}
+	controllers := status.Controllers
+
+	st := (page - 1) * size
+	if st > len(controllers) {
+		return nil, errors.New("page out of range")
+	}
+	end := st + size
+	if end > len(controllers) {
+		end = len(controllers)
+	}
+
+	var data []vo.ControllerVo
+	var item vo.ControllerVo
+	for _, c := range controllers[st:end] {
+		item.PrincipalId = c
+		if userIcp.PrincipalId == c {
+			item.Type = "Hamster-Managed"
+		} else {
+			item.Type = "User-Managed"
+		}
+	}
+
+	res.Total = len(controllers)
+	res.Data = data
+	res.Page = page
+	res.PageSize = size
+	return &res, nil
 }
 
-// TODO
+// TODO No comsumption yet
 func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (*vo.ConsumptionPage, error) {
 	var cspPage vo.ConsumptionPage
 	return &cspPage, nil
@@ -224,206 +281,9 @@ func (i *IcpService) InstallDapp(userId uint, canister vo.InstallDappParam) erro
 	return nil
 }
 
-// api canister
-
-func (i *IcpService) newIndentity(identityName string) (err error) {
-	newIdentitySprintf := NewIdentity
-	newIdentityCmd := fmt.Sprintf(newIdentitySprintf, identityName)
-	_, err = i.execDfxCommand(newIdentityCmd)
-	return err
-}
-
-func (i *IcpService) useIndentity(identityName string) (err error) {
-	useIdentitySprintf := UseIdentity
-	useIdentityCmd := fmt.Sprintf(useIdentitySprintf, identityName)
-	_, err = i.execDfxCommand(useIdentityCmd)
-	return err
-}
-
-func (i *IcpService) dbUserProjects(userId uint, projects *[]db.Project) error {
-	return i.db.Model(db.Project{}).Where("user_id = ?", userId).Find(&projects).Error
-}
-
-func (i *IcpService) dbProjCanisters(projId string, canisters *[]db.IcpCanister) error {
-	return i.db.Model(db.IcpCanister{}).Where("project_id = ?", projId).Find(&canisters).Error
-}
-
-func (i *IcpService) dbCanisterInfo(canisterId string, canister *db.IcpCanister) error {
-	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).First(&canister).Error
-}
-
-// return accountId, principal
-func (i *IcpService) getLedgerInfo(identityName string) (string, string, error) {
-	lock, err := utils.Lock()
-	if err != nil {
-		return "", "", err
-	}
-	defer utils.Unlock(lock)
-
-	i.useIndentity(identityName)
-	if err != nil {
-		return "", "", err
-	}
-	accountIdCmd := AccountId
-	accountId, err := i.execDfxCommand(accountIdCmd)
-	if err != nil {
-		return "", "", err
-	}
-	principalCmd := GetPrincipal
-	principal, err := i.execDfxCommand(principalCmd)
-	if err != nil {
-		return "", "", err
-	}
-
-	return accountId, principal, nil
-}
-
-func (i *IcpService) getWalletId(identityName string) (walletId string, err error) {
-	getWalletSprintf := GetWallet
-	getWalletCmd := fmt.Sprintf(getWalletSprintf, i.network)
-	output, err := i.execDfxCommand(getWalletCmd)
-	if err != nil {
-		return "", err
-	}
-	re := regexp.MustCompile(`([a-z0-9-]+-[a-z0-9-]+-[a-z0-9-]+-[a-z0-9-]+-[a-z0-9-]+)`)
-	matches := re.FindStringSubmatch(output)
-	if len(matches) > 1 {
-		return matches[1], nil
-	} else {
-		return "", errors.New("fail to get walletId")
-	}
-}
-
-func (i *IcpService) icpBalanceWithUnit() (string, error) {
-	ledgerBalanceSprintf := LedgerBalance
-	ledgerBalanceCmd := fmt.Sprintf(ledgerBalanceSprintf, i.network)
-	balance, err := i.execDfxCommand(ledgerBalanceCmd)
-	return strings.TrimSpace(balance), err
-}
-
-func (i *IcpService) cycleBalanceWithUnit() (string, error) {
-	walletBalanceSprintf := WalletBalance
-	walletBalanceCmd := fmt.Sprintf(walletBalanceSprintf, i.network)
-	balance, err := i.execDfxCommand(walletBalanceCmd)
-	return strings.TrimSpace(balance), err
-}
-
-func (i *IcpService) getIcpBalance() (string, error) {
-	balanceSprintf := LedgerBalance
-	balanceCmd := fmt.Sprintf(balanceSprintf, i.network)
-	balance, err := i.execDfxCommand(balanceCmd)
-	if err != nil {
-		return "", err
-	}
-	balanceSplit := strings.Split(balance, " ")
-	if len(balanceSplit) > 0 {
-		amount, err := strconv.ParseFloat(balanceSplit[0], 64)
-		if err != nil {
-			return "", err
-		}
-		if amount > 0.0002 {
-			amount -= 0.0002
-		} else {
-			return "", errors.New("insufficient icp balance")
-		}
-		return strconv.FormatFloat(amount, 'f', 8, 64), nil
-	} else {
-		return "", errors.New("failure to obtain ICP balances")
-	}
-}
-
-// deprecated
-func (i *IcpService) getICPs() (string, error) {
-	balanceSprintf := LedgerBalance
-	balanceCmd := fmt.Sprintf(balanceSprintf, i.network)
-	balance, err := i.execDfxCommand(balanceCmd)
-	if err != nil {
-		return "", err
-	}
-	balanceSplit := strings.Split(balance, " ")
-	if len(balanceSplit) > 0 {
-		return balanceSplit[0], nil
-	} else {
-		return "", errors.New("failure to obtain cycle balances")
-	}
-}
-
-func (i *IcpService) getCycles() (string, error) {
-	walletBalanceSprintf := WalletBalance
-	walletBalanceCmd := fmt.Sprintf(walletBalanceSprintf, i.network)
-	balance, err := i.execDfxCommand(walletBalanceCmd)
-	if err != nil {
-		return "", err
-	}
-	balanceSplit := strings.Split(balance, " ")
-	if len(balanceSplit) > 0 {
-		return balanceSplit[0], nil
-	} else {
-		return "", errors.New("failure to obtain cycle balances")
-	}
-}
-
-func (i *IcpService) walletTopUp(identityName string, walletId string) (error error) {
-	lock, err := utils.Lock()
-	if err != nil {
-		return err
-	}
-	defer utils.Unlock(lock)
-	err = i.useIndentity(identityName)
-	if err != nil {
-		return err
-	}
-	// TODO all balance?
-	balance, err := i.getIcpBalance()
-	if err != nil {
-		return err
-	}
-	walletTopUpSprintf := WalletTopUp
-	walletTopUpCmd := fmt.Sprintf(walletTopUpSprintf, walletId, balance, i.network)
-	output, err := i.execDfxCommand(walletTopUpCmd)
-	if err != nil {
-		return err
-	}
-	logger.Infof("identityName-> %s walletId-> %s top-up result is: %s \n", identityName, walletId, output)
-	return nil
-}
-
-func (i *IcpService) depositCanister(identityName string, cycles string, canisterId string) error {
-	lock, err := utils.Lock()
-	if err != nil {
-		return err
-	}
-	defer utils.Unlock(lock)
-	err = i.useIndentity(identityName)
-	if err != nil {
-		return err
-	}
-	depositCyclesSprintf := DepositCycles
-	depositCyclesCmd := fmt.Sprintf(depositCyclesSprintf, cycles, canisterId, i.network)
-	output, err := i.execDfxCommand(depositCyclesCmd)
-	if err != nil {
-		return err
-	}
-	logger.Infof("userid-> %s canisterId-> %s deposit-cycles result is: %s \n", identityName, canisterId, output)
-	return nil
-}
-
-func (i *IcpService) execDfxCommand(cmd string) (string, error) {
-	output, err := exec.Command("bash", "-c", cmd).Output()
-	if exitError, ok := err.(*exec.ExitError); ok {
-		logger.Errorf("%s Exit status: %d, Exit str: %s", cmd, exitError.ExitCode(), string(exitError.Stderr))
-		return "", errors.New(string(exitError.Stderr))
-	} else if err != nil {
-		// 输出其他类型的错误
-		logger.Errorf("%s Failed to execute command: %s", cmd, err)
-		return "", err
-	}
-	logger.Infof("%s Exit result: %s", cmd, string(output))
-	return string(output), nil
-}
-
-//  Old version
-
+//	Old version
+//
+// api/icp/account/get-account
 // return if account or wallet id is exist
 func (i *IcpService) GetAccountFlag(userId uint) (vo vo.IcpAccountVo, error error) {
 	var userIcp db.UserIcp
@@ -447,6 +307,7 @@ func (i *IcpService) GetAccountFlag(userId uint) (vo vo.IcpAccountVo, error erro
 	return vo, nil
 }
 
+// api/icp/account/create-identity
 // create identity and insert usericp db
 func (i *IcpService) CreateIdentity(userId uint) (vo vo.UserIcpInfoVo, error error) {
 	var userIcp db.UserIcp
@@ -492,6 +353,7 @@ func (i *IcpService) CreateIdentity(userId uint) (vo vo.UserIcpInfoVo, error err
 	return vo, nil
 }
 
+// api/icp/account/get-account-info
 // return accountId and icp balance (ICP)
 func (i *IcpService) GetAccountInfo(userId uint) (vo vo.UserIcpInfoVo, error error) {
 	var userIcp db.UserIcp
@@ -499,17 +361,7 @@ func (i *IcpService) GetAccountInfo(userId uint) (vo vo.UserIcpInfoVo, error err
 	if err != nil {
 		return vo, err
 	}
-	// lock k8s
-	lock, err := utils.Lock()
-	if err != nil {
-		return vo, err
-	}
-	defer utils.Unlock(lock)
-	err = i.useIndentity(userIcp.IdentityName)
-	if err != nil {
-		return vo, err
-	}
-	balance, err := i.icpBalanceWithUnit()
+	balance, err := i.icpBalanceWithUnit(userIcp.IdentityName)
 	if err != nil {
 		return vo, err
 	}
@@ -520,8 +372,8 @@ func (i *IcpService) GetAccountInfo(userId uint) (vo vo.UserIcpInfoVo, error err
 	return vo, nil
 }
 
+// api/icp/account/get-cycle
 // return walletId and cycle balance (TC)
-// api get cycle balance
 func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error error) {
 	var userIcp db.UserIcp
 	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
@@ -548,7 +400,7 @@ func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error er
 	}
 	// get wallet balance
 	walletBalanceSprintf := WalletBalance
-	walletBalanceCmd := fmt.Sprintf(walletBalanceSprintf, i.network)
+	walletBalanceCmd := fmt.Sprintf(walletBalanceSprintf, i.network, userIcp.IdentityName)
 	balance, err := i.execDfxCommand(walletBalanceCmd)
 	if err != nil {
 		return vo, err
@@ -560,7 +412,7 @@ func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error er
 	return vo, nil
 }
 
-// api buy cycles from wallet
+// api/icp/account/buy-cycles
 func (i *IcpService) RechargeWallet(userId uint) (vo vo.UserCycleInfoVo, error error) {
 	var userIcp db.UserIcp
 	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
@@ -586,7 +438,7 @@ func (i *IcpService) RechargeWallet(userId uint) (vo vo.UserCycleInfoVo, error e
 	return i.GetWalletInfo(userId)
 }
 
-// api add cycles to canister
+// api/icp/canister/add-cycles
 func (i *IcpService) RechargeCanister(userId uint, rechargeCanisterParam vo.RechargeCanisterParam) (vo vo.UserCycleInfoVo, error error) {
 	var userIcp db.UserIcp
 	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
@@ -619,7 +471,7 @@ func (i *IcpService) RechargeCanister(userId uint, rechargeCanisterParam vo.Rech
 	if err != nil {
 		return vo, err
 	}
-	data, err := i.queryCanisterStatus(rechargeCanisterParam.CanisterId)
+	data, err := i.queryCanisterStatus(userIcp.IdentityName, rechargeCanisterParam.CanisterId)
 	if err != nil {
 		return vo, err
 	}
@@ -643,8 +495,8 @@ func (i *IcpService) RechargeCanister(userId uint, rechargeCanisterParam vo.Rech
 	return vo, nil
 }
 
+// use in recharge
 // init account wallet
-// api init wallet
 func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error error) {
 	lock, err := utils.Lock()
 	if err != nil {
@@ -656,13 +508,13 @@ func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error erro
 		return "", err
 	}
 	// TODO all balance?
-	balance, err := i.getIcpBalance()
+	balance, err := i.getIcpBalance(userIcp.IdentityName)
 	if err != nil {
 		return "", err
 	}
 	// create new canister
 	createCanisterSprintf := CreateCanister
-	createCanisterCmd := fmt.Sprintf(createCanisterSprintf, userIcp.PrincipalId, balance, i.network)
+	createCanisterCmd := fmt.Sprintf(createCanisterSprintf, userIcp.PrincipalId, balance, i.network, userIcp.IdentityName)
 	output, err := i.execDfxCommand(createCanisterCmd)
 	logger.Infof("userid-> %s create-canister result is: %s \n", userIcp.IdentityName, output)
 	if err != nil {
@@ -681,7 +533,7 @@ func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error erro
 	}
 	// deploy wallet
 	deployWalletSprintf := DeployWallet
-	deployWalletCmd := fmt.Sprintf(deployWalletSprintf, walletId, i.network)
+	deployWalletCmd := fmt.Sprintf(deployWalletSprintf, walletId, i.network, userIcp.IdentityName)
 	output, err = i.execDfxCommand(deployWalletCmd)
 	logger.Infof("userid-> %s walletId-> %s deploy-wallet result is: %s \n", userIcp.IdentityName, walletId, output)
 	if err != nil {
@@ -690,71 +542,10 @@ func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error erro
 	return walletId, nil
 }
 
-func (i *IcpService) QueryIcpCanister(projectId string) (string, error) {
-	var data db.IcpCanister
-	err := i.db.Model(db.IcpCanister{}).Where("project_id = ?", projectId).First(&data).Error
-	if err != nil {
-		return "", err
-	}
-	return data.CanisterId, nil
-}
-
-func (i *IcpService) QueryIcpCanisterList(projectId string, page, size int) (*vo.IcpCanisterPage, error) {
-	var total int64
-	var pageData vo.IcpCanisterPage
-	var canisters []db.IcpCanister
-	var vo []vo.IcpCanisterVo
-	err := i.db.Model(db.IcpCanister{}).Where("project_id = ?", projectId).Order("create_time DESC").Offset((page - 1) * size).Limit(size).Find(&canisters).Offset(-1).Limit(-1).Count(&total).Error
-	if err != nil {
-		return &pageData, err
-	}
-	for _, canister := range canisters {
-		logger.Info(canister.Cycles)
-		if !canister.Cycles.Valid {
-			data, err := i.queryCanisterStatus(canister.CanisterId)
-			logger.Debugf("balance data is %s:", data.Balance)
-			if err == nil {
-				logger.Info("start save balance")
-				canister.Cycles = sql.NullString{
-					String: data.Balance,
-					Valid:  true,
-				}
-				canister.UpdateTime = sql.NullTime{
-					Time:  time.Now(),
-					Valid: true,
-				}
-				i.db.Save(&canister)
-			}
-		} else {
-			isThreeHoursAgo := isTimeThreeHoursAgo(canister.UpdateTime.Time, time.Now())
-			if isThreeHoursAgo {
-				data, err := i.queryCanisterStatus(canister.CanisterId)
-				if err == nil {
-					canister.Cycles = sql.NullString{
-						String: data.Balance,
-						Valid:  true,
-					}
-					canister.UpdateTime = sql.NullTime{
-						Time:  time.Now(),
-						Valid: true,
-					}
-					i.db.Save(&canister)
-				}
-			}
-		}
-	}
-	copier.Copy(&vo, &canisters)
-	pageData.Data = vo
-	pageData.Page = page
-	pageData.PageSize = size
-	pageData.Total = int(total)
-	return &pageData, nil
-}
-
-func (i *IcpService) queryCanisterStatus(canisterId string) (vo.CanisterStatusRes, error) {
+func (i *IcpService) queryCanisterStatus(identity string, canisterId string) (vo.CanisterStatusRes, error) {
 	var res vo.CanisterStatusRes
 	canisterStatusSprintf := CanisterStatus
-	canisterCmd := fmt.Sprintf(canisterStatusSprintf, canisterId, i.network)
+	canisterCmd := fmt.Sprintf(canisterStatusSprintf, canisterId, i.network, identity)
 	logger.Infof("exec cmd is %s", canisterCmd)
 	cmd := exec.Command("bash", "-c", canisterCmd)
 	out, err := cmd.CombinedOutput()
@@ -763,6 +554,7 @@ func (i *IcpService) queryCanisterStatus(canisterId string) (vo.CanisterStatusRe
 		return res, err
 	}
 	logger.Infof("status is:%s", string(out))
+	// find cycle
 	re := regexp.MustCompile(`Balance: ([0-9_]+) Cycles`)
 	matches := re.FindStringSubmatch(string(out))
 	if len(matches) > 1 {
@@ -779,6 +571,7 @@ func (i *IcpService) queryCanisterStatus(canisterId string) (vo.CanisterStatusRe
 	} else {
 		logger.Info("balance not found!")
 	}
+	// find status
 	statusRegex := regexp.MustCompile(`Status: (.+)`)
 	statusMatch := statusRegex.FindStringSubmatch(string(out))
 	if len(statusMatch) > 1 {
@@ -787,11 +580,6 @@ func (i *IcpService) queryCanisterStatus(canisterId string) (vo.CanisterStatusRe
 		logger.Info("status not found!")
 	}
 	return res, nil
-}
-
-func isTimeThreeHoursAgo(t time.Time, now time.Time) bool {
-	duration := now.Sub(t)
-	return duration >= 3*time.Hour
 }
 
 func (i *IcpService) SaveDfxJsonData(projectId string, jsonData string) error {

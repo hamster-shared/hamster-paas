@@ -30,6 +30,15 @@ type CanisterStatusRes struct {
 	Balance string `json:"balance"`
 }
 
+// New call Status
+type CanisterStatus struct {
+	Controllers []string `json:"controller"`
+	Status      string   `json:"status"`
+	Balance     string   `json:"balance"`
+	MemorySize  string   `json:"memorySize"`
+	ModuleHash  string   `json:"moduleHash"`
+}
+
 // New
 type AccountBrief struct {
 	Canisters int `json:"canisters"`
@@ -67,7 +76,7 @@ type CanisterOverview struct {
 	Project      string `json:"project"`
 	Cycles       string `json:"cycles"`
 	Status       string `json:"status"`
-	Size         string `json:"size"`
+	MemorySize   string `json:"moduleSize"`
 	ModuleHash   string `json:"moduleHash"`
 	UpdateAt     string `json:"updateAt"`
 }
@@ -75,7 +84,6 @@ type CanisterOverview struct {
 // controllers
 type ControllerVo struct {
 	PrincipalId string `json:"principalId"`
-	Scope       string `json:"scope"`
 	Type        string `json:"type"`
 }
 

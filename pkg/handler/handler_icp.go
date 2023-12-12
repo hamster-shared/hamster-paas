@@ -79,7 +79,7 @@ func (h *HandlerServer) IcpCanisterPage(c *gin.Context) {
 
 // IcpCanisterOverview 获取指定 canister 的概览
 func (h *HandlerServer) IcpCanisterOverview(c *gin.Context) {
-	_, exists := c.Get("userId")
+	userId, exists := c.Get("userId")
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -89,7 +89,7 @@ func (h *HandlerServer) IcpCanisterOverview(c *gin.Context) {
 		Fail("canister id is empty", c)
 		return
 	}
-	data, err := h.icpService.GetCanisterOverview(canisterId)
+	data, err := h.icpService.GetCanisterOverview(userId.(uint), canisterId)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -99,13 +99,13 @@ func (h *HandlerServer) IcpCanisterOverview(c *gin.Context) {
 
 // IcpControllerPage 获取指定 canister 的 controller
 func (h *HandlerServer) IcpControllerPage(c *gin.Context) {
-	_, exists := c.Get("userId")
+	userId, exists := c.Get("userId")
 	if !exists {
 		Fail("do not have token", c)
 		return
 	}
 	pageStr := c.DefaultQuery("id", "1")
-	sizeStr := c.DefaultQuery("size", "10")
+	sizeStr := c.DefaultQuery("size", "5")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
 		Fail(err.Error(), c)
@@ -121,7 +121,7 @@ func (h *HandlerServer) IcpControllerPage(c *gin.Context) {
 		Fail("canister id is empty", c)
 		return
 	}
-	data, err := h.icpService.GetContollerPage(canisterId, page, size)
+	data, err := h.icpService.GetContollerPage(userId.(uint), canisterId, page, size)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
