@@ -2,11 +2,12 @@ package zan
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func GetClient() *ZanClient {
-	return NewZanClient("https://api.zan.top", "cee5fc4f2ca742c3a4f10581a6dc8057", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
+	return NewZanClient("http://webtcapi.unchartedw3s.com", "478f53734d284889a6a0fbfc648cc061", "2def8d1826884fdd896508d078b26a91", "/Users/mohaijiang/IdeaProjects/blockchain/hamster-paas/rsa_private_key_pkcs8.pem")
 }
 
 func TestAuthURL(t *testing.T) {
@@ -72,4 +73,24 @@ func TestEcosystemsDigest(t *testing.T) {
 	if err == nil {
 		fmt.Println(response)
 	}
+}
+
+func TestPlan(t *testing.T) {
+	accessToken := "cc9f76447eaf492199f5f1e81311dc97"
+	client := GetClient()
+	response, err := client.Plan(accessToken)
+	assert.NoError(t, err)
+	fmt.Println(response.Data)
+
+}
+
+func TestInitPlan(t *testing.T) {
+	accessToken := "v29f76447eaf492199f5f1e542ccqevd"
+	client := GetClient()
+
+	err := client.InitFreeSpec(accessToken)
+	assert.NoError(t, err)
+	response, err := client.Plan(accessToken)
+	assert.NoError(t, err)
+	fmt.Println(response.Data)
 }

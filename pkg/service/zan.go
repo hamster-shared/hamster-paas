@@ -54,6 +54,14 @@ func (s *ZanService) ExchangeAccessToken(user aline.UserPrincipal, authCode stri
 		zanUser.AccessToken = resp.Data.AccessToken
 	}
 	err = s.db.Model(zanUser).Save(&zanUser).Error
+
+	if err != nil {
+		return err
+	}
+
+	// 初始化plan
+	err = s.cli.InitFreeSpec(resp.Data.AccessToken)
+
 	return err
 }
 
@@ -164,14 +172,14 @@ func (s *ZanService) EcosystemsDigest() ([]zan.EcosystemDigestInfo, error) {
 	return resp.Data, nil
 }
 
-func (s *ZanService) UserPlan(u aline.UserPrincipal) (zan.PlanDetailInfo, error) {
+func (s *ZanService) UserPlan(u aline.UserPrincipal) (*zan.PlanDetailInfo, error) {
 	token, err := s.GetUserAccessToken(u)
 	if err != nil {
-		return zan.PlanDetailInfo{}, err
+		return nil, err
 	}
 	resp, err := s.cli.Plan(token)
 	if err != nil {
-		return zan.PlanDetailInfo{}, err
+		return nil, err
 	}
 	return resp.Data, nil
 }

@@ -168,10 +168,10 @@ func (c *ZanClient) EcosystemsDigest() (BaseResponse[[]EcosystemDigestInfo], err
 }
 
 // 2.9 套餐信息查询接⼝
-func (c *ZanClient) Plan(accessToken string) (BaseResponse[PlanDetailInfo], error) {
+func (c *ZanClient) Plan(accessToken string) (BaseResponse[*PlanDetailInfo], error) {
 	params := map[string]string{}
 
-	response, err := DoGet[PlanDetailInfo](c, accessToken, "/openapi/v1/node-service/plan", params)
+	response, err := DoGet[*PlanDetailInfo](c, accessToken, "/openapi/v1/node-service/plan", params)
 	return response, err
 }
 
@@ -186,6 +186,28 @@ func (c *ZanClient) ApiKeyRequestActivityStatsFail(accessToken string, apiKeyId 
 
 	response, err := DoGet[[]StatMethodRequestActivityFailedDetailGwInfo](c, accessToken, "/openapi/v1/node-service/api-keys/stats/requests-activity/failed", params)
 	return response, err
+}
+
+func (c *ZanClient) FreeSpec(accessToken string) error {
+	resp, err := DoPost[*string](c, accessToken, "/openapi/v1/node-service/free-spec", nil)
+	fmt.Println("FreeSpec:", resp)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func (c *ZanClient) InitFreeSpec(accessToken string) error {
+	plan, err := c.Plan(accessToken)
+	if err != nil {
+		return err
+	}
+	if plan.Data == nil {
+		return c.FreeSpec(accessToken)
+	}
+
+	return nil
 }
 
 func (c *ZanClient) getParamsSignature(timestamp int64, params map[string][]string) string {
@@ -209,7 +231,12 @@ func (c *ZanClient) getParamsSignature(timestamp int64, params map[string][]stri
 }
 
 func (c *ZanClient) getBodySignature(timestamp int64, params any) string {
-	unsignedPayload := fmt.Sprintf("%d|%s", timestamp, objectToJson(params))
+	var unsignedPayload string
+	if strparams, ok := params.(string); ok {
+		unsignedPayload = fmt.Sprintf("%d|%s", timestamp, strparams)
+	} else {
+		unsignedPayload = fmt.Sprintf("%d|%s", timestamp, objectToJson(params))
+	}
 
 	fmt.Println("1.待加密payload：" + unsignedPayload)
 	hash := sha256.Sum256([]byte(unsignedPayload))
@@ -296,11 +323,19 @@ func DoPost[T any](c *ZanClient, accessToken string, path string, params any) (r
 	timestamp := time.Now().UnixMilli()
 	fullPath, err := url.JoinPath(c.baseUrl, path)
 	reqUrl, err := url.ParseRequestURI(fullPath)
-	requestBody, err := json.Marshal(params)
-	req, _ := http.NewRequest("POST", reqUrl.String(), bytes.NewBuffer(requestBody))
+	var bodyContent io.Reader
+	if params == nil {
+		params = ""
+		bodyContent = nil
+	} else {
+		requestBody, _ := json.Marshal(params)
+		bodyContent = bytes.NewBuffer(requestBody)
+	}
+
+	req, _ := http.NewRequest("POST", reqUrl.String(), bodyContent)
+	req.Header.Set("Authorization", fmt.Sprintf("%s_%s", c.clientId, c.getBodySignature(timestamp, params)))
 	req.Header.Set("Request-Timestamp", fmt.Sprintf("%d", timestamp))
 	req.Header.Set("X-Access-Token", fmt.Sprintf("Bearer %s", accessToken))
-	req.Header.Set("Authorization", fmt.Sprintf("%s_%s", c.clientId, c.getBodySignature(timestamp, params)))
 
 	fmt.Println("5.请求URL和Header: ")
 	fmt.Println(req.Method, req.URL.String())
