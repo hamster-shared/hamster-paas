@@ -1,16 +1,20 @@
 package service
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hamster-paas/pkg/db"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/utils/logger"
 	"math"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var (
@@ -27,16 +31,28 @@ var (
 	WalletTopUp    = "dfx ledger top-up %s --amount %s --network %s --identity %s"
 	DepositCycles  = "dfx canister deposit-cycles %s %s --network %s --identity %s"
 	CanisterStatus = "dfx canister status %s --network %s --identity %s"
-	CanisterCreate = "dfx canister create %s --all --network %s --identity %s"
-	AddController  = "dfx canister update-settings --add-controller %s %s --network %s --identity %s"
-	DelController  = "dfx canister update-settings --remove-controller %s %s --network %s --identity %s"
-	UninstallCode  = "dfx canister uninstall-code %s --network %s --identity %s"
-	TransferICP    = "dfx ledger transfer %s --icp %s --memo %s --network %s --identity %s"
+	CanisterCreate = "dfx canister create %s --network %s --identity %s"
+	CanisterDelete = "dfx canister delete %s --network %s --identity %s"
+	CanisterStop   = "dfx canister stop %s --network %s --identity %s"
+	CanisterStart  = "dfx canister start %s --network %s --identity %s"
+
+	AddController = "dfx canister update-settings --add-controller %s %s --network %s --identity %s"
+	DelController = "dfx canister update-settings --remove-controller %s %s --network %s --identity %s"
+	UninstallCode = "dfx canister uninstall-code %s --network %s --identity %s"
+	TransferICP   = "dfx ledger transfer %s --icp %s --memo %s --network %s --identity %s"
 )
 
 // db operations
 func (i *IcpService) dbUserIdentity(userId uint, userIcp *db.UserIcp) error {
 	return i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
+}
+
+func (i *IcpService) dbIdentityName(userId uint) (identityName string, err error) {
+	var userIcp db.UserIcp
+	if err = i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error; err != nil {
+		return "", err
+	}
+	return userIcp.IdentityName, nil
 }
 
 func (i *IcpService) dbUserProjects(userId uint, projects *[]db.Project) error {
@@ -57,6 +73,24 @@ func (i *IcpService) dbProjectInfo(projId string, project *db.Project) error {
 
 func (i *IcpService) dbCanisterInfo(canisterId string, canister *db.IcpCanister) error {
 	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).First(&canister).Error
+}
+
+func (i *IcpService) dbCreateCanister(userId uint, canisterName string, canisterId string) error {
+	canister := db.IcpCanister{
+		FkUserId:     userId,
+		ProjectId:    "",
+		CanisterId:   canisterId,
+		CanisterName: canisterName,
+		Status:       db.Processing,
+		CreateTime: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
+	}
+	return i.db.Create(canister).Error
+}
+func (i *IcpService) dbDeleteCanister(userId uint, canisterId string) error {
+	return i.db.Delete(db.IcpCanister{}).Where("canister_id = ?", canisterId).Error
 }
 
 // dfx operations
@@ -261,6 +295,90 @@ func (i *IcpService) getCanisterStatus(identity string, canisterId string) (*vo.
 		logger.Errorf("module hash not found!")
 	}
 	return &res, err
+}
+
+func (i *IcpService) changeCanisterStatus(identity string, canisterId string, statusType int) error {
+	var changStatusCmd string
+	if statusType == 1 {
+		changStatusCmd = fmt.Sprintf(CanisterStart, canisterId, i.network, identity)
+		output, err := i.execDfxCommand(changStatusCmd)
+		if err != nil {
+			return err
+		}
+		logger.Infof("userid-> %s canisterId-> %s start result is: %s \n", identity, canisterId, output)
+
+	} else {
+		changStatusCmd = fmt.Sprintf(CanisterStop, canisterId, i.network, identity)
+		output, err := i.execDfxCommand(changStatusCmd)
+		if err != nil {
+			return err
+		}
+		logger.Infof("userid-> %s canisterId-> %s start result is: %s \n", identity, canisterId, output)
+	}
+
+	return nil
+}
+
+func (i *IcpService) createCanister(identity string, canisterName string) (canisterId string, err error) {
+	// 生成一个 dfx.json
+	if _, err := os.Stat("dfx.json"); os.IsNotExist(err) {
+		cans := map[string]interface{}{}
+		cans[canisterName] = map[string]interface{}{}
+		data := map[string]interface{}{}
+		data["canisters"] = cans
+		dataJSON, err := json.Marshal(data)
+		if err != nil {
+			return "", err
+		}
+		err = os.WriteFile("dfx.json", dataJSON, 0644)
+		if err != nil {
+			return "", err
+		}
+	}
+	createCanisterCmd := fmt.Sprintf(CanisterCreate, canisterName, i.network, identity)
+	out, err := i.execDfxCommand(createCanisterCmd)
+	if err != nil {
+		return "", err
+	}
+	logger.Infof("canister-> %s create-canister result is: %s \n", canisterName, out)
+	re := regexp.MustCompile(`canister id: (.+)`)
+	matches := re.FindStringSubmatch(out)
+	if len(matches) > 1 {
+		canisterId = matches[1]
+	} else {
+		return "", errors.New("canister status not found")
+	}
+	return canisterId, nil
+}
+
+func (i *IcpService) deleteCanister(identity string, canisterId string) error {
+	createCanisterCmd := fmt.Sprintf(CanisterDelete, canisterId, i.network, identity)
+	out, err := i.execDfxCommand(createCanisterCmd)
+	if err != nil {
+		return err
+	}
+	logger.Infof("canisterId-> %s delete-canister result is: %s \n", canisterId, out)
+	return nil
+}
+
+func (i *IcpService) addController(identity string, canisterId string, controller string) error {
+	addControllerCmd := fmt.Sprintf(AddController, controller, canisterId, i.network, identity)
+	output, err := i.execDfxCommand(addControllerCmd)
+	if err != nil {
+		return err
+	}
+	logger.Infof("userid-> %s canisterId-> %s add-controller %s result is: %s \n", identity, canisterId, controller, output)
+	return nil
+}
+
+func (i *IcpService) delController(identity string, canisterId string, controller string) error {
+	delControllerCmd := fmt.Sprintf(DelController, controller, canisterId, i.network, identity)
+	output, err := i.execDfxCommand(delControllerCmd)
+	if err != nil {
+		return err
+	}
+	logger.Infof("userid-> %s canisterId-> %s del-controller %s result is: %s \n", identity, canisterId, controller, output)
+	return nil
 }
 
 func (i *IcpService) execDfxCommand(cmd string) (string, error) {

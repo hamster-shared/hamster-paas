@@ -45,11 +45,6 @@ func (i *IcpService) GetDfxVersion() (string, error) {
 // api/icp/account/brief
 func (i *IcpService) GetAccountBrief(userId uint) (*vo.AccountBrief, error) {
 	var res vo.AccountBrief
-	// var projects []db.Project
-	// if err := i.dbUserProjects(userId, &projects); err != nil {
-	// 	return nil, err
-	// }
-
 	var canisters []db.IcpCanister
 	if err := i.dbUserCanisters(userId, &canisters); err != nil {
 		return nil, err
@@ -71,11 +66,11 @@ func (i *IcpService) GetAccountBrief(userId uint) (*vo.AccountBrief, error) {
 // api/icp/account/overview
 func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error) {
 	var res vo.AccountOverview
-	// var projects []db.Project
-	// if err := i.dbUserProjects(userId, &projects); err != nil {
-	// 	return nil, err
-	// }
-	// res.Projects = len(projects)
+	var projects []db.Project
+	if err := i.dbUserProjects(userId, &projects); err != nil {
+		return nil, err
+	}
+	res.Projects = len(projects)
 
 	var canisters []db.IcpCanister
 	if err := i.dbUserCanisters(userId, &canisters); err != nil {
@@ -110,27 +105,6 @@ func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error
 // api/icp/account/canisters
 func (i *IcpService) GetCanisterPage(userId uint, page int, size int) (*vo.UserCanisterPage, error) {
 	var res vo.UserCanisterPage
-
-	// var projects []db.Project
-	// if err := i.dbUserProjects(userId, &projects); err != nil {
-	// 	return nil, err
-	// }
-
-	// var allCanisters []db.IcpCanister
-	// var canisters []db.IcpCanister
-	// var canisterProj map[string]string = make(map[string]string)
-	// for _, proj := range projects {
-	// 	if err := i.dbProjCanisters(proj.Id.String(), &canisters); err != nil {
-	// 		return nil, err
-	// 	}
-	// 	// append all canisters
-	// 	allCanisters = append(allCanisters, canisters...)
-	// 	// set map of canisters to project name
-	// 	for _, canister := range canisters {
-	// 		canisterProj[canister.CanisterId] = proj.Name
-	// 	}
-	// }
-	// res.Total = len(allCanisters)
 
 	var projects []db.Project
 	if err := i.dbUserProjects(userId, &projects); err != nil {
@@ -256,24 +230,68 @@ func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (
 	return &cspPage, nil
 }
 
-// TODO
-func (i *IcpService) AddCanister(userId uint, canister vo.AddCanisterParam) error {
+func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) error {
+	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	if err != nil {
+		return err
+	}
+	canisterId, err := i.createCanister(identityName, param.CanisterName)
+	if err != nil {
+		return err
+	}
+	// 添加用户的 canister
+	if err := i.dbCreateCanister(userId, param.CanisterName, canisterId); err != nil {
+		return err
+	}
 	return nil
 }
 
-// TODO
-func (i *IcpService) AddController(userId uint, canister vo.AddControllerParam) error {
+func (i *IcpService) DelCanister(userId uint, param vo.DeleteCanisterParam) error {
+	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	if err != nil {
+		return err
+	}
+	if err := i.deleteCanister(identityName, param.CanisterId); err != nil {
+		return err
+	}
+	// 删除用户的 canister
+	if err := i.dbDeleteCanister(userId, param.CanisterId); err != nil {
+		return err
+	}
 	return nil
 }
 
-// TODO
-func (i *IcpService) DelController(userId uint, canister vo.DelControllerParam) error {
+func (i *IcpService) AddController(userId uint, param vo.AddControllerParam) error {
+	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	if err != nil {
+		return err
+	}
+
+	if err := i.addController(identityName, param.CanisterId, param.Controller); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-// TODO
+func (i *IcpService) DelController(userId uint, param vo.DelControllerParam) error {
+	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	if err != nil {
+		return err
+	}
+	if err := i.delController(identityName, param.CanisterId, param.Controller); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (i *IcpService) ChangeCanisterStatus(userId uint, canister vo.ChangeStatusParam) error {
-	return nil
+	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	if err != nil {
+		return err
+	}
+	return i.changeCanisterStatus(identityName, canister.CanisterId, canister.Status)
 }
 
 // TODO

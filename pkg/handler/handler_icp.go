@@ -242,13 +242,33 @@ func (h *HandlerServer) IcpAddCanister(c *gin.Context) {
 		Fail("do not have token", c)
 		return
 	}
-	var addCanisterParam vo.AddCanisterParam
+	var addCanisterParam vo.CreateCanisterParam
 	err := c.BindJSON(&addCanisterParam)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
 	err = h.icpService.AddCanister(userId.(uint), addCanisterParam)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	Success("SUCCESS", c)
+}
+
+func (h *HandlerServer) IcpDelCanister(c *gin.Context) {
+	userId, exists := c.Get("userId")
+	if !exists {
+		Fail("do not have token", c)
+		return
+	}
+	var delCanisterParam vo.DeleteCanisterParam
+	err := c.BindJSON(&delCanisterParam)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	err = h.icpService.DelCanister(userId.(uint), delCanisterParam)
 	if err != nil {
 		Fail(err.Error(), c)
 		return

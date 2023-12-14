@@ -108,9 +108,12 @@ type ConsumptionPage struct {
 	PageSize int             `json:"pageSize"`
 }
 
-type AddCanisterParam struct {
+type CreateCanisterParam struct {
+	CanisterName string `json:"canisterName" binding:"required"`
+}
+
+type DeleteCanisterParam struct {
 	CanisterId string `json:"canisterId" binding:"required"`
-	ProjectId  string `json:"projectId" binding:"required"`
 }
 
 type RechargeCanisterParam struct {
@@ -121,7 +124,6 @@ type RechargeCanisterParam struct {
 type AddControllerParam struct {
 	CanisterId string `json:"canisterId" binding:"required"`
 	Controller string `json:"controller" binding:"required"`
-	Role       int    `json:"role" binding:"required"` // 0: controller, 1: operator
 }
 
 type DelControllerParam struct {
@@ -129,13 +131,10 @@ type DelControllerParam struct {
 	Controller string `json:"controller" binding:"required"`
 }
 
+type StatusType int
 type ChangeStatusParam struct {
 	CanisterId string `json:"canisterId" binding:"required"`
 	Status     int    `json:"status" binding:"required"` // 1: running, 2: stopped
-}
-
-type DeleteCanisterParam struct {
-	CanisterId string `json:"canisterId" binding:"required"`
 }
 
 type InstallDappParam struct {
