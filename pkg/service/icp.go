@@ -79,21 +79,20 @@ func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error
 	res.Canisters += len(canisters)
 
 	// get icp identity
-	var userIcp db.UserIcp
-	if err := i.dbUserIdentity(userId, &userIcp); err != nil {
+	identityName, err := i.dbIdentityName(userId)
+	if err != nil {
 		return nil, err
 	}
-	identityName := userIcp.IdentityName
 
 	// icp balance
-	icps, err := i.icpBalanceWithUnit(identityName)
+	icps, err := i.getIcp(identityName)
 	if err != nil {
 		return nil, err
 	}
 	res.Icps = icps
 
 	// cycle balance
-	cycles, err := i.cycleBalanceWithUnit(identityName)
+	cycles, err := i.getCycle(identityName)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +104,6 @@ func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error
 // api/icp/account/canisters
 func (i *IcpService) GetCanisterPage(userId uint, page int, size int) (*vo.UserCanisterPage, error) {
 	var res vo.UserCanisterPage
-
 	var projects []db.Project
 	if err := i.dbUserProjects(userId, &projects); err != nil {
 		return nil, err
@@ -163,14 +161,14 @@ func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.Ca
 	if err := i.dbProjectInfo(canister.ProjectId, &project); err != nil {
 		return nil, err
 	}
-
 	res.Project = project.Name
+
 	// get icp identity
-	var userIcp db.UserIcp
-	if err := i.dbUserIdentity(userId, &userIcp); err != nil {
+	identityName, err := i.dbIdentityName(userId)
+	if err != nil {
 		return nil, err
 	}
-	identityName := userIcp.IdentityName
+
 	status, err := i.getCanisterStatus(identityName, canisterId)
 	if err != nil {
 		return nil, err
@@ -222,12 +220,6 @@ func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, 
 	res.Page = page
 	res.PageSize = size
 	return &res, nil
-}
-
-// TODO No comsumption yet
-func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (*vo.ConsumptionPage, error) {
-	var cspPage vo.ConsumptionPage
-	return &cspPage, nil
 }
 
 func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) error {
@@ -297,6 +289,12 @@ func (i *IcpService) ChangeCanisterStatus(userId uint, canister vo.ChangeStatusP
 // TODO
 func (i *IcpService) InstallDapp(userId uint, canister vo.InstallDappParam) error {
 	return nil
+}
+
+// TODO No comsumption yet
+func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (*vo.ConsumptionPage, error) {
+	var cspPage vo.ConsumptionPage
+	return &cspPage, nil
 }
 
 //	Old version
@@ -379,7 +377,7 @@ func (i *IcpService) GetAccountInfo(userId uint) (vo vo.UserIcpInfoVo, error err
 	if err != nil {
 		return vo, err
 	}
-	balance, err := i.icpBalanceWithUnit(userIcp.IdentityName)
+	balance, err := i.getIcp(userIcp.IdentityName)
 	if err != nil {
 		return vo, err
 	}

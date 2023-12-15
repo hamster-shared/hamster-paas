@@ -137,17 +137,17 @@ func (i *IcpService) getWalletId(identity string) (string, error) {
 	}
 }
 
-func (i *IcpService) icpBalanceWithUnit(identity string) (string, error) {
-	ledgerBalanceCmd := fmt.Sprintf(LedgerBalance, i.network, identity)
-	balance, err := i.execDfxCommand(ledgerBalanceCmd)
-	return strings.TrimSpace(balance), err
-}
+// func (i *IcpService) icpBalanceWithUnit(identity string) (string, error) {
+// 	ledgerBalanceCmd := fmt.Sprintf(LedgerBalance, i.network, identity)
+// 	balance, err := i.execDfxCommand(ledgerBalanceCmd)
+// 	return strings.TrimSpace(balance), err
+// }
 
-func (i *IcpService) cycleBalanceWithUnit(identity string) (string, error) {
-	walletBalanceCmd := fmt.Sprintf(WalletBalance, i.network, identity)
-	balance, err := i.execDfxCommand(walletBalanceCmd)
-	return strings.TrimSpace(balance), err
-}
+// func (i *IcpService) cycleBalanceWithUnit(identity string) (string, error) {
+// 	walletBalanceCmd := fmt.Sprintf(WalletBalance, i.network, identity)
+// 	balance, err := i.execDfxCommand(walletBalanceCmd)
+// 	return strings.TrimSpace(balance), err
+// }
 
 // deprecated
 func (i *IcpService) getIcp(identity string) (string, error) {
