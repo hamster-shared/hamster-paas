@@ -63,6 +63,11 @@ func (i *IcpService) GetAccountBrief(userId uint) (*vo.AccountBrief, error) {
 	return &res, nil
 }
 
+const (
+	MYIDENTITY = "default"
+	MYCANISTER = "srbgg-giaaa-aaaao-a27na-cai"
+)
+
 // api/icp/account/overview
 func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error) {
 	var res vo.AccountOverview
@@ -82,6 +87,11 @@ func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error
 	identityName, err := i.dbIdentityName(userId)
 	if err != nil {
 		return nil, err
+	}
+
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = MYIDENTITY
 	}
 
 	// icp balance
@@ -167,6 +177,12 @@ func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.Ca
 	identityName, err := i.dbIdentityName(userId)
 	if err != nil {
 		return nil, err
+	}
+
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = MYIDENTITY
+		canisterId = MYCANISTER
 	}
 
 	status, err := i.getCanisterStatus(identityName, canisterId)
@@ -397,7 +413,7 @@ func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error er
 		return vo, err
 	}
 	// test
-	icpTest := os.Getenv("IPC_TEST")
+	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" && userIcp.WalletId == "icp-test-wallet-id" {
 		vo.UserId = int(userIcp.FkUserId)
 		vo.CanisterId = userIcp.WalletId

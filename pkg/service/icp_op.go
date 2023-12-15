@@ -63,12 +63,12 @@ func (i *IcpService) dbUserCanisters(userId uint, canisters *[]db.IcpCanister) e
 	return i.db.Model(db.IcpCanister{}).Where("fk_user_id = ?", userId).Find(&canisters).Error
 }
 
-func (i *IcpService) dbProjCanisters(projId string, canisters *[]db.IcpCanister) error {
-	return i.db.Model(db.IcpCanister{}).Where("project_id = ?", projId).Find(&canisters).Error
-}
+// func (i *IcpService) dbProjCanisters(projId string, canisters *[]db.IcpCanister) error {
+// 	return i.db.Model(db.IcpCanister{}).Where("project_id = ?", projId).Find(&canisters).Error
+// }
 
 func (i *IcpService) dbProjectInfo(projId string, project *db.Project) error {
-	return i.db.Model(db.Project{}).Where("project_id = ?", projId).First(&project).Error
+	return i.db.Model(db.Project{}).Where("id = ?", projId).First(&project).Error
 }
 
 func (i *IcpService) dbCanisterInfo(canisterId string, canister *db.IcpCanister) error {
