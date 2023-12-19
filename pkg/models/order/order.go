@@ -24,6 +24,8 @@ const (
 	Dispute
 )
 
+type PayType int
+
 type Order struct {
 	Id      uint   `gorm:"primaryKey" json:"id"`
 	OrderId string `json:"orderId"`
@@ -41,6 +43,7 @@ type Order struct {
 	AddressInitBalance sql.NullString     `gorm:"type:decimal(10,2)" json:"addressInitBalance"`
 	BuyTime            int                `json:"buyTime"`
 	NodeName           string             `json:"nodeName"`
+	PayType            PayType            `json:"payType"`
 }
 
 type OrderNode struct {

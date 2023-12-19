@@ -33,3 +33,8 @@ func ParseStatus(s string) (string, error) {
 		return "Failed", fmt.Errorf("invalid status: #{s}", s)
 	}
 }
+
+const (
+	USD = 1
+	RMB = 2
+)
