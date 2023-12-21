@@ -65,7 +65,7 @@ func (i *IcpService) GetAccountBrief(userId uint) (*vo.AccountBrief, error) {
 
 const (
 	MYIDENTITY = "default"
-	MYCANISTER = "srbgg-giaaa-aaaao-a27na-cai"
+	MYCANISTER = "t35f6-tiaaa-aaaai-acewq-cai"
 )
 
 // api/icp/account/overview
