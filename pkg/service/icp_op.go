@@ -45,7 +45,7 @@ var (
 )
 
 // ################ db operations ################
-func (i *IcpService) dbIdentityName(userId uint) (identityName string, err error) {
+func (i *IcpService) DBIdentityName(userId uint) (identityName string, err error) {
 	var userIcp db.UserIcp
 	if err = i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error; err != nil {
 		return "", err
@@ -63,6 +63,10 @@ func (i *IcpService) dbUserProjects(userId uint, projects *[]db.Project) error {
 
 func (i *IcpService) dbUserCanisters(userId uint, canisters *[]db.IcpCanister) error {
 	return i.db.Model(db.IcpCanister{}).Where("fk_user_id = ?", userId).Find(&canisters).Error
+}
+
+func (i *IcpService) DBAllCanisters(canisters *[]db.IcpCanister) error {
+	return i.db.Model(db.IcpCanister{}).Find(&canisters).Error
 }
 
 // func (i *IcpService) dbProjCanisters(projId string, canisters *[]db.IcpCanister) error {
@@ -128,7 +132,7 @@ func (i *IcpService) dbUpdateCanister(identity string, canisterId string) error 
 	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).Updates(&icpCanister).Error
 }
 
-func (i *IcpService) dbSetComsuption(identity string, canisterId string) error {
+func (i *IcpService) DBSetComsuption(identity string, canisterId string) error {
 	out, err := i.getCanisterStatus(identity, canisterId)
 	if err != nil {
 		return err

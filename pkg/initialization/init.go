@@ -106,6 +106,7 @@ func Init() {
 	listeningService := service2.NewOrderListeningService(os.Getenv("TOKEN_ADDRESS"), db)
 	listeningService.StartOrderListening()
 	listeningService.StartScanBlockInformation()
+	listeningService.StartIcpConsumptions()
 
 	// 初始化 zan service
 	zanService := service.NewZanService(zanClient, db)

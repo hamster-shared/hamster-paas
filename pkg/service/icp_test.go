@@ -89,7 +89,7 @@ func TestIdentityName(t *testing.T) {
 	alineDb := getDB()
 
 	i := IcpService{alineDb, "local"}
-	name, err := i.dbIdentityName(65406422)
+	name, err := i.DBIdentityName(65406422)
 	logger.Debugf("ledger info: %v", name)
 	if err != nil {
 		logger.Errorf("ledger info error: %v", err)

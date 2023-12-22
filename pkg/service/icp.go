@@ -79,7 +79,7 @@ func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error
 	res.Canisters += len(canisters)
 
 	// get icp identity
-	identityName, err := i.dbIdentityName(userId)
+	identityName, err := i.DBIdentityName(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.Ca
 	res.Project = project.Name
 
 	// get icp identity
-	identityName, err := i.dbIdentityName(userId)
+	identityName, err := i.DBIdentityName(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +292,7 @@ func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) erro
 
 // api/icp/account/del-canister
 func (i *IcpService) DelCanister(userId uint, param vo.DeleteCanisterParam) error {
-	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	identityName, err := i.DBIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
@@ -316,7 +316,7 @@ func (i *IcpService) DelCanister(userId uint, param vo.DeleteCanisterParam) erro
 
 // api/icp/canister/add-controller
 func (i *IcpService) AddController(userId uint, param vo.AddControllerParam) error {
-	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	identityName, err := i.DBIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func (i *IcpService) AddController(userId uint, param vo.AddControllerParam) err
 
 // api/icp/canister/del-controller
 func (i *IcpService) DelController(userId uint, param vo.DelControllerParam) error {
-	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	identityName, err := i.DBIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
@@ -361,7 +361,7 @@ func (i *IcpService) DelController(userId uint, param vo.DelControllerParam) err
 
 // api/icp/canister/change-status 1. running 2. stop
 func (i *IcpService) ChangeCanisterStatus(userId uint, param vo.ChangeStatusParam) error {
-	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	identityName, err := i.DBIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
@@ -381,7 +381,7 @@ func (i *IcpService) ChangeCanisterStatus(userId uint, param vo.ChangeStatusPara
 }
 
 func (i *IcpService) InstallWasm(userId uint, param vo.InstallParam) error {
-	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	identityName, err := i.DBIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
