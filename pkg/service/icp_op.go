@@ -2,14 +2,12 @@ package service
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hamster-paas/pkg/db"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/utils/logger"
 	"math"
-	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -18,41 +16,43 @@ import (
 )
 
 var (
-	GetVersion     = "dfx -V"
-	NewIdentity    = "dfx identity new %s --storage-mode plaintext"
-	UseIdentity    = "dfx identity use %s"
-	AccountId      = "dfx ledger account-id --identity %s"
-	GetPrincipal   = "dfx identity get-principal --identity %s"
-	GetWallet      = "dfx identity get-wallet --network %s --identity %s"
-	DeployWallet   = "dfx identity deploy-wallet %s --network %s --identity %s"
-	LedgerBalance  = "dfx ledger balance --network %s --identity %s" // icp
-	WalletBalance  = "dfx wallet balance --network %s --identity %s" // cycle
-	CreateCanister = "dfx ledger create-canister %s --amount %s --network %s --identity %s"
+	GetVersion  = "dfx -V"
+	NewIdentity = "dfx identity new %s --storage-mode plaintext"
+	UseIdentity = "dfx identity use %s"
+
+	AccountId     = "dfx ledger account-id --identity %s"
+	LedgerBalance = "dfx ledger balance --network %s --identity %s" // icp
+	GetPrincipal  = "dfx identity get-principal --identity %s"
+	GetWallet     = "dfx identity get-wallet --network %s --identity %s"
+	DeployWallet  = "dfx identity deploy-wallet %s --network %s --identity %s"
+	WalletBalance = "dfx wallet balance --network %s --identity %s" // cycle
+
 	WalletTopUp    = "dfx ledger top-up %s --amount %s --network %s --identity %s"
+	CreateCanister = "dfx ledger create-canister %s --amount %s --network %s --identity %s"
 	DepositCycles  = "dfx canister deposit-cycles %s %s --network %s --identity %s"
 	CanisterStatus = "dfx canister status %s --network %s --identity %s"
-	CanisterCreate = "dfx canister create %s --network %s --identity %s"
+	// CanisterCreate = "dfx canister create %s --network %s --identity %s"
 	CanisterDelete = "dfx canister delete %s --network %s --identity %s"
 	CanisterStop   = "dfx canister stop %s --network %s --identity %s"
 	CanisterStart  = "dfx canister start %s --network %s --identity %s"
 
-	AddController = "dfx canister update-settings --add-controller %s %s --network %s --identity %s"
-	DelController = "dfx canister update-settings --remove-controller %s %s --network %s --identity %s"
+	AddController = "dfx canister update-settings %s --add-controller %s --network %s --identity %s"
+	DelController = "dfx canister update-settings %s --remove-controller %s --network %s --identity %s"
 	UninstallCode = "dfx canister uninstall-code %s --network %s --identity %s"
 	TransferICP   = "dfx ledger transfer %s --icp %s --memo %s --network %s --identity %s"
 )
 
-// db operations
-func (i *IcpService) dbUserIdentity(userId uint, userIcp *db.UserIcp) error {
-	return i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
-}
-
+// ################ db operations ################
 func (i *IcpService) dbIdentityName(userId uint) (identityName string, err error) {
 	var userIcp db.UserIcp
 	if err = i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error; err != nil {
 		return "", err
 	}
 	return userIcp.IdentityName, nil
+}
+
+func (i *IcpService) dbUserIdentity(userId uint, userIcp *db.UserIcp) error {
+	return i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
 }
 
 func (i *IcpService) dbUserProjects(userId uint, projects *[]db.Project) error {
@@ -75,13 +75,14 @@ func (i *IcpService) dbCanisterInfo(canisterId string, canister *db.IcpCanister)
 	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).First(&canister).Error
 }
 
-func (i *IcpService) dbCreateCanister(userId uint, canisterName string, canisterId string) error {
+// create
+func (i *IcpService) dbCreateCanister(userId uint, canisterId string, canisterName string) error {
 	canister := db.IcpCanister{
 		FkUserId:     userId,
 		ProjectId:    "",
 		CanisterId:   canisterId,
 		CanisterName: canisterName,
-		Status:       db.Processing,
+		Status:       db.Running,
 		CreateTime: sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
@@ -89,22 +90,34 @@ func (i *IcpService) dbCreateCanister(userId uint, canisterName string, canister
 	}
 	return i.db.Create(canister).Error
 }
+
+func (i *IcpService) dbUpdateCanister(canisterId string, canister db.IcpCanister) error {
+	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).Updates(&canister).Error
+}
+
+// TODO
+func (i *IcpService) dbUpdateComsuption(canisterId string, comsume db.IcpComsuption) error {
+	return i.db.Model(db.IcpComsuption{}).Where("canister_id = ?", canisterId).Updates(&comsume).Error
+}
+
+// delete
 func (i *IcpService) dbDeleteCanister(userId uint, canisterId string) error {
 	return i.db.Delete(db.IcpCanister{}).Where("canister_id = ?", canisterId).Error
 }
 
-// dfx operations
+//################ dfx operations ################
+
 func (i *IcpService) newIndentity(identity string) (err error) {
 	newIdentityCmd := fmt.Sprintf(NewIdentity, identity)
 	_, err = i.execDfxCommand(newIdentityCmd)
 	return err
 }
 
-func (i *IcpService) useIndentity(identity string) (err error) {
-	useIdentityCmd := fmt.Sprintf(UseIdentity, identity)
-	_, err = i.execDfxCommand(useIdentityCmd)
-	return err
-}
+// func (i *IcpService) useIndentity(identity string) (err error) {
+// 	useIdentityCmd := fmt.Sprintf(UseIdentity, identity)
+// 	_, err = i.execDfxCommand(useIdentityCmd)
+// 	return err
+// }
 
 // return accountId, principal
 func (i *IcpService) getLedgerInfo(identity string) (string, string, error) {
@@ -137,19 +150,7 @@ func (i *IcpService) getWalletId(identity string) (string, error) {
 	}
 }
 
-// func (i *IcpService) icpBalanceWithUnit(identity string) (string, error) {
-// 	ledgerBalanceCmd := fmt.Sprintf(LedgerBalance, i.network, identity)
-// 	balance, err := i.execDfxCommand(ledgerBalanceCmd)
-// 	return strings.TrimSpace(balance), err
-// }
-
-// func (i *IcpService) cycleBalanceWithUnit(identity string) (string, error) {
-// 	walletBalanceCmd := fmt.Sprintf(WalletBalance, i.network, identity)
-// 	balance, err := i.execDfxCommand(walletBalanceCmd)
-// 	return strings.TrimSpace(balance), err
-// }
-
-// deprecated
+// RAW dfx ledger balance --network ic
 func (i *IcpService) getIcp(identity string) (string, error) {
 	balanceCmd := fmt.Sprintf(LedgerBalance, i.network, identity)
 	balance, err := i.execDfxCommand(balanceCmd)
@@ -164,6 +165,7 @@ func (i *IcpService) getIcp(identity string) (string, error) {
 	}
 }
 
+// RAW dfx wallet balance --network ic
 func (i *IcpService) getCycle(identity string) (string, error) {
 	walletBalanceCmd := fmt.Sprintf(WalletBalance, i.network, identity)
 	balance, err := i.execDfxCommand(walletBalanceCmd)
@@ -201,6 +203,7 @@ func (i *IcpService) getIcpBalance(identity string) (string, error) {
 	}
 }
 
+// top up all ICPs
 func (i *IcpService) walletTopUp(identity string, walletId string) error {
 	// TODO all balance topup?
 	balance, err := i.getIcpBalance(identity)
@@ -216,6 +219,7 @@ func (i *IcpService) walletTopUp(identity string, walletId string) error {
 	return nil
 }
 
+// deposit cycles
 func (i *IcpService) depositCanister(identity string, cycles string, canisterId string) error {
 	depositCyclesCmd := fmt.Sprintf(DepositCycles, cycles, canisterId, i.network, identity)
 	output, err := i.execDfxCommand(depositCyclesCmd)
@@ -226,6 +230,7 @@ func (i *IcpService) depositCanister(identity string, cycles string, canisterId 
 	return nil
 }
 
+// status all
 func (i *IcpService) getCanisterStatus(identity string, canisterId string) (*vo.CanisterStatus, error) {
 	var res vo.CanisterStatus
 	statusCmd := fmt.Sprintf(CanisterStatus, canisterId, i.network, identity)
@@ -233,10 +238,10 @@ func (i *IcpService) getCanisterStatus(identity string, canisterId string) (*vo.
 	cmd := exec.Command("bash", "-c", statusCmd)
 	out, err := cmd.CombinedOutput()
 	result := string(out)
-	// logger.Debugf("canister status result is %s", result)
 	if err != nil {
 		return nil, err
 	}
+	// logger.Infof("status is:%s", result)
 	// status
 	re := regexp.MustCompile(`Status: (.+)`)
 	matches := re.FindStringSubmatch(result)
@@ -294,12 +299,15 @@ func (i *IcpService) getCanisterStatus(identity string, canisterId string) (*vo.
 	} else {
 		logger.Errorf("module hash not found!")
 	}
+	// logger.Debugf("canister status result is %v", res)
+
 	return &res, err
 }
 
-func (i *IcpService) changeCanisterStatus(identity string, canisterId string, statusType int) error {
+// 1 running 0 or 2 stoped
+func (i *IcpService) changeCanisterStatus(identity string, canisterId string, statusType vo.StatusType) error {
 	var changStatusCmd string
-	if statusType == 1 {
+	if statusType == vo.Running {
 		changStatusCmd = fmt.Sprintf(CanisterStart, canisterId, i.network, identity)
 		output, err := i.execDfxCommand(changStatusCmd)
 		if err != nil {
@@ -313,41 +321,31 @@ func (i *IcpService) changeCanisterStatus(identity string, canisterId string, st
 		if err != nil {
 			return err
 		}
-		logger.Infof("userid-> %s canisterId-> %s start result is: %s \n", identity, canisterId, output)
+		logger.Infof("userid-> %s canisterId-> %s stop result is: %s \n", identity, canisterId, output)
 	}
 
 	return nil
 }
 
-func (i *IcpService) createCanister(identity string, canisterName string) (canisterId string, err error) {
-	// 生成一个 dfx.json
-	if _, err := os.Stat("dfx.json"); os.IsNotExist(err) {
-		cans := map[string]interface{}{}
-		cans[canisterName] = map[string]interface{}{}
-		data := map[string]interface{}{}
-		data["canisters"] = cans
-		dataJSON, err := json.Marshal(data)
-		if err != nil {
-			return "", err
-		}
-		err = os.WriteFile("dfx.json", dataJSON, 0644)
-		if err != nil {
-			return "", err
-		}
+func (i *IcpService) createCanister(identity string, controller string) (canisterId string, err error) {
+	// all balance create?
+	balance, err := i.getIcpBalance(identity)
+	if err != nil {
+		return "", err
 	}
-	createCanisterCmd := fmt.Sprintf(CanisterCreate, canisterName, i.network, identity)
+	createCanisterCmd := fmt.Sprintf(CreateCanister, controller, balance, i.network, identity)
 	out, err := i.execDfxCommand(createCanisterCmd)
 	if err != nil {
 		return "", err
 	}
-	logger.Infof("canister-> %s create-canister result is: %s \n", canisterName, out)
-	re := regexp.MustCompile(`canister id: (.+)`)
+	re := regexp.MustCompile(`Canister created with id: "(.*?)"`)
 	matches := re.FindStringSubmatch(out)
 	if len(matches) > 1 {
 		canisterId = matches[1]
 	} else {
 		return "", errors.New("canister status not found")
 	}
+	logger.Infof("identity-> %s controller-> %s create-canister result is: %s \n", identity, controller, canisterId)
 	return canisterId, nil
 }
 
@@ -362,7 +360,7 @@ func (i *IcpService) deleteCanister(identity string, canisterId string) error {
 }
 
 func (i *IcpService) addController(identity string, canisterId string, controller string) error {
-	addControllerCmd := fmt.Sprintf(AddController, controller, canisterId, i.network, identity)
+	addControllerCmd := fmt.Sprintf(AddController, canisterId, controller, i.network, identity)
 	output, err := i.execDfxCommand(addControllerCmd)
 	if err != nil {
 		return err
@@ -372,7 +370,7 @@ func (i *IcpService) addController(identity string, canisterId string, controlle
 }
 
 func (i *IcpService) delController(identity string, canisterId string, controller string) error {
-	delControllerCmd := fmt.Sprintf(DelController, controller, canisterId, i.network, identity)
+	delControllerCmd := fmt.Sprintf(DelController, canisterId, controller, i.network, identity)
 	output, err := i.execDfxCommand(delControllerCmd)
 	if err != nil {
 		return err

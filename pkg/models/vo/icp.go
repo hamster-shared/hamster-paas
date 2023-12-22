@@ -132,14 +132,27 @@ type DelControllerParam struct {
 }
 
 type StatusType int
+
+const (
+	Running StatusType = iota + 1
+	Stopped
+)
+
 type ChangeStatusParam struct {
-	CanisterId string `json:"canisterId" binding:"required"`
-	Status     int    `json:"status" binding:"required"` // 1: running, 2: stopped
+	CanisterId string     `json:"canisterId" binding:"required"`
+	Status     StatusType `json:"status" binding:"required"` // 1: running, 2: stopped
 }
 
+type InstallMode int
+
+const (
+	Upgrade StatusType = iota
+	Reinstall
+)
+
 type InstallDappParam struct {
-	CanisterId string `json:"canisterId" binding:"required"`
-	WasmFile   string `json:"wasmFile" binding:"required"`
-	Type       string `json:"type" binding:"required"`
-	Mode       int    `json:"mode" binding:"required"` // 0: upgrade, 1: reinstall
+	CanisterId string      `json:"canisterId" binding:"required"`
+	WasmFile   string      `json:"wasmFile" binding:"required"`
+	WasmType   string      `json:"wasmType" binding:"required"`
+	Mode       InstallMode `json:"mode" binding:"required"` // 0: upgrade, 1: reinstall
 }

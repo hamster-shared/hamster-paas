@@ -2,23 +2,18 @@ package service
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hamster-paas/pkg/application"
 	"hamster-paas/pkg/db"
 	"hamster-paas/pkg/models/vo"
-	"hamster-paas/pkg/utils"
 	"hamster-paas/pkg/utils/logger"
-	"math"
 	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )
 
@@ -64,8 +59,8 @@ func (i *IcpService) GetAccountBrief(userId uint) (*vo.AccountBrief, error) {
 }
 
 const (
-	MYIDENTITY = "default"
-	MYCANISTER = "t35f6-tiaaa-aaaai-acewq-cai"
+	DEFAULT = "default"
+	//MYCANISTER = "t35f6-tiaaa-aaaai-acewq-cai"
 )
 
 // api/icp/account/overview
@@ -91,7 +86,7 @@ func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error
 
 	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" {
-		identityName = MYIDENTITY
+		identityName = DEFAULT
 	}
 
 	// icp balance
@@ -181,8 +176,9 @@ func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.Ca
 
 	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" {
-		identityName = MYIDENTITY
-		canisterId = MYCANISTER
+		identityName = DEFAULT
+		canisterId = os.Getenv("CANISTER")
+		logger.Debugf("test canisterId: %s", canisterId)
 	}
 
 	status, err := i.getCanisterStatus(identityName, canisterId)
@@ -198,6 +194,7 @@ func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.Ca
 	return &res, nil
 }
 
+// api/icp/account/add-canister
 func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, size int) (*vo.ControllerPage, error) {
 	var res vo.ControllerPage
 	var userIcp db.UserIcp
@@ -205,6 +202,12 @@ func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, 
 		return nil, err
 	}
 	identityName := userIcp.IdentityName
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = DEFAULT
+		canisterId = os.Getenv("CANISTER")
+		logger.Debugf("test canisterId: %s", canisterId)
+	}
 	status, err := i.getCanisterStatus(identityName, canisterId)
 	if err != nil {
 		return nil, err
@@ -229,6 +232,7 @@ func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, 
 		} else {
 			item.Type = "User-Managed"
 		}
+		data = append(data, item)
 	}
 
 	res.Total = len(controllers)
@@ -238,68 +242,114 @@ func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, 
 	return &res, nil
 }
 
+// api/icp/account/add-canister
 func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) error {
-	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	var userIcp db.UserIcp
+	if err := i.dbUserIdentity(userId, &userIcp); err != nil {
+		return err
+	}
+	identityName := userIcp.IdentityName
+	principalId := userIcp.PrincipalId
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = DEFAULT
+		principalId, _, _ = i.getLedgerInfo(identityName)
+		logger.Debugf("test principal: %s", principalId)
+	}
+	canisterId, err := i.createCanister(identityName, principalId)
 	if err != nil {
 		return err
 	}
-	canisterId, err := i.createCanister(identityName, param.CanisterName)
-	if err != nil {
-		return err
-	}
+	logger.Infof("CREATE canister: %s", canisterId)
 	// 添加用户的 canister
-	if err := i.dbCreateCanister(userId, param.CanisterName, canisterId); err != nil {
+	if err := i.dbCreateCanister(userId, canisterId, param.CanisterName); err != nil {
 		return err
 	}
 	return nil
 }
 
+// api/icp/account/del-canister
 func (i *IcpService) DelCanister(userId uint, param vo.DeleteCanisterParam) error {
 	identityName, err := i.dbIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
-	if err := i.deleteCanister(identityName, param.CanisterId); err != nil {
+	canisterId := param.CanisterId
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = DEFAULT
+		canisterId = os.Getenv("CANISTER")
+		logger.Debugf("test canisterId: %s", canisterId)
+	}
+	if err := i.deleteCanister(identityName, canisterId); err != nil {
 		return err
 	}
+	logger.Infof("DELETE canister: %s", canisterId)
+
 	// 删除用户的 canister
-	if err := i.dbDeleteCanister(userId, param.CanisterId); err != nil {
+	if err := i.dbDeleteCanister(userId, canisterId); err != nil {
 		return err
 	}
 	return nil
 }
 
+// api/icp/canister/add-controller
 func (i *IcpService) AddController(userId uint, param vo.AddControllerParam) error {
 	identityName, err := i.dbIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
+	canisterId := param.CanisterId
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = DEFAULT
+		canisterId = os.Getenv("CANISTER")
+		logger.Debugf("test canisterId: %s", canisterId)
+	}
 
-	if err := i.addController(identityName, param.CanisterId, param.Controller); err != nil {
+	if err := i.addController(identityName, canisterId, param.Controller); err != nil {
 		return err
 	}
+	logger.Infof("ADD controller: %s", canisterId)
 
 	return nil
 }
 
+// api/icp/canister/del-controller
 func (i *IcpService) DelController(userId uint, param vo.DelControllerParam) error {
 	identityName, err := i.dbIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
-	if err := i.delController(identityName, param.CanisterId, param.Controller); err != nil {
+	canisterId := param.CanisterId
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = DEFAULT
+		canisterId = os.Getenv("CANISTER")
+		logger.Debugf("test canisterId: %s", canisterId)
+	}
+	if err := i.delController(identityName, canisterId, param.Controller); err != nil {
 		return err
 	}
+	logger.Infof("DEL controller: %s", canisterId)
 
 	return nil
 }
 
-func (i *IcpService) ChangeCanisterStatus(userId uint, canister vo.ChangeStatusParam) error {
+// api/icp/canister/change-status 1. running 2. stop
+func (i *IcpService) ChangeCanisterStatus(userId uint, param vo.ChangeStatusParam) error {
 	identityName, err := i.dbIdentityName(userId) //获取用户的身份
 	if err != nil {
 		return err
 	}
-	return i.changeCanisterStatus(identityName, canister.CanisterId, canister.Status)
+	canisterId := param.CanisterId
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = DEFAULT
+		canisterId = os.Getenv("CANISTER")
+		logger.Debugf("test canisterId: %s", canisterId)
+	}
+	return i.changeCanisterStatus(identityName, canisterId, param.Status)
 }
 
 // TODO
@@ -404,7 +454,7 @@ func (i *IcpService) GetAccountInfo(userId uint) (vo vo.UserIcpInfoVo, error err
 	return vo, nil
 }
 
-// api/icp/account/get-cycle
+// api/icp/account/get-cycle-info
 // return walletId and cycle balance (TC)
 func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error error) {
 	var userIcp db.UserIcp
@@ -419,16 +469,6 @@ func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error er
 		vo.CanisterId = userIcp.WalletId
 		vo.CyclesBalance = "0.0000000 TC (trillion cycles)"
 		return vo, nil
-	}
-	// lock
-	lock, err := utils.Lock()
-	if err != nil {
-		return vo, err
-	}
-	defer utils.Unlock(lock)
-	err = i.useIndentity(userIcp.IdentityName)
-	if err != nil {
-		return vo, err
 	}
 	// get wallet balance
 	walletBalanceSprintf := WalletBalance
@@ -452,7 +492,7 @@ func (i *IcpService) RechargeWallet(userId uint) (vo vo.UserCycleInfoVo, error e
 		return vo, err
 	}
 	if userIcp.WalletId == "" {
-		walletId, err := i.InitWallet(userIcp)
+		walletId, err := i.initWallet(userIcp)
 		if err != nil {
 			return vo, err
 		}
@@ -471,45 +511,29 @@ func (i *IcpService) RechargeWallet(userId uint) (vo vo.UserCycleInfoVo, error e
 }
 
 // api/icp/canister/add-cycles
-func (i *IcpService) RechargeCanister(userId uint, rechargeCanisterParam vo.RechargeCanisterParam) (vo vo.UserCycleInfoVo, error error) {
+func (i *IcpService) RechargeCanister(userId uint, param vo.RechargeCanisterParam) (vo vo.UserCycleInfoVo, error error) {
 	var userIcp db.UserIcp
 	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
 	if err != nil {
 		return vo, err
 	}
-	// 判断当前目录是否存在 dfx.json 文件
-	if _, err := os.Stat("dfx.json"); os.IsNotExist(err) {
-		// 不存在，则新建并写入数据 {}
-		data := map[string]interface{}{}
-		dataJSON, err := json.Marshal(data)
-		if err != nil {
-			return vo, err
-		}
-		err = os.WriteFile("dfx.json", dataJSON, 0644)
-		if err != nil {
-			return vo, err
-		}
-	}
-	amount, err := strconv.ParseFloat(rechargeCanisterParam.Amount, 64)
+	amount, err := strconv.ParseFloat(param.Amount, 64)
 	if err != nil {
 		return vo, err
 	}
 	depositCycles := amount * 1e12
-	err = i.depositCanister(userIcp.IdentityName, strconv.FormatFloat(depositCycles, 'f', -1, 64), rechargeCanisterParam.CanisterId)
+	err = i.depositCanister(userIcp.IdentityName, strconv.FormatFloat(depositCycles, 'f', -1, 64), param.CanisterId)
 	if err != nil {
 		return vo, err
 	}
-	err = os.Remove("dfx.json")
-	if err != nil {
-		return vo, err
-	}
-	data, err := i.queryCanisterStatus(userIcp.IdentityName, rechargeCanisterParam.CanisterId)
+
+	data, err := i.getCanisterStatus(userIcp.IdentityName, param.CanisterId)
 	if err != nil {
 		return vo, err
 	}
 
 	var icpCanister db.IcpCanister
-	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", rechargeCanisterParam.CanisterId).First(&icpCanister).Error
+	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", param.CanisterId).First(&icpCanister).Error
 	if err != nil {
 		return vo, err
 	}
@@ -517,28 +541,19 @@ func (i *IcpService) RechargeCanister(userId uint, rechargeCanisterParam vo.Rech
 		String: data.Balance,
 		Valid:  true,
 	}
-	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", rechargeCanisterParam.CanisterId).Updates(&icpCanister).Error
+	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", param.CanisterId).Updates(&icpCanister).Error
 	if err != nil {
 		return vo, err
 	}
 	vo.UserId = int(userId)
-	vo.CanisterId = rechargeCanisterParam.CanisterId
+	vo.CanisterId = param.CanisterId
 	vo.CyclesBalance = data.Balance + "T"
 	return vo, nil
 }
 
 // use in recharge
 // init account wallet
-func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error error) {
-	lock, err := utils.Lock()
-	if err != nil {
-		return "", err
-	}
-	defer utils.Unlock(lock)
-	err = i.useIndentity(userIcp.IdentityName)
-	if err != nil {
-		return "", err
-	}
+func (i *IcpService) initWallet(userIcp db.UserIcp) (walletId string, error error) {
 	// TODO all balance?
 	balance, err := i.getIcpBalance(userIcp.IdentityName)
 	if err != nil {
@@ -546,7 +561,8 @@ func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error erro
 	}
 	// create new canister
 	createCanisterSprintf := CreateCanister
-	createCanisterCmd := fmt.Sprintf(createCanisterSprintf, userIcp.PrincipalId, balance, i.network, userIcp.IdentityName)
+	createCanisterCmd := fmt.Sprintf(createCanisterSprintf,
+		userIcp.PrincipalId, balance, i.network, userIcp.IdentityName)
 	output, err := i.execDfxCommand(createCanisterCmd)
 	logger.Infof("userid-> %s create-canister result is: %s \n", userIcp.IdentityName, output)
 	if err != nil {
@@ -574,46 +590,6 @@ func (i *IcpService) InitWallet(userIcp db.UserIcp) (walletId string, error erro
 	return walletId, nil
 }
 
-func (i *IcpService) queryCanisterStatus(identity string, canisterId string) (vo.CanisterStatusRes, error) {
-	var res vo.CanisterStatusRes
-	canisterStatusSprintf := CanisterStatus
-	canisterCmd := fmt.Sprintf(canisterStatusSprintf, canisterId, i.network, identity)
-	logger.Infof("exec cmd is %s", canisterCmd)
-	cmd := exec.Command("bash", "-c", canisterCmd)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		logger.Errorf("cmd exec failed: %s", err)
-		return res, err
-	}
-	logger.Infof("status is:%s", string(out))
-	// find cycle
-	re := regexp.MustCompile(`Balance: ([0-9_]+) Cycles`)
-	matches := re.FindStringSubmatch(string(out))
-	if len(matches) > 1 {
-		value := matches[1]
-		value = strings.ReplaceAll(value, "_", "")
-		number, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			logger.Errorf("balance parse int failed:%s", err)
-			return res, err
-		}
-		data := float64(number) / math.Pow(10, 12)
-		balance := fmt.Sprintf("%.2f\n", data)
-		res.Balance = balance
-	} else {
-		logger.Info("balance not found!")
-	}
-	// find status
-	statusRegex := regexp.MustCompile(`Status: (.+)`)
-	statusMatch := statusRegex.FindStringSubmatch(string(out))
-	if len(statusMatch) > 1 {
-		res.Status = statusMatch[1]
-	} else {
-		logger.Info("status not found!")
-	}
-	return res, nil
-}
-
 func (i *IcpService) SaveDfxJsonData(projectId string, jsonData string) error {
 	var dfxData db.IcpDfxData
 	err := i.db.Where("project_id = ?", projectId).First(&dfxData).Error
@@ -634,35 +610,4 @@ func (i *IcpService) SaveDfxJsonData(projectId string, jsonData string) error {
 		return err
 	}
 	return nil
-}
-
-func (i *IcpService) QueryDfxJsonDataByProjectId(projectId string) (vo.IcpDfxDataVo, error) {
-	var data db.IcpDfxData
-	var vo vo.IcpDfxDataVo
-	err := i.db.Model(db.IcpDfxData{}).Where("project_id = ?", projectId).First(&data).Error
-	if err != nil {
-		return vo, err
-	}
-	copier.Copy(&vo, &data)
-	return vo, nil
-}
-
-func (i *IcpService) IsConfigJsonData(projectId string) bool {
-	var data db.IcpDfxData
-	err := i.db.Model(db.IcpDfxData{}).Where("project_id = ?", projectId).First(&data).Error
-	if err != nil {
-		return false
-	}
-	return true
-}
-
-func (i *IcpService) UpdateDfxJsonData(id int, jsonData string) error {
-	var data db.IcpDfxData
-	err := i.db.Model(db.IcpDfxData{}).Where("id = ?", id).First(&data).Error
-	if err != nil {
-		return err
-	}
-	data.DfxData = jsonData
-	err = i.db.Save(&data).Error
-	return err
 }

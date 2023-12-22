@@ -159,7 +159,7 @@ func (h *HandlerServer) IcpControllerPage(c *gin.Context) {
 	Success(data, c)
 }
 
-// IcpConsumptionPage 获取指定 canister 的消费
+// TODO: IcpConsumptionPage 获取指定 canister 的消费
 func (h *HandlerServer) IcpConsumptionPage(c *gin.Context) {
 	pageStr := c.DefaultQuery("id", "1")
 	sizeStr := c.DefaultQuery("size", "10")
@@ -206,8 +206,28 @@ func (h *HandlerServer) IcpGetAccount(c *gin.Context) {
 	Success(data, c)
 }
 
-// IcpAccountInfo 获取钱包账户信息
-func (h *HandlerServer) IcpAccountInfo(c *gin.Context) {
+// POST IcpCreateIdentity 创建钱包账户信息
+func (h *HandlerServer) IcpCreateIdentity(c *gin.Context) {
+	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
+	if !exists {
+		Fail("do not have token", c)
+		return
+	}
+	data, err := h.icpService.CreateIdentity(userId.(uint))
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	Success(data, c)
+}
+
+// IcpAccountIcps 获取钱包账户信息
+func (h *HandlerServer) IcpAccountIcps(c *gin.Context) {
 	userId, exists := c.Get("userId")
 	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" {
@@ -226,24 +246,14 @@ func (h *HandlerServer) IcpAccountInfo(c *gin.Context) {
 	Success(data, c)
 }
 
-// POST IcpCreateIdentity 创建钱包账户信息
-func (h *HandlerServer) IcpCreateIdentity(c *gin.Context) {
+// IcpWalletCycles 获取钱包 Gas
+func (h *HandlerServer) IcpWalletCycles(c *gin.Context) {
 	userId, exists := c.Get("userId")
-	if !exists {
-		Fail("do not have token", c)
-		return
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
 	}
-	data, err := h.icpService.CreateIdentity(userId.(uint))
-	if err != nil {
-		Fail(err.Error(), c)
-		return
-	}
-	Success(data, c)
-}
-
-// IcpGetWalletCycles 获取钱包 Gas
-func (h *HandlerServer) IcpGetWalletCycles(c *gin.Context) {
-	userId, exists := c.Get("userId")
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -259,6 +269,11 @@ func (h *HandlerServer) IcpGetWalletCycles(c *gin.Context) {
 // IcpRechargeWallet 购买钱包 Gas
 func (h *HandlerServer) IcpRechargeWallet(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -273,6 +288,11 @@ func (h *HandlerServer) IcpRechargeWallet(c *gin.Context) {
 
 func (h *HandlerServer) IcpAddCanister(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -293,6 +313,11 @@ func (h *HandlerServer) IcpAddCanister(c *gin.Context) {
 
 func (h *HandlerServer) IcpDelCanister(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -313,6 +338,11 @@ func (h *HandlerServer) IcpDelCanister(c *gin.Context) {
 
 func (h *HandlerServer) IcpRechargeCanister(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -333,6 +363,11 @@ func (h *HandlerServer) IcpRechargeCanister(c *gin.Context) {
 
 func (h *HandlerServer) IcpAddController(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -353,6 +388,11 @@ func (h *HandlerServer) IcpAddController(c *gin.Context) {
 
 func (h *HandlerServer) IcpDelController(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -373,6 +413,11 @@ func (h *HandlerServer) IcpDelController(c *gin.Context) {
 
 func (h *HandlerServer) IcpChangeStatus(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -393,6 +438,11 @@ func (h *HandlerServer) IcpChangeStatus(c *gin.Context) {
 
 func (h *HandlerServer) IcpDeleteCanister(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return
@@ -413,6 +463,11 @@ func (h *HandlerServer) IcpDeleteCanister(c *gin.Context) {
 
 func (h *HandlerServer) IcpInstallDapp(c *gin.Context) {
 	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
 	if !exists {
 		Fail("do not have token", c)
 		return

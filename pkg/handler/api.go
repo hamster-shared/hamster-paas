@@ -123,10 +123,10 @@ func (h *HttpServer) StartHttpServer() error {
 	zanApi.GET("/node-service/ecosystems/digest", h.handlerServer.ZanEcosystemsDigest)
 	zanApi.GET("/node-service/plan", h.handlerServer.ZanPlan)
 
+	r.Use(h.handlerServer.Cors())
 	icpApi := r.Group("/api/icp")
 	icpApi.GET("/dfx/version", h.handlerServer.DfxVersion)
 	// icpApi.Use(h.handlerServer.Authorize())
-	icpApi.Use(h.handlerServer.Cors())
 	icpApi.GET("/account/brief", h.handlerServer.IcpAccountBreif)
 	icpApi.GET("/account/overview", h.handlerServer.IcpAccountOverview)
 	icpApi.GET("/account/canisters", h.handlerServer.IcpCanisterPage)
@@ -135,10 +135,10 @@ func (h *HttpServer) StartHttpServer() error {
 	icpApi.GET("/canister/:id/consumption", h.handlerServer.IcpConsumptionPage)
 
 	icpApi.GET("/account/get-account", h.handlerServer.IcpGetAccount)
-	icpApi.GET("/account/get-account-info", h.handlerServer.IcpAccountInfo)
 	icpApi.POST("/account/create-identity", h.handlerServer.IcpCreateIdentity)
+	icpApi.GET("/account/get-account-info", h.handlerServer.IcpAccountIcps)
+	icpApi.GET("/account/get-cycles-info", h.handlerServer.IcpWalletCycles)
 
-	icpApi.GET("/account/get-cycles", h.handlerServer.IcpGetWalletCycles)
 	icpApi.POST("/account/buy-cycles", h.handlerServer.IcpRechargeWallet)
 	icpApi.POST("/account/add-canister", h.handlerServer.IcpAddCanister)
 	icpApi.POST("/canister/add-cycles", h.handlerServer.IcpRechargeCanister)

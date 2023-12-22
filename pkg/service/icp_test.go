@@ -13,14 +13,25 @@ import (
 )
 
 func TestCanisterStatus(t *testing.T) {
-
 	logger.InitLogger()
 
-	i := IcpService{nil, "local"}
-	res, err := i.getCanisterStatus("default", "bd3sg-teaaa-aaaaa-qaaba-cai")
+	i := IcpService{nil, "ic"}
+	res, err := i.getCanisterStatus("cold", "we7gr-5iaaa-aaaak-qcxqq-cai")
 	logger.Debugf("canister status: %v", res)
 	if err != nil {
 		logger.Errorf("canister status error: %v", err)
+	}
+}
+
+func TestBalance(t *testing.T) {
+	logger.InitLogger()
+	// alineDb := getDB()
+
+	i := IcpService{nil, "ic"}
+	name, err := i.getCycle("cold")
+	logger.Debugf("ledger info: %v", name)
+	if err != nil {
+		logger.Errorf("ledger info error: %v", err)
 	}
 }
 
@@ -79,19 +90,6 @@ func TestIdentityName(t *testing.T) {
 
 	i := IcpService{alineDb, "local"}
 	name, err := i.dbIdentityName(65406422)
-	logger.Debugf("ledger info: %v", name)
-	if err != nil {
-		logger.Errorf("ledger info error: %v", err)
-	}
-}
-
-func TestBalance(t *testing.T) {
-
-	logger.InitLogger()
-	// alineDb := getDB()
-
-	i := IcpService{nil, "ic"}
-	name, err := i.getCycle("default")
 	logger.Debugf("ledger info: %v", name)
 	if err != nil {
 		logger.Errorf("ledger info error: %v", err)
