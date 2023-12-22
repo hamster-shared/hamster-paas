@@ -23,6 +23,17 @@ func (s *CanisterStatus) String() string {
 	}
 }
 
+func DBStatus(st string) CanisterStatus {
+	switch st {
+	case "Running":
+		return Running
+	case "Stopped":
+		return Stopped
+	default:
+		return Processing
+	}
+}
+
 type IcpCanister struct {
 	Id           int            `json:"id"`
 	FkUserId     uint           `json:"fkUserId"`

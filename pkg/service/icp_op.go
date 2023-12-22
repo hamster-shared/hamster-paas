@@ -39,7 +39,9 @@ var (
 	AddController = "dfx canister update-settings %s --add-controller %s --network %s --identity %s"
 	DelController = "dfx canister update-settings %s --remove-controller %s --network %s --identity %s"
 	UninstallCode = "dfx canister uninstall-code %s --network %s --identity %s"
-	TransferICP   = "dfx ledger transfer %s --icp %s --memo %s --network %s --identity %s"
+	InstallCode   = "dfx canister install %s --wasm %s --network %s --identity %s"
+
+	TransferICP = "dfx ledger transfer %s --icp %s --memo %s --network %s --identity %s"
 )
 
 // ################ db operations ################
@@ -76,14 +78,26 @@ func (i *IcpService) dbCanisterInfo(canisterId string, canister *db.IcpCanister)
 }
 
 // create
-func (i *IcpService) dbCreateCanister(userId uint, canisterId string, canisterName string) error {
+func (i *IcpService) dbCreateCanister(userId uint, identity string, canisterId string, canisterName string) error {
+	out, err := i.getCanisterStatus(identity, canisterId)
+	if err != nil {
+		return err
+	}
 	canister := db.IcpCanister{
 		FkUserId:     userId,
 		ProjectId:    "",
 		CanisterId:   canisterId,
 		CanisterName: canisterName,
 		Status:       db.Running,
+		Cycles: sql.NullString{
+			String: out.Balance,
+			Valid:  true,
+		},
 		CreateTime: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
+		UpdateTime: sql.NullTime{
 			Time:  time.Now(),
 			Valid: true,
 		},
@@ -91,8 +105,27 @@ func (i *IcpService) dbCreateCanister(userId uint, canisterId string, canisterNa
 	return i.db.Create(canister).Error
 }
 
-func (i *IcpService) dbUpdateCanister(canisterId string, canister db.IcpCanister) error {
-	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).Updates(&canister).Error
+func (i *IcpService) dbUpdateCanister(identity string, canisterId string) error {
+	out, err := i.getCanisterStatus(identity, canisterId)
+	if err != nil {
+		return err
+	}
+
+	var icpCanister db.IcpCanister
+	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).First(&icpCanister).Error
+	if err != nil {
+		return err
+	}
+	icpCanister.Status = db.DBStatus(out.Status)
+	icpCanister.Cycles = sql.NullString{
+		String: out.Balance,
+		Valid:  true,
+	}
+	icpCanister.UpdateTime = sql.NullTime{
+		Time:  time.Now(),
+		Valid: true,
+	}
+	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).Updates(&icpCanister).Error
 }
 
 // TODO
@@ -376,6 +409,16 @@ func (i *IcpService) delController(identity string, canisterId string, controlle
 		return err
 	}
 	logger.Infof("userid-> %s canisterId-> %s del-controller %s result is: %s \n", identity, canisterId, controller, output)
+	return nil
+}
+
+func (i *IcpService) installWasm(identity string, canisterId string, wasmPath string) error {
+	installWasmCmd := fmt.Sprintf(InstallCode, canisterId, wasmPath, i.network, identity)
+	output, err := i.execDfxCommand(installWasmCmd)
+	if err != nil {
+		return err
+	}
+	logger.Infof("canisterId-> %s install-wasm %s result is: %s \n", canisterId, wasmPath, output)
 	return nil
 }
 

@@ -150,9 +150,12 @@ const (
 	Reinstall
 )
 
-type InstallDappParam struct {
+type UploadParam struct {
+	CanisterId string `json:"canisterId" binding:"required"`
+}
+
+type InstallParam struct {
 	CanisterId string      `json:"canisterId" binding:"required"`
-	WasmFile   string      `json:"wasmFile" binding:"required"`
 	WasmType   string      `json:"wasmType" binding:"required"`
 	Mode       InstallMode `json:"mode" binding:"required"` // 0: upgrade, 1: reinstall
 }

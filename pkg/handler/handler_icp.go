@@ -461,6 +461,32 @@ func (h *HandlerServer) IcpDeleteCanister(c *gin.Context) {
 	Success("SUCCESS", c)
 }
 
+func (h *HandlerServer) IcpUploadWasm(c *gin.Context) {
+	_, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		exists = true
+	}
+	if !exists {
+		Fail("do not have token", c)
+		return
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		Fail(err.Error(), c)
+	}
+	var param vo.UploadParam
+	err = c.BindJSON(&param)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	c.SaveUploadedFile(file, "./wasm/"+param.CanisterId+".wasm")
+
+	Success("SUCCESS", c)
+}
+
 func (h *HandlerServer) IcpInstallDapp(c *gin.Context) {
 	userId, exists := c.Get("userId")
 	icpTest := os.Getenv("ICP_TEST")
@@ -472,13 +498,13 @@ func (h *HandlerServer) IcpInstallDapp(c *gin.Context) {
 		Fail("do not have token", c)
 		return
 	}
-	var param vo.InstallDappParam
+	var param vo.InstallParam
 	err := c.BindJSON(&param)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	err = h.icpService.InstallDapp(userId.(uint), param)
+	err = h.icpService.InstallWasm(userId.(uint), param)
 	if err != nil {
 		Fail(err.Error(), c)
 		return

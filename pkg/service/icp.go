@@ -261,8 +261,8 @@ func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) erro
 		return err
 	}
 	logger.Infof("CREATE canister: %s", canisterId)
-	// 添加用户的 canister
-	if err := i.dbCreateCanister(userId, canisterId, param.CanisterName); err != nil {
+	// db create canister
+	if err := i.dbCreateCanister(userId, identityName, canisterId, param.CanisterName); err != nil {
 		return err
 	}
 	return nil
@@ -285,8 +285,7 @@ func (i *IcpService) DelCanister(userId uint, param vo.DeleteCanisterParam) erro
 		return err
 	}
 	logger.Infof("DELETE canister: %s", canisterId)
-
-	// 删除用户的 canister
+	// db delete canister
 	if err := i.dbDeleteCanister(userId, canisterId); err != nil {
 		return err
 	}
@@ -311,6 +310,7 @@ func (i *IcpService) AddController(userId uint, param vo.AddControllerParam) err
 		return err
 	}
 	logger.Infof("ADD controller: %s", canisterId)
+	// no db op
 
 	return nil
 }
@@ -332,6 +332,7 @@ func (i *IcpService) DelController(userId uint, param vo.DelControllerParam) err
 		return err
 	}
 	logger.Infof("DEL controller: %s", canisterId)
+	// no db op
 
 	return nil
 }
@@ -349,15 +350,42 @@ func (i *IcpService) ChangeCanisterStatus(userId uint, param vo.ChangeStatusPara
 		canisterId = os.Getenv("CANISTER")
 		logger.Debugf("test canisterId: %s", canisterId)
 	}
-	return i.changeCanisterStatus(identityName, canisterId, param.Status)
+	err = i.changeCanisterStatus(identityName, canisterId, param.Status)
+	if err != nil {
+		return err
+	}
+	// db change status
+	return i.dbUpdateCanister(identityName, canisterId)
 }
 
-// TODO
-func (i *IcpService) InstallDapp(userId uint, canister vo.InstallDappParam) error {
-	return nil
+func (i *IcpService) InstallWasm(userId uint, param vo.InstallParam) error {
+	identityName, err := i.dbIdentityName(userId) //获取用户的身份
+	if err != nil {
+		return err
+	}
+	canisterId := param.CanisterId
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		identityName = DEFAULT
+		canisterId = os.Getenv("CANISTER")
+		logger.Debugf("test canisterId: %s", canisterId)
+	}
+	path := "./wasm/" + param.CanisterId + ".wasm"
+	_, err = os.Stat(path)
+	if err == nil {
+		return err
+	}
+	if os.IsNotExist(err) {
+		return errors.New(string("File Not Exist"))
+	}
+	err = i.installWasm(identityName, canisterId, path)
+	if err != nil {
+		return err
+	}
+	// db change status
+	return i.dbUpdateCanister(identityName, canisterId)
 }
 
-// TODO No comsumption yet
 func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (*vo.ConsumptionPage, error) {
 	var cspPage vo.ConsumptionPage
 	return &cspPage, nil
@@ -527,6 +555,7 @@ func (i *IcpService) RechargeCanister(userId uint, param vo.RechargeCanisterPara
 		return vo, err
 	}
 
+	// get status
 	data, err := i.getCanisterStatus(userIcp.IdentityName, param.CanisterId)
 	if err != nil {
 		return vo, err
@@ -540,6 +569,10 @@ func (i *IcpService) RechargeCanister(userId uint, param vo.RechargeCanisterPara
 	icpCanister.Cycles = sql.NullString{
 		String: data.Balance,
 		Valid:  true,
+	}
+	icpCanister.UpdateTime = sql.NullTime{
+		Time:  time.Now(),
+		Valid: true,
 	}
 	err = i.db.Model(db.IcpCanister{}).Where("canister_id = ?", param.CanisterId).Updates(&icpCanister).Error
 	if err != nil {
