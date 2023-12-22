@@ -242,6 +242,28 @@ func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, 
 	return &res, nil
 }
 
+func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (*vo.ConsumptionPage, error) {
+	var res vo.ConsumptionPage
+	var consumptions []db.IcpConsumption
+	count, err := i.dbGetComsuption(canisterId, &consumptions, page, size)
+	if err != nil {
+		return nil, err
+	}
+	var data []vo.ConsumptionVo
+	for _, csp := range consumptions {
+		data = append(data, vo.ConsumptionVo{
+			Cycles:   csp.Cycles.String,
+			UpdateAt: csp.UpdateTime.Time.Format("2006-01-02 15:04:05"),
+		})
+	}
+	res.Total = count
+	res.Data = data
+	res.Page = page
+	res.PageSize = size
+
+	return &res, nil
+}
+
 // api/icp/account/add-canister
 func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) error {
 	var userIcp db.UserIcp
@@ -384,11 +406,6 @@ func (i *IcpService) InstallWasm(userId uint, param vo.InstallParam) error {
 	}
 	// db change status
 	return i.dbUpdateCanister(identityName, canisterId)
-}
-
-func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (*vo.ConsumptionPage, error) {
-	var cspPage vo.ConsumptionPage
-	return &cspPage, nil
 }
 
 //	Old version
@@ -587,7 +604,7 @@ func (i *IcpService) RechargeCanister(userId uint, param vo.RechargeCanisterPara
 // use in recharge
 // init account wallet
 func (i *IcpService) initWallet(userIcp db.UserIcp) (walletId string, error error) {
-	// TODO all balance?
+	// all balance?
 	balance, err := i.getIcpBalance(userIcp.IdentityName)
 	if err != nil {
 		return "", err

@@ -128,9 +128,34 @@ func (i *IcpService) dbUpdateCanister(identity string, canisterId string) error 
 	return i.db.Model(db.IcpCanister{}).Where("canister_id = ?", canisterId).Updates(&icpCanister).Error
 }
 
-// TODO
-func (i *IcpService) dbUpdateComsuption(canisterId string, comsume db.IcpComsuption) error {
-	return i.db.Model(db.IcpComsuption{}).Where("canister_id = ?", canisterId).Updates(&comsume).Error
+func (i *IcpService) dbSetComsuption(identity string, canisterId string) error {
+	out, err := i.getCanisterStatus(identity, canisterId)
+	if err != nil {
+		return err
+	}
+	consume := db.IcpConsumption{
+		CanisterId: canisterId,
+		Cycles: sql.NullString{
+			String: out.Balance,
+			Valid:  true,
+		},
+		UpdateTime: sql.NullTime{
+			Time:  time.Now(),
+			Valid: true,
+		},
+	}
+	return i.db.Model(db.IcpConsumption{}).Where("canister_id = ?", canisterId).Create(&consume).Error
+}
+
+func (i *IcpService) dbGetComsuption(canisterId string, consumptions *[]db.IcpConsumption, page, size int) (int, error) {
+	var count int64
+	err := i.db.Model(db.IcpConsumption{}).Where("canister_id = ?", canisterId).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	tx := i.db.Model(db.IcpConsumption{}).Where("canister_id = ?", canisterId)
+	err = tx.Order("update_time DESC").Offset((page - 1) * size).Limit(size).Find(&consumptions).Error
+	return int(count), err
 }
 
 // delete

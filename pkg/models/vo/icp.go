@@ -96,9 +96,8 @@ type ControllerPage struct {
 
 // Consumption
 type ConsumptionVo struct {
-	Cycles     string `json:"cycles"`
-	ModuleHash string `json:"moduleHash"`
-	UpdateAt   string `json:"updateAt"`
+	Cycles   string `json:"cycles"`
+	UpdateAt string `json:"updateAt"`
 }
 
 type ConsumptionPage struct {
