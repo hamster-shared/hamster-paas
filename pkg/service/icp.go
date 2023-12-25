@@ -162,11 +162,15 @@ func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.Ca
 	res.CanisterId = canisterId
 	res.CanisterName = canister.CanisterName
 
-	var project db.Project
-	if err := i.dbProjectInfo(canister.ProjectId, &project); err != nil {
-		return nil, err
+	if canister.ProjectId != "" {
+		var project db.Project
+		if err := i.dbProjectInfo(canister.ProjectId, &project); err != nil {
+			return nil, err
+		}
+		res.Project = project.Name
+	} else {
+		res.Project = ""
 	}
-	res.Project = project.Name
 
 	// get icp identity
 	identityName, err := i.DBIdentityName(userId)

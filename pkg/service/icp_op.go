@@ -62,7 +62,7 @@ func (i *IcpService) dbUserProjects(userId uint, projects *[]db.Project) error {
 }
 
 func (i *IcpService) dbUserCanisters(userId uint, canisters *[]db.IcpCanister) error {
-	return i.db.Model(db.IcpCanister{}).Where("fk_user_id = ?", userId).Find(&canisters).Error
+	return i.db.Model(db.IcpCanister{}).Where("fk_user_id = ?", userId).Order("update_time DESC").Find(&canisters).Error
 }
 
 func (i *IcpService) DBAllCanisters(canisters *[]db.IcpCanister) error {
