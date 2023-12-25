@@ -39,7 +39,7 @@ var (
 	AddController = "dfx canister update-settings %s --add-controller %s --network %s --identity %s"
 	DelController = "dfx canister update-settings %s --remove-controller %s --network %s --identity %s"
 	UninstallCode = "dfx canister uninstall-code %s --network %s --identity %s"
-	InstallCode   = "dfx canister install %s --wasm %s --network %s --identity %s"
+	InstallCode   = "dfx canister install %s --wasm %s --mode %s --network %s --identity %s"
 
 	TransferICP = "dfx ledger transfer %s --icp %s --memo %s --network %s --identity %s"
 )
@@ -87,6 +87,7 @@ func (i *IcpService) dbCreateCanister(userId uint, identity string, canisterId s
 	if err != nil {
 		return err
 	}
+	fmt.Printf("out: %v", out)
 	canister := db.IcpCanister{
 		FkUserId:     userId,
 		ProjectId:    "",
@@ -106,7 +107,7 @@ func (i *IcpService) dbCreateCanister(userId uint, identity string, canisterId s
 			Valid: true,
 		},
 	}
-	return i.db.Create(canister).Error
+	return i.db.Create(&canister).Error
 }
 
 func (i *IcpService) dbUpdateCanister(identity string, canisterId string) error {
@@ -450,9 +451,10 @@ func (i *IcpService) delController(identity string, canisterId string, controlle
 	return nil
 }
 
-func (i *IcpService) installWasm(identity string, canisterId string, wasmPath string) error {
-	installWasmCmd := fmt.Sprintf(InstallCode, canisterId, wasmPath, i.network, identity)
+func (i *IcpService) installWasm(identity string, canisterId string, wasmPath string, mode vo.InstallMode) error {
+	installWasmCmd := fmt.Sprintf(InstallCode, canisterId, wasmPath, mode.String(), i.network, identity)
 	output, err := i.execDfxCommand(installWasmCmd)
+	logger.Debugf("install wasm: \ncmd %s \nout %s", installWasmCmd, output)
 	if err != nil {
 		return err
 	}

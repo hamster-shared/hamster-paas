@@ -466,13 +466,13 @@ func (h *HandlerServer) IcpDeleteCanister(c *gin.Context) {
 		Fail("do not have token", c)
 		return
 	}
-	var param vo.ChangeStatusParam
+	var param vo.DeleteCanisterParam
 	err := c.BindJSON(&param)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	err = h.icpService.ChangeCanisterStatus(userId.(uint), param)
+	err = h.icpService.DelCanister(userId.(uint), param)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
@@ -495,13 +495,12 @@ func (h *HandlerServer) IcpUploadWasm(c *gin.Context) {
 	if err != nil {
 		Fail(err.Error(), c)
 	}
-	var param vo.UploadParam
-	err = c.BindJSON(&param)
+	canisterId := c.Param("id")
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	c.SaveUploadedFile(file, "./wasm/"+param.CanisterId+".wasm")
+	c.SaveUploadedFile(file, "./wasm/"+canisterId+".wasm")
 
 	Success("SUCCESS", c)
 }

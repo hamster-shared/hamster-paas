@@ -83,15 +83,14 @@ func TestBrief(t *testing.T) {
 	}
 }
 
-func TestIdentityName(t *testing.T) {
+func TestCreate(t *testing.T) {
 
 	logger.InitLogger()
 	alineDb := getDB()
 
-	i := IcpService{alineDb, "local"}
-	name, err := i.DBIdentityName(65406422)
-	logger.Debugf("ledger info: %v", name)
+	i := IcpService{alineDb, "ic"}
+	err := i.dbCreateCanister(65406422, "65406422", "nglpe-baaaa-aaaal-qcx3a-cai", "hello")
 	if err != nil {
-		logger.Errorf("ledger info error: %v", err)
+		logger.Errorf("dbCreateCanister error: %v", err)
 	}
 }

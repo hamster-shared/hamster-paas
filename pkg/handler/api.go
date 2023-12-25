@@ -147,7 +147,7 @@ func (h *HttpServer) StartHttpServer() error {
 	icpApi.POST("/canister/del-controller", h.handlerServer.IcpDelController)
 	icpApi.POST("/canister/change-status", h.handlerServer.IcpChangeStatus) // stop, run
 	icpApi.POST("/canister/delete", h.handlerServer.IcpDeleteCanister)
-	icpApi.POST("/canister/upload", h.handlerServer.IcpUploadWasm)
+	icpApi.POST("/canister/:id/upload", h.handlerServer.IcpUploadWasm)
 	icpApi.POST("/canister/install", h.handlerServer.IcpInstallDapp)
 
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))

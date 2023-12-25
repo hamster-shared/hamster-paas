@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -83,10 +84,10 @@ func (i *IcpService) GetAccountOverview(userId uint) (*vo.AccountOverview, error
 		return nil, err
 	}
 
-	icpTest := os.Getenv("ICP_TEST")
-	if icpTest == "true" {
-		identityName = DEFAULT
-	}
+	// icpTest := os.Getenv("ICP_TEST")
+	// if icpTest == "true" {
+	// 	identityName = DEFAULT
+	// }
 
 	// icp balance
 	icps, err := i.getIcp(identityName)
@@ -175,7 +176,7 @@ func (i *IcpService) GetCanisterOverview(userId uint, canisterId string) (*vo.Ca
 
 	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" {
-		identityName = DEFAULT
+		// identityName = DEFAULT
 		canisterId = os.Getenv("CANISTER")
 		logger.Debugf("test canisterId: %s", canisterId)
 	}
@@ -203,7 +204,7 @@ func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, 
 	identityName := userIcp.IdentityName
 	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" {
-		identityName = DEFAULT
+		// identityName = DEFAULT
 		canisterId = os.Getenv("CANISTER")
 		logger.Debugf("test canisterId: %s", canisterId)
 	}
@@ -273,7 +274,7 @@ func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) erro
 	principalId := userIcp.PrincipalId
 	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" {
-		identityName = DEFAULT
+		// identityName = DEFAULT
 		_, principalId, _ = i.getLedgerInfo(identityName)
 		logger.Debugf("test principal: %s", principalId)
 	}
@@ -296,12 +297,12 @@ func (i *IcpService) DelCanister(userId uint, param vo.DeleteCanisterParam) erro
 		return err
 	}
 	canisterId := param.CanisterId
-	icpTest := os.Getenv("ICP_TEST")
-	if icpTest == "true" {
-		identityName = DEFAULT
-		canisterId = os.Getenv("CANISTER")
-		logger.Debugf("test canisterId: %s", canisterId)
-	}
+	// icpTest := os.Getenv("ICP_TEST")
+	// if icpTest == "true" {
+	// 	identityName = DEFAULT
+	// 	canisterId = os.Getenv("CANISTER")
+	// 	logger.Debugf("test canisterId: %s", canisterId)
+	// }
 	if err := i.deleteCanister(identityName, canisterId); err != nil {
 		return err
 	}
@@ -320,12 +321,12 @@ func (i *IcpService) AddController(userId uint, param vo.AddControllerParam) err
 		return err
 	}
 	canisterId := param.CanisterId
-	icpTest := os.Getenv("ICP_TEST")
-	if icpTest == "true" {
-		identityName = DEFAULT
-		canisterId = os.Getenv("CANISTER")
-		logger.Debugf("test canisterId: %s", canisterId)
-	}
+	// icpTest := os.Getenv("ICP_TEST")
+	// if icpTest == "true" {
+	// 	identityName = DEFAULT
+	// 	canisterId = os.Getenv("CANISTER")
+	// 	logger.Debugf("test canisterId: %s", canisterId)
+	// }
 
 	if err := i.addController(identityName, canisterId, param.Controller); err != nil {
 		return err
@@ -343,12 +344,12 @@ func (i *IcpService) DelController(userId uint, param vo.DelControllerParam) err
 		return err
 	}
 	canisterId := param.CanisterId
-	icpTest := os.Getenv("ICP_TEST")
-	if icpTest == "true" {
-		identityName = DEFAULT
-		canisterId = os.Getenv("CANISTER")
-		logger.Debugf("test canisterId: %s", canisterId)
-	}
+	// icpTest := os.Getenv("ICP_TEST")
+	// if icpTest == "true" {
+	// 	identityName = DEFAULT
+	// 	canisterId = os.Getenv("CANISTER")
+	// 	logger.Debugf("test canisterId: %s", canisterId)
+	// }
 	if err := i.delController(identityName, canisterId, param.Controller); err != nil {
 		return err
 	}
@@ -365,12 +366,12 @@ func (i *IcpService) ChangeCanisterStatus(userId uint, param vo.ChangeStatusPara
 		return err
 	}
 	canisterId := param.CanisterId
-	icpTest := os.Getenv("ICP_TEST")
-	if icpTest == "true" {
-		identityName = DEFAULT
-		canisterId = os.Getenv("CANISTER")
-		logger.Debugf("test canisterId: %s", canisterId)
-	}
+	// icpTest := os.Getenv("ICP_TEST")
+	// if icpTest == "true" {
+	// 	identityName = DEFAULT
+	// 	canisterId = os.Getenv("CANISTER")
+	// 	logger.Debugf("test canisterId: %s", canisterId)
+	// }
 	err = i.changeCanisterStatus(identityName, canisterId, param.Status)
 	if err != nil {
 		return err
@@ -385,21 +386,23 @@ func (i *IcpService) InstallWasm(userId uint, param vo.InstallParam) error {
 		return err
 	}
 	canisterId := param.CanisterId
-	icpTest := os.Getenv("ICP_TEST")
-	if icpTest == "true" {
-		identityName = DEFAULT
-		canisterId = os.Getenv("CANISTER")
-		logger.Debugf("test canisterId: %s", canisterId)
-	}
+	// icpTest := os.Getenv("ICP_TEST")
+	// if icpTest == "true" {
+	// 	identityName = DEFAULT
+	// 	canisterId = os.Getenv("CANISTER")
+	// 	logger.Debugf("test canisterId: %s", canisterId)
+	// }
 	path := "./wasm/" + param.CanisterId + ".wasm"
 	_, err = os.Stat(path)
-	if err == nil {
+	if err != nil {
 		return err
 	}
 	if os.IsNotExist(err) {
-		return errors.New(string("File Not Exist"))
+		return errors.New("File Not Exist")
 	}
-	err = i.installWasm(identityName, canisterId, path)
+	mode := param.Mode
+	logger.Infof("installWasm identity: %s path: %s", identityName, path)
+	err = i.installWasm(identityName, canisterId, path, mode)
 	if err != nil {
 		return err
 	}
@@ -546,7 +549,7 @@ func (i *IcpService) GetWalletInfo(userId uint) (vo vo.UserCycleInfoVo, error er
 	// result
 	vo.UserId = int(userIcp.FkUserId)
 	vo.CanisterId = userIcp.WalletId
-	vo.CyclesBalance = balance
+	vo.CyclesBalance = strings.TrimSpace(balance)
 	return vo, nil
 }
 

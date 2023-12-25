@@ -151,16 +151,17 @@ type ChangeStatusParam struct {
 type InstallMode int
 
 const (
-	Upgrade StatusType = iota
+	Install InstallMode = iota
+	Upgrade
 	Reinstall
 )
 
-type UploadParam struct {
-	CanisterId string `json:"canisterId" binding:"required"`
+func (i *InstallMode) String() string {
+	return [...]string{"install", "upgrade", "reinstall"}[*i]
 }
 
 type InstallParam struct {
 	CanisterId string      `json:"canisterId" binding:"required"`
 	WasmType   string      `json:"wasmType" binding:"required"`
-	Mode       InstallMode `json:"mode" binding:"required"` // 0: upgrade, 1: reinstall
+	Mode       InstallMode `json:"mode" binding:"required"` // 1: upgrade, 2: reinstall
 }
