@@ -188,12 +188,13 @@ func (i *IcpService) getLedgerInfo(identity string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
+	accountId = strings.TrimSpace(accountId)
 	principalCmd := fmt.Sprintf(GetPrincipal, identity)
 	principal, err := i.execDfxCommand(principalCmd)
 	if err != nil {
 		return "", "", err
 	}
-
+	principal = strings.TrimSpace(principal)
 	return accountId, principal, nil
 }
 
@@ -397,6 +398,8 @@ func (i *IcpService) createCanister(identity string, controller string) (caniste
 	}
 	createCanisterCmd := fmt.Sprintf(CreateCanister, controller, balance, i.network, identity)
 	out, err := i.execDfxCommand(createCanisterCmd)
+	logger.Debugf("create canister: \ncmd %s \nout %s", createCanisterCmd, out)
+
 	if err != nil {
 		return "", err
 	}
@@ -412,8 +415,10 @@ func (i *IcpService) createCanister(identity string, controller string) (caniste
 }
 
 func (i *IcpService) deleteCanister(identity string, canisterId string) error {
-	createCanisterCmd := fmt.Sprintf(CanisterDelete, canisterId, i.network, identity)
-	out, err := i.execDfxCommand(createCanisterCmd)
+	deleteCanisterCmd := fmt.Sprintf(CanisterDelete, canisterId, i.network, identity)
+	out, err := i.execDfxCommand(deleteCanisterCmd)
+	logger.Debugf("delete canister: \ncmd %s \nout %s", deleteCanisterCmd, out)
+
 	if err != nil {
 		return err
 	}
@@ -424,6 +429,8 @@ func (i *IcpService) deleteCanister(identity string, canisterId string) error {
 func (i *IcpService) addController(identity string, canisterId string, controller string) error {
 	addControllerCmd := fmt.Sprintf(AddController, canisterId, controller, i.network, identity)
 	output, err := i.execDfxCommand(addControllerCmd)
+	logger.Debugf("add controller: \ncmd %s \nout %s", addControllerCmd, output)
+
 	if err != nil {
 		return err
 	}
@@ -434,6 +441,8 @@ func (i *IcpService) addController(identity string, canisterId string, controlle
 func (i *IcpService) delController(identity string, canisterId string, controller string) error {
 	delControllerCmd := fmt.Sprintf(DelController, canisterId, controller, i.network, identity)
 	output, err := i.execDfxCommand(delControllerCmd)
+	logger.Debugf("del controller: \ncmd %s \nout %s", delControllerCmd, output)
+
 	if err != nil {
 		return err
 	}

@@ -11,7 +11,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -275,7 +274,7 @@ func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) erro
 	icpTest := os.Getenv("ICP_TEST")
 	if icpTest == "true" {
 		identityName = DEFAULT
-		principalId, _, _ = i.getLedgerInfo(identityName)
+		_, principalId, _ = i.getLedgerInfo(identityName)
 		logger.Debugf("test principal: %s", principalId)
 	}
 	canisterId, err := i.createCanister(identityName, principalId)
@@ -412,12 +411,12 @@ func (i *IcpService) InstallWasm(userId uint, param vo.InstallParam) error {
 //
 // api/icp/account/get-account
 // return if account or wallet id is exist
-func (i *IcpService) GetAccountFlag(userId uint) (vo vo.IcpAccountVo, error error) {
+func (i *IcpService) HasAccount(userId uint) (vo vo.HasAccountVo, error error) {
 	var userIcp db.UserIcp
 	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
 	vo.UserId = int(userId)
-	vo.WalletIdFlag = false
-	vo.AccountIdFlag = false
+	vo.HasWalletId = false
+	vo.HasAccountId = false
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return vo, nil
@@ -426,11 +425,32 @@ func (i *IcpService) GetAccountFlag(userId uint) (vo vo.IcpAccountVo, error erro
 		}
 	}
 	if userIcp.AccountId != "" {
-		vo.AccountIdFlag = true
+		vo.HasAccountId = true
 	}
 	if userIcp.WalletId != "" {
-		vo.WalletIdFlag = true
+		vo.HasWalletId = true
 	}
+	return vo, nil
+}
+
+func (i *IcpService) GetAccount(userId uint) (vo vo.IcpAccountVo, error error) {
+	var userIcp db.UserIcp
+	err := i.db.Model(db.UserIcp{}).Where("fk_user_id = ?", userId).First(&userIcp).Error
+	vo.UserId = int(userId)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return vo, nil
+		} else {
+			return vo, err
+		}
+	}
+	identityName := strconv.Itoa(int(userId))
+	aId, pId, err := i.getLedgerInfo(identityName)
+	if err != nil {
+		return vo, err
+	}
+	vo.AccountId = aId
+	vo.PrincipalId = pId
 	return vo, nil
 }
 
@@ -447,6 +467,7 @@ func (i *IcpService) CreateIdentity(userId uint) (vo vo.UserIcpInfoVo, error err
 	}
 	// newIdentity
 	identityName := strconv.Itoa(int(userId))
+	logger.Debugf("new identity for %s", identityName)
 	err = i.newIndentity(identityName)
 	if err != nil {
 		return vo, err
@@ -459,8 +480,8 @@ func (i *IcpService) CreateIdentity(userId uint) (vo vo.UserIcpInfoVo, error err
 	// insert userIcp
 	userIcp.FkUserId = userId
 	userIcp.IdentityName = identityName
-	userIcp.AccountId = strings.TrimSpace(aId)
-	userIcp.PrincipalId = strings.TrimSpace(pId)
+	userIcp.AccountId = aId
+	userIcp.PrincipalId = pId
 	userIcp.CreateTime = sql.NullTime{
 		Time:  time.Now(),
 		Valid: true,

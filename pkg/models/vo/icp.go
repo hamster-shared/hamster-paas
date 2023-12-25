@@ -6,10 +6,16 @@ type UserIcpInfoVo struct {
 	IcpBalance string `json:"icpBalance"`
 }
 
+type HasAccountVo struct {
+	UserId       int  `json:"userId"`
+	HasAccountId bool `json:"hasAccountId"`
+	HasWalletId  bool `json:"hasWalletId"`
+}
+
 type IcpAccountVo struct {
-	UserId        int  `json:"userId"`
-	AccountIdFlag bool `json:"accountIdFlag"`
-	WalletIdFlag  bool `json:"walletIdFlag"`
+	UserId      int    `json:"userId"`
+	AccountId   string `json:"accountId"`
+	PrincipalId string `json:"walletId"`
 }
 
 type UserCycleInfoVo struct {

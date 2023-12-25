@@ -186,7 +186,26 @@ func (h *HandlerServer) IcpConsumptionPage(c *gin.Context) {
 	Success(data, c)
 }
 
-// IcpGetAccount 获取钱包账户启动
+// IcpHasWallet 获取钱包账户启动
+func (h *HandlerServer) IcpHasWallet(c *gin.Context) {
+	userId, exists := c.Get("userId")
+	icpTest := os.Getenv("ICP_TEST")
+	if icpTest == "true" {
+		userId = USERID
+		exists = true
+	}
+	if !exists {
+		Fail("do not have token", c)
+		return
+	}
+	data, err := h.icpService.HasAccount(userId.(uint))
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+	Success(data, c)
+}
+
 func (h *HandlerServer) IcpGetAccount(c *gin.Context) {
 	userId, exists := c.Get("userId")
 	icpTest := os.Getenv("ICP_TEST")
@@ -198,7 +217,7 @@ func (h *HandlerServer) IcpGetAccount(c *gin.Context) {
 		Fail("do not have token", c)
 		return
 	}
-	data, err := h.icpService.GetAccountFlag(userId.(uint))
+	data, err := h.icpService.GetAccount(userId.(uint))
 	if err != nil {
 		Fail(err.Error(), c)
 		return

@@ -134,9 +134,10 @@ func (h *HttpServer) StartHttpServer() error {
 	icpApi.GET("/canister/:id/controllers", h.handlerServer.IcpControllerPage)
 	icpApi.GET("/canister/:id/consumption", h.handlerServer.IcpConsumptionPage)
 
+	icpApi.GET("/account/has-wallet", h.handlerServer.IcpHasWallet)
 	icpApi.GET("/account/get-account", h.handlerServer.IcpGetAccount)
 	icpApi.POST("/account/create-identity", h.handlerServer.IcpCreateIdentity)
-	icpApi.GET("/account/get-account-info", h.handlerServer.IcpAccountIcps)
+	icpApi.GET("/account/get-icps-info", h.handlerServer.IcpAccountIcps)
 	icpApi.GET("/account/get-cycles-info", h.handlerServer.IcpWalletCycles)
 
 	icpApi.POST("/account/buy-cycles", h.handlerServer.IcpRechargeWallet)
