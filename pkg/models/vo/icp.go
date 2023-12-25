@@ -94,10 +94,11 @@ type ControllerVo struct {
 }
 
 type ControllerPage struct {
-	Data     []ControllerVo `json:"data"`
-	Total    int            `json:"total"`
-	Page     int            `json:"page"`
-	PageSize int            `json:"pageSize"`
+	CanisterId string         `json:"canisterId" binding:"required"`
+	Data       []ControllerVo `json:"data"`
+	Total      int            `json:"total"`
+	Page       int            `json:"page"`
+	PageSize   int            `json:"pageSize"`
 }
 
 // Consumption
@@ -163,5 +164,5 @@ func (i *InstallMode) String() string {
 type InstallParam struct {
 	CanisterId string      `json:"canisterId" binding:"required"`
 	WasmType   string      `json:"wasmType" binding:"required"`
-	Mode       InstallMode `json:"mode" binding:"required"` // 1: upgrade, 2: reinstall
+	Mode       InstallMode `json:"mode" binding:"required"` // 0: install 1: upgrade, 2: reinstall
 }

@@ -322,12 +322,12 @@ func (h *HandlerServer) IcpAddCanister(c *gin.Context) {
 		Fail(err.Error(), c)
 		return
 	}
-	err = h.icpService.AddCanister(userId.(uint), addCanisterParam)
+	canisterId, err := h.icpService.AddCanister(userId.(uint), addCanisterParam)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
-	Success("SUCCESS", c)
+	Success(canisterId, c)
 }
 
 func (h *HandlerServer) IcpDelCanister(c *gin.Context) {

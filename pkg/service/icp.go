@@ -234,7 +234,7 @@ func (i *IcpService) GetContollerPage(userId uint, canisterId string, page int, 
 		}
 		data = append(data, item)
 	}
-
+	res.CanisterId = canisterId
 	res.Total = len(controllers)
 	res.Data = data
 	res.Page = page
@@ -265,10 +265,10 @@ func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (
 }
 
 // api/icp/account/add-canister
-func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) error {
+func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) (string, error) {
 	var userIcp db.UserIcp
 	if err := i.dbUserIdentity(userId, &userIcp); err != nil {
-		return err
+		return "", err
 	}
 	identityName := userIcp.IdentityName
 	principalId := userIcp.PrincipalId
@@ -280,14 +280,14 @@ func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) erro
 	}
 	canisterId, err := i.createCanister(identityName, principalId)
 	if err != nil {
-		return err
+		return canisterId, err
 	}
 	logger.Infof("CREATE canister: %s", canisterId)
 	// db create canister
 	if err := i.dbCreateCanister(userId, identityName, canisterId, param.CanisterName); err != nil {
-		return err
+		return canisterId, err
 	}
-	return nil
+	return canisterId, nil
 }
 
 // api/icp/account/del-canister
