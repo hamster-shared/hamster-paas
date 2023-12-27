@@ -126,7 +126,7 @@ func (h *HttpServer) StartHttpServer() error {
 	r.Use(h.handlerServer.Cors())
 	icpApi := r.Group("/api/icp")
 	icpApi.GET("/dfx/version", h.handlerServer.DfxVersion)
-	// icpApi.Use(h.handlerServer.Authorize())
+	icpApi.Use(h.handlerServer.Authorize())
 	icpApi.GET("/account/brief", h.handlerServer.IcpAccountBreif)
 	icpApi.GET("/account/overview", h.handlerServer.IcpAccountOverview)
 	icpApi.GET("/account/canisters", h.handlerServer.IcpCanisterPage)
