@@ -150,5 +150,8 @@ func (h *HttpServer) StartHttpServer() error {
 	icpApi.POST("/canister/:id/upload", h.handlerServer.IcpUploadWasm)
 	icpApi.POST("/canister/install", h.handlerServer.IcpInstallDapp)
 
+	// icpApi.GET("/dfx/get-principal", h.handlerServer.DfxPrincipal)
+	// icpApi.GET("/dfx/account-id", h.handlerServer.DfxAccountId)
+
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }
