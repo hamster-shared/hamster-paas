@@ -33,8 +33,8 @@ func NewIcpService() *IcpService {
 	}
 }
 
-func (i *IcpService) GetDfxVersion() (string, error) {
-	return i.execDfxCommand(GetVersion)
+func (i *IcpService) DfxCmd(cmd string) (string, error) {
+	return i.execDfxCommand(cmd)
 }
 
 // api/icp/account/brief

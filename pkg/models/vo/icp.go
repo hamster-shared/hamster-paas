@@ -163,6 +163,10 @@ func (i *InstallMode) String() string {
 
 type InstallParam struct {
 	CanisterId string      `json:"canisterId" binding:"required"`
-	WasmType   string      `json:"wasmType" binding:"required"`
-	Mode       InstallMode `json:"mode" binding:"required"` // 0: install 1: upgrade, 2: reinstall
+	WasmType   string      `json:"wasmType" binding:"required"` // contract / frontend
+	Mode       InstallMode `json:"mode" binding:"required"`     // 0: install 1: upgrade, 2: reinstall
+}
+
+type CmdParam struct {
+	Cmd string `json:"cmd" binding:"required"`
 }

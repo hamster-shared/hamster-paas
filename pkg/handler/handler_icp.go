@@ -10,12 +10,19 @@ import (
 )
 
 // DfxVersion 获取 DFX 版本
-func (h *HandlerServer) DfxVersion(c *gin.Context) {
-	version, err := h.icpService.GetDfxVersion()
+func (h *HandlerServer) DfxCmd(c *gin.Context) {
+	var CmdParam vo.CmdParam
+	err := c.BindJSON(&CmdParam)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
+	version, err := h.icpService.DfxCmd(CmdParam.Cmd)
+	if err != nil {
+		Fail(err.Error(), c)
+		return
+	}
+
 	ver := strings.Fields(version)[1]
 	Success(ver, c)
 }

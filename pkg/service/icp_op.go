@@ -2,12 +2,14 @@ package service
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"hamster-paas/pkg/db"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/utils/logger"
 	"math"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -371,6 +373,18 @@ func (i *IcpService) getCanisterStatus(identity string, canisterId string) (*vo.
 // 1 running 0 or 2 stoped
 func (i *IcpService) changeCanisterStatus(identity string, canisterId string, statusType vo.StatusType) error {
 	var changStatusCmd string
+	if _, err := os.Stat("dfx.json"); os.IsNotExist(err) {
+		// 不存在，则新建并写入数据 {}
+		data := map[string]interface{}{}
+		dataJSON, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile("dfx.json", dataJSON, 0644)
+		if err != nil {
+			return err
+		}
+	}
 	if statusType == vo.Running {
 		changStatusCmd = fmt.Sprintf(CanisterStart, canisterId, i.network, identity)
 		output, err := i.execDfxCommand(changStatusCmd)
