@@ -301,12 +301,6 @@ func (i *IcpService) DelCanister(userId uint, param vo.DeleteCanisterParam) erro
 		return err
 	}
 	canisterId := param.CanisterId
-	// icpTest := os.Getenv("ICP_TEST")
-	// if icpTest == "true" {
-	// 	identityName = DEFAULT
-	// 	canisterId = os.Getenv("CANISTER")
-	// 	logger.Debugf("test canisterId: %s", canisterId)
-	// }
 	if err := i.deleteCanister(identityName, canisterId); err != nil {
 		return err
 	}
@@ -325,12 +319,6 @@ func (i *IcpService) AddController(userId uint, param vo.AddControllerParam) err
 		return err
 	}
 	canisterId := param.CanisterId
-	// icpTest := os.Getenv("ICP_TEST")
-	// if icpTest == "true" {
-	// 	identityName = DEFAULT
-	// 	canisterId = os.Getenv("CANISTER")
-	// 	logger.Debugf("test canisterId: %s", canisterId)
-	// }
 
 	if err := i.addController(identityName, canisterId, param.Controller); err != nil {
 		return err
@@ -348,12 +336,6 @@ func (i *IcpService) DelController(userId uint, param vo.DelControllerParam) err
 		return err
 	}
 	canisterId := param.CanisterId
-	// icpTest := os.Getenv("ICP_TEST")
-	// if icpTest == "true" {
-	// 	identityName = DEFAULT
-	// 	canisterId = os.Getenv("CANISTER")
-	// 	logger.Debugf("test canisterId: %s", canisterId)
-	// }
 	if err := i.delController(identityName, canisterId, param.Controller); err != nil {
 		return err
 	}
@@ -370,12 +352,6 @@ func (i *IcpService) ChangeCanisterStatus(userId uint, param vo.ChangeStatusPara
 		return err
 	}
 	canisterId := param.CanisterId
-	// icpTest := os.Getenv("ICP_TEST")
-	// if icpTest == "true" {
-	// 	identityName = DEFAULT
-	// 	canisterId = os.Getenv("CANISTER")
-	// 	logger.Debugf("test canisterId: %s", canisterId)
-	// }
 	err = i.changeCanisterStatus(identityName, canisterId, param.Status)
 	if err != nil {
 		return err
@@ -396,7 +372,7 @@ func (i *IcpService) InstallWasm(userId uint, param vo.InstallParam) error {
 	// 	canisterId = os.Getenv("CANISTER")
 	// 	logger.Debugf("test canisterId: %s", canisterId)
 	// }
-	path := "./wasm/" + param.CanisterId + ".wasm"
+	path := "./wasm/" + canisterId + ".wasm"
 	_, err = os.Stat(path)
 	if err != nil {
 		return err
