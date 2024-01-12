@@ -256,8 +256,10 @@ func (i *IcpService) GetConsumptionPage(canisterId string, page int, size int) (
 	var data []vo.ConsumptionVo
 	for _, csp := range consumptions {
 		data = append(data, vo.ConsumptionVo{
-			Cycles:   csp.Cycles.String,
-			UpdateAt: csp.UpdateTime.Time.Format("2006-01-02 15:04:05"),
+			CanisterId: csp.CanisterId,
+			ModuleHash: csp.ModuleHash,
+			Cycles:     csp.Cycles.String,
+			UpdateAt:   csp.UpdateTime.Time.Format("2006-01-02 15:04:05"),
 		})
 	}
 	res.Total = count

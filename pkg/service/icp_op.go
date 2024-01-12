@@ -142,6 +142,7 @@ func (i *IcpService) DBSetComsuption(identity string, canisterId string) error {
 	}
 	consume := db.IcpConsumption{
 		CanisterId: canisterId,
+		ModuleHash: out.ModuleHash,
 		Cycles: sql.NullString{
 			String: out.Balance,
 			Valid:  true,
