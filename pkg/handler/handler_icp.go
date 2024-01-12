@@ -4,7 +4,6 @@ import (
 	"hamster-paas/pkg/models/vo"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,14 +16,13 @@ func (h *HandlerServer) DfxCmd(c *gin.Context) {
 		Fail(err.Error(), c)
 		return
 	}
-	version, err := h.icpService.DfxCmd(CmdParam.Cmd)
+	output, err := h.icpService.DfxCmd(CmdParam.Cmd)
 	if err != nil {
 		Fail(err.Error(), c)
 		return
 	}
 
-	ver := strings.Fields(version)[1]
-	Success(ver, c)
+	Success(output, c)
 }
 
 const (
