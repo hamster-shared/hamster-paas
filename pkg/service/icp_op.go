@@ -41,7 +41,7 @@ var (
 	AddController = "dfx canister update-settings %s --add-controller %s --network %s --identity %s"
 	DelController = "dfx canister update-settings %s --remove-controller %s --network %s --identity %s"
 	UninstallCode = "dfx canister uninstall-code %s --network %s --identity %s"
-	InstallCode   = "dfx canister install %s --wasm %s --mode %s --network %s --identity %s"
+	InstallCode   = "dfx canister install %s --wasm %s --mode %s --network %s --identity %s -y"
 
 	TransferICP = "dfx ledger transfer %s --icp %s --memo %s --network %s --identity %s"
 )
