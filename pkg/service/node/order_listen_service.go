@@ -5,6 +5,20 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"hamster-paas/pkg/application"
+	"hamster-paas/pkg/db"
+	"hamster-paas/pkg/models/node"
+	"hamster-paas/pkg/models/order"
+	"hamster-paas/pkg/service"
+	"hamster-paas/pkg/utils"
+	"hamster-paas/pkg/utils/logger"
+	"log"
+	"math/big"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -17,16 +31,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/shopspring/decimal"
 	"gorm.io/gorm"
-	"hamster-paas/pkg/models/node"
-	"hamster-paas/pkg/models/order"
-	"hamster-paas/pkg/utils"
-	"hamster-paas/pkg/utils/logger"
-	"log"
-	"math/big"
-	"net/http"
-	"os"
-	"strings"
-	"time"
 )
 
 type OrderListeningService struct {
@@ -52,8 +56,10 @@ func (ol *OrderListeningService) StartOrderListening() {
 	//cron.WithSeconds()	秒级操作
 	//cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger))	函数没执行完就跳过本次函数
 	//cron.WithLogger(cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags)))	打印任务日志
-	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
-		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
+	c := cron.New(
+		cron.WithSeconds(),
+		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
+		cron.WithLogger(cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
 	EntryID, err := c.AddFunc("*/5 * * * * *", func() {
 		var orderList []order.Order
 		err := ol.db.Model(order.Order{}).Where("status = ?", order.PaymentPending).Order("order_time desc").Find(&orderList).Error
@@ -180,8 +186,11 @@ func (ol *OrderListeningService) StartOrderListening() {
 }
 
 func (ol *OrderListeningService) StartScanBlockInformation() {
-	c := cron.New(cron.WithSeconds(), cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)), cron.WithLogger(
-		cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
+	c := cron.New(
+		cron.WithSeconds(),
+		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
+		cron.WithLogger(cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
+
 	EntryID, err := c.AddFunc("*/5 * * * * *", func() {
 		var blackHeight order.BlackHeight
 		err := ol.db.Model(order.BlackHeight{}).Where("event_type = ?", "Transfer").First(&blackHeight).Error
@@ -295,6 +304,51 @@ func (ol *OrderListeningService) StartScanBlockInformation() {
 		} else {
 			begin.Commit()
 		}
+	})
+	if err != nil {
+		logger.Errorf("StartScanBlockInformation start failed, EntryID: %s, err: %s", EntryID, err)
+	}
+	c.Start()
+}
+
+func (ol *OrderListeningService) StartIcpConsumptions() {
+	c := cron.New(
+		cron.WithSeconds(),
+		cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger)),
+		cron.WithLogger(cron.VerbosePrintfLogger(log.New(os.Stdout, "cron: ", log.LstdFlags))))
+
+	EntryID, err := c.AddFunc("@daily", func() {
+		i, err := application.GetBean[*service.IcpService]("icpService")
+		if err != nil {
+			logger.Errorf("StartIcpConsumptions get icp service failed: %s", err)
+			return
+		}
+
+		var canisters []db.IcpCanister
+		err = i.DBAllCanisters(&canisters)
+		if err != nil {
+			logger.Errorf("daily consumption DBAllCanisters error: %s", err)
+			return
+		}
+		for _, canister := range canisters {
+			if canister.FkUserId == 0 {
+				logger.Debugf("daily consumption canister %s user_id %d is 0")
+				continue
+			}
+			userId := canister.FkUserId
+			identity, err := i.DBIdentityName(userId)
+			if err != nil {
+				logger.Debugf("daily consumption DBIdentityName user_id %d error: %s", userId, err)
+				continue
+			}
+			canisterId := canister.CanisterId
+			err = i.DBSetComsuption(identity, canisterId)
+			if err != nil {
+				logger.Debugf("daily consumption DBSetComsuption canister %s error: %s", canisterId, err)
+				continue
+			}
+		}
+
 	})
 	if err != nil {
 		logger.Errorf("StartScanBlockInformation start failed, EntryID: %s, err: %s", EntryID, err)

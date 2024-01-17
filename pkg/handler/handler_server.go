@@ -21,6 +21,7 @@ type HandlerServer struct {
 	orderService                 service2.OrderService
 	resourceStandardService      service2.ResourceStandardService
 	zanService                   service.ZanService
+	icpService                   service.IcpService
 }
 
 func NewHandlerServer() *HandlerServer {
@@ -101,8 +102,14 @@ func NewHandlerServer() *HandlerServer {
 		logger.Error(fmt.Sprintf("application get zan service failed: %s", err.Error()))
 		panic(fmt.Sprintf("application get zan service failed: %s", err.Error()))
 	}
-
 	handlerServer.zanService = *zanService
+
+	icpService, err := application.GetBean[*service.IcpService]("icpService")
+	if err != nil {
+		logger.Error(fmt.Sprintf("application get icp service failed: %s", err.Error()))
+		panic(fmt.Sprintf("application get icp service failed: %s", err.Error()))
+	}
+	handlerServer.icpService = *icpService
 
 	return &handlerServer
 }
