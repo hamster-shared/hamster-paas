@@ -135,6 +135,8 @@ spec:
               name: hamster-paas-nginx-log
             - mountPath: /app/cert
               name: zan-private-key
+            - name: dfx-config
+              mountPath: /home/ubuntu/.config/dfx
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -151,6 +153,9 @@ spec:
               - key: rsa_private_key_pkcs8.pem
                 path: rsa_private_key_pkcs8.pem
             name: hamster-paas
+        - name: dfx-config
+          persistentVolumeClaim:
+            claimName: dfx-config
 ---
 apiVersion: v1
 kind: Service
