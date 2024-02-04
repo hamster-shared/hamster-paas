@@ -8,6 +8,7 @@ import (
 	"hamster-paas/pkg/db"
 	"hamster-paas/pkg/models/vo"
 	"hamster-paas/pkg/utils/logger"
+	"io"
 	"math"
 	"os"
 	"os/exec"
@@ -33,7 +34,7 @@ var (
 	CreateCanister = "dfx ledger create-canister %s --amount %s --network %s --identity %s"
 	DepositCycles  = "dfx canister deposit-cycles %s %s --network %s --identity %s"
 	CanisterStatus = "dfx canister status %s --network %s --identity %s"
-	// CanisterCreate = "dfx canister create %s --network %s --identity %s"
+	CanisterCreate = "dfx canister create %s --with-cycles 200000000000 --network %s --identity %s"
 	CanisterDelete = "dfx canister delete %s --network %s --identity %s"
 	CanisterStop   = "dfx canister stop %s --network %s --identity %s"
 	CanisterStart  = "dfx canister start %s --network %s --identity %s"
@@ -406,27 +407,55 @@ func (i *IcpService) changeCanisterStatus(identity string, canisterId string, st
 	return nil
 }
 
-func (i *IcpService) createCanister(identity string, controller string) (canisterId string, err error) {
-	// all balance create?
-	balance, err := i.getIcpBalance(identity)
+func (i *IcpService) createCanister(identity string, canisterName string) (canisterId string, err error) {
+	// 写入数据
+	data := map[string]interface{}{}
+	data["canisters"] = map[string]interface{}{canisterName: map[string]interface{}{}}
+	dataJSON, err := json.Marshal(data)
 	if err != nil {
-		return "", err
+		logger.Errorf("marshal dfx.json error: %v", err)
 	}
-	createCanisterCmd := fmt.Sprintf(CreateCanister, controller, balance, i.network, identity)
+	err = os.WriteFile("dfx.json", dataJSON, 0644)
+	if err != nil {
+		logger.Errorf("write dfx.json error: %v", err)
+	}
+	//创建 canister
+	createCanisterCmd := fmt.Sprintf(CanisterCreate, canisterName, i.network, identity)
 	out, err := i.execDfxCommand(createCanisterCmd)
 	logger.Debugf("create canister: \ncmd %s \nout %s", createCanisterCmd, out)
 
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile(`Canister created with id: "(.*?)"`)
+	// re := regexp.MustCompile(`Canister created with id: "(.*?)"`)
+	re := regexp.MustCompile(`has canister id: (.+)`)
 	matches := re.FindStringSubmatch(out)
 	if len(matches) > 1 {
 		canisterId = matches[1]
 	} else {
-		return "", errors.New("canister status not found")
+		jsonFile, err := os.Open("canister_ids.json")
+		if err != nil {
+			logger.Errorf("open canister_ids.json error: %v", err)
+		}
+		defer jsonFile.Close()
+
+		byteValue, err := io.ReadAll(jsonFile)
+		if err != nil {
+			logger.Errorf("read canister_ids.json error: %v", err)
+		}
+		var result map[string]interface{}
+		json.Unmarshal(byteValue, &result)
+		// logger.Debugf("result: %v", result)
+		canisters := result[canisterName].(map[string]interface{})
+		canisterId = canisters["ic"].(string)
+		// logger.Debugf("canisters: %v", canisterId)
+		if canisterId == "" {
+			return "", errors.New("canister id not found")
+		} else {
+			return canisterId, nil
+		}
 	}
-	logger.Infof("identity-> %s controller-> %s create-canister result is: %s \n", identity, controller, canisterId)
+	logger.Infof("identity-> %s canisterName-> %s create-canister result is: %s \n", identity, canisterName, canisterId)
 	return canisterId, nil
 }
 

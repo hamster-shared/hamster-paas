@@ -1,10 +1,13 @@
 package service
 
 import (
+	"encoding/json"
 	"fmt"
 	"hamster-paas/pkg/db"
 	"hamster-paas/pkg/utils/logger"
+	"io"
 	"os"
+	"regexp"
 	"testing"
 
 	"gorm.io/driver/mysql"
@@ -83,14 +86,71 @@ func TestBrief(t *testing.T) {
 	}
 }
 
-func TestCreate(t *testing.T) {
+// func TestCreate(t *testing.T) {
 
+// 	logger.InitLogger()
+// 	alineDb := getDB()
+
+// 	i := IcpService{alineDb, "ic"}
+// 	err := i.dbCreateCanister(65406422, "65406422", "nglpe-baaaa-aaaal-qcx3a-cai", "hello")
+// 	if err != nil {
+// 		logger.Errorf("dbCreateCanister error: %v", err)
+// 	}
+// }
+
+func TestMatch(t *testing.T) {
 	logger.InitLogger()
-	alineDb := getDB()
 
-	i := IcpService{alineDb, "ic"}
-	err := i.dbCreateCanister(65406422, "65406422", "nglpe-baaaa-aaaal-qcx3a-cai", "hello")
-	if err != nil {
-		logger.Errorf("dbCreateCanister error: %v", err)
+	text := "hello canister was already created on network ic and has canister id: srbgg-giaaa-aaaao-a27na-cai"
+	re := regexp.MustCompile(`has canister id: (.+)`)
+	matches := re.FindStringSubmatch(text)
+	// logger.Debugf("matches: %v", matches)
+	if len(matches) > 1 {
+		canisterId := matches[1]
+		logger.Debugf("canister id: %s", canisterId)
+	} else {
+		logger.Errorf("canister id not found")
 	}
+}
+
+func TestFile(t *testing.T) {
+	logger.InitLogger()
+
+	canisterName := "hello"
+	// if _, err := os.Stat("dfx.json"); os.IsNotExist(err) {
+	// 不存在，则新建并写入数据 {}
+	data := map[string]interface{}{}
+	data["canisters"] = map[string]interface{}{canisterName: map[string]interface{}{}}
+	dataJSON, err := json.Marshal(data)
+	if err != nil {
+		logger.Errorf("marshal dfx.json error: %v", err)
+	}
+	err = os.WriteFile("dfx.json", dataJSON, 0644)
+	if err != nil {
+		logger.Errorf("write dfx.json error: %v", err)
+	}
+	// }
+}
+
+func TestRead(t *testing.T) {
+	logger.InitLogger()
+
+	canisterName := "hello"
+	jsonFile, err := os.Open("canister_ids.json")
+	if err != nil {
+		logger.Errorf("open canister_ids.json error: %v", err)
+	}
+
+	defer jsonFile.Close()
+
+	byteValue, err := io.ReadAll(jsonFile)
+	if err != nil {
+		logger.Errorf("read canister_ids.json error: %v", err)
+	}
+
+	var result map[string]interface{}
+	json.Unmarshal(byteValue, &result)
+	logger.Debugf("result: %v", result)
+	canisters := result[canisterName].(map[string]interface{})
+	logger.Debugf("canisters: %v", canisters["ic"])
 }
