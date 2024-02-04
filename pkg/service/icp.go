@@ -277,14 +277,7 @@ func (i *IcpService) AddCanister(userId uint, param vo.CreateCanisterParam) (str
 		return "", err
 	}
 	identityName := userIcp.IdentityName
-	principalId := userIcp.PrincipalId
-	icpTest := os.Getenv("ICP_TEST")
-	if icpTest == "true" {
-		// identityName = DEFAULT
-		_, principalId, _ = i.getLedgerInfo(identityName)
-		logger.Debugf("test principal: %s", principalId)
-	}
-	canisterId, err := i.createCanister(identityName, principalId)
+	canisterId, err := i.createCanister(identityName, param.CanisterName)
 	if err != nil {
 		return canisterId, err
 	}
