@@ -4,18 +4,19 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/ethereum/go-ethereum"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"gorm.io/gorm"
 	"hamster-paas/pkg/models"
 	"hamster-paas/pkg/rpc/eth"
 	"hamster-paas/pkg/service/contract"
 	"hamster-paas/pkg/utils/logger"
 	"strconv"
 	"time"
+
+	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"gorm.io/gorm"
 )
 
 type FunctionConsumerEventService struct {
@@ -93,9 +94,9 @@ func handlerData(data *contract.FunctionConsumerOCRResponse, db *gorm.DB) {
 	logger.Debugf("*****************")
 	logger.Debugf(result)
 	logger.Debugf("*****************")
-	logger.Debugf("#####################")
+	logger.Debugf("#################")
 	logger.Debugf(string(data.Err))
-	logger.Debugf("###############")
+	logger.Debugf("#################")
 	eventData.Created = time.Now()
 	eventData.RequestId = requestIdData
 	eventData.Result = result

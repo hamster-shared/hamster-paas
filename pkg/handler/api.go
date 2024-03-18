@@ -2,13 +2,14 @@ package handler
 
 import (
 	"fmt"
+	"hamster-paas/docs"
+	"hamster-paas/pkg/utils/logger"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	socketIo "github.com/googollee/go-socket.io"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"hamster-paas/docs"
-	"hamster-paas/pkg/utils/logger"
-	"os"
 )
 
 type HttpServer struct {
@@ -121,5 +122,36 @@ func (h *HttpServer) StartHttpServer() error {
 	zanApi.GET("/node-service/api-keys/stats/requests-origin", h.handlerServer.ZanApiKeyRequestsOriginStats)
 	zanApi.GET("/node-service/ecosystems/digest", h.handlerServer.ZanEcosystemsDigest)
 	zanApi.GET("/node-service/plan", h.handlerServer.ZanPlan)
+
+	r.Use(h.handlerServer.Cors())
+	icpApi := r.Group("/api/icp")
+	icpApi.POST("/dfx/cmd", h.handlerServer.DfxCmd)
+	icpApi.Use(h.handlerServer.Authorize())
+	icpApi.GET("/account/brief", h.handlerServer.IcpAccountBreif)
+	icpApi.GET("/account/overview", h.handlerServer.IcpAccountOverview)
+	icpApi.GET("/account/canisters", h.handlerServer.IcpCanisterPage)
+	icpApi.GET("/canister/:id/overview", h.handlerServer.IcpCanisterOverview)
+	icpApi.GET("/canister/:id/controllers", h.handlerServer.IcpControllerPage)
+	icpApi.GET("/canister/:id/consumption", h.handlerServer.IcpConsumptionPage)
+
+	icpApi.GET("/account/has-wallet", h.handlerServer.IcpHasWallet)
+	icpApi.GET("/account/get-account", h.handlerServer.IcpGetAccount)
+	icpApi.POST("/account/create-identity", h.handlerServer.IcpCreateIdentity)
+	icpApi.GET("/account/get-icps-info", h.handlerServer.IcpAccountIcps)
+	icpApi.GET("/account/get-cycles-info", h.handlerServer.IcpWalletCycles)
+
+	icpApi.POST("/account/buy-cycles", h.handlerServer.IcpRechargeWallet)
+	icpApi.POST("/account/add-canister", h.handlerServer.IcpAddCanister)
+	icpApi.POST("/canister/add-cycles", h.handlerServer.IcpRechargeCanister)
+	icpApi.POST("/canister/add-controller", h.handlerServer.IcpAddController)
+	icpApi.POST("/canister/del-controller", h.handlerServer.IcpDelController)
+	icpApi.POST("/canister/change-status", h.handlerServer.IcpChangeStatus) // stop, run
+	icpApi.POST("/canister/delete", h.handlerServer.IcpDeleteCanister)
+	icpApi.POST("/canister/:id/upload", h.handlerServer.IcpUploadWasm)
+	icpApi.POST("/canister/install", h.handlerServer.IcpInstallDapp)
+
+	// icpApi.GET("/dfx/get-principal", h.handlerServer.DfxPrincipal)
+	// icpApi.GET("/dfx/account-id", h.handlerServer.DfxAccountId)
+
 	return r.Run(fmt.Sprintf("0.0.0.0:%s", h.port))
 }

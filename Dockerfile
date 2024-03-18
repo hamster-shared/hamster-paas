@@ -13,7 +13,13 @@ RUN go build .
 
 FROM debian:11
 
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates curl
+
+WORKDIR /home/ubuntu
+ENV HOME /home/ubuntu
+
+RUN sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+RUN dfx cache install
 
 WORKDIR /app
 
